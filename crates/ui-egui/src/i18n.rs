@@ -109,7 +109,7 @@ pub static LANGUAGES: [LangInfo; 27] = [
     // Hungarian; `hu`, `hu-HU` and `hu_HU.UTF-8` resolve here.
     LangInfo { code: "hu", prefer_hans: false, editing_lang: None },
     // French; `fr`, `fr-FR`, `fr_CA` and other regions resolve here.
-    LangInfo { code: "fr", prefer_hans: false, editing_lang: None },
+    LangInfo { code: "fr", prefer_hans: false, editing_lang: Some("fr-FR") },
     // Bulgarian; `bg`, `bg-BG` and `bg_BG.UTF-8` resolve here.
     LangInfo { code: "bg", prefer_hans: false, editing_lang: None },
     // Vietnamese; `vi`, `vi-VN` and `vi_VN.UTF-8` resolve here.

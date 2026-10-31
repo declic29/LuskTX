@@ -732,7 +732,7 @@ impl WordApp {
                 ));
             }
             "ui.discord" => {
-                self.canvas.open_url = Some("https://discord.gg/artcraft".into());
+                self.canvas.open_url = Some("https://www.lusk.bzh".into());
                 json!({})
             }
             "ui.caretAnimation" => {

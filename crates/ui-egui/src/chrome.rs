@@ -357,19 +357,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                     }
                     ui.add_space(8.0);
                     if app.ui.show_discord {
-                        let (r, resp) = ui.allocate_exact_size(vec2(84.0, 22.0), Sense::click());
-                        ui.painter().rect_filled(r, 11.0, if resp.hovered() { t.accent_text } else { t.accent });
-                        icons::paint(
-                            ui.painter(),
-                            Rect::from_center_size(pos2(r.min.x + 13.0, r.center().y), vec2(14.0, 14.0)),
-                            "discord",
-                            t.on_accent,
-                            t.on_accent,
-                        );
-                        ui.painter().text(pos2(r.min.x + 24.0, r.center().y), Align2::LEFT_CENTER, tl!("Discord"), medium(11.5), t.on_accent);
-                        if resp.on_hover_text(tl!("Join the ArtCraft community on Discord")).clicked() {
-                            let _ = app.run("ui.discord", json!({}));
-                        }
+                        lusk_box(ui, control_h);
                         ui.add_space(8.0);
                     }
                     search_box(app, ui, control_h);
@@ -379,7 +367,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
             // Centred title.
             let title = if !app.has_document() {
                 // No document open (#1129): the app's name alone.
-                "WordCraft".to_string()
+                "Lusk Texte".to_string()
             } else {
                 format!(
                     "{} — {}",
@@ -455,6 +443,55 @@ fn search_box(app: &mut WordApp, ui: &mut Ui, control_h: f32) {
     };
     if resp.on_hover_text(tip).clicked() {
         let _ = app.run("tools.search", json!({}));
+    }
+}
+
+/// Barre de recherche Lusk: ouvre le métamoteur breton dans le navigateur par défaut.
+/// Seul le texte tapé dans ce champ est envoyé; jamais le contenu du document.
+fn lusk_box(ui: &mut Ui, control_h: f32) {
+    // Adresse de la page de résultats de Lusk, avec {q} à la place du texte cherché.
+    // Exemple: Some("https://www.lusk.bzh/<chemin>?q={q}")
+    // Tant que c'est None, on ouvre la page d'accueil de Lusk.
+    const MODELE: Option<&str> = Some("https://www.lusk.bzh/search/{q}/local");
+    const ACCUEIL: &str = "https://www.lusk.bzh";
+
+    fn encoder(s: &str) -> String {
+        s.bytes()
+            .map(|b| match b {
+                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => (b as char).to_string(),
+                _ => format!("%{b:02X}"),
+            })
+            .collect()
+    }
+
+    let id = egui::Id::new("lusk_search_query");
+    let mut texte: String = ui.data_mut(|d| d.get_temp::<String>(id).unwrap_or_default());
+    let mut lancer = false;
+
+    // Dans une ligne de droite à gauche, le bouton est ajouté en premier.
+    if ui
+        .add_sized(vec2(90.0, control_h), egui::Button::new("Chercher"))
+        .on_hover_text("Rechercher sur Lusk, le moteur de recherche breton")
+        .clicked()
+    {
+        lancer = true;
+    }
+    let champ = ui.add_sized(
+        vec2(220.0, control_h),
+        egui::TextEdit::singleline(&mut texte).hint_text("Rechercher sur Lusk…"),
+    );
+    if champ.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+        lancer = true;
+    }
+    ui.data_mut(|d| d.insert_temp(id, texte.clone()));
+
+    if lancer {
+        let q = texte.trim();
+        let url = match MODELE {
+            Some(m) if !q.is_empty() => m.replace("{q}", &encoder(q)),
+            _ => ACCUEIL.to_string(),
+        };
+        ui.ctx().open_url(egui::OpenUrl::new_tab(url));
     }
 }
 
