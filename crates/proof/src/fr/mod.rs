@@ -1,0 +1,171 @@
+//! French proofing using the Hunspell `fr_FR` dictionary of Dicollecte (MPL 2.0), read from the
+//! dictionaries folders (`hunspell::search_dirs`), for instance a `dictionnaires` folder next to
+//! the program. Elisions (`l'homme`, `qu'il`, `aujourd'hui`) are accepted whole or as an elided
+//! prefix plus a known word. Suggestions are single edits (accents first) kept when the
+//! dictionary knows the result. Grammar is limited to generic repeated-word and spacing checks
+//! with French messages; hyphenation keeps the English fallback.
+
+pub mod grammar;
+mod suggest;
+
+use std::sync::{Arc, RwLock};
+
+use crate::affix::AffixDict;
+
+pub use suggest::suggest;
+
+/// The French dictionary: `None` until first use, then the installed one (or an empty one).
+static DICT: RwLock<Option<Arc<AffixDict>>> = RwLock::new(None);
+
+/// File names of a French Hunspell dictionary, most specific first (`fr_FR` is what Linux
+/// packages and LibreOffice call it; the others are Dicollecte's own file names).
+const NAMES: &[&str] = &["fr_FR", "fr-FR", "fr", "fr-toutesvariantes", "fr-classique", "fr-reforme1990"];
+
+/// Elided prefixes that are not dictionary words on their own (`qu'`, `jusqu'`…); a single
+/// letter followed by an apostrophe (`l'`, `d'`, `j'`…) is always accepted.
+const ELISIONS: &[&str] = &["qu'", "jusqu'", "lorsqu'", "puisqu'", "quoiqu'", "presqu'", "quelqu'", "entr'", "prud'"];
+
+/// The French dictionary: the installed Hunspell `fr_FR` (read on first use), one given with
+/// [`install_dictionary`], or an empty one when none is available (French spelling is off then;
+/// see [`has_dictionary`]).
+pub fn dictionary() -> Arc<AffixDict> {
+    if let Some(d) = DICT.read().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
+        return d.clone();
+    }
+    let loaded = Arc::new(load_installed());
+    let mut slot = DICT.write().unwrap_or_else(std::sync::PoisonError::into_inner);
+    slot.get_or_insert(loaded).clone()
+}
+
+fn load_installed() -> AffixDict {
+    let Some((aff, dic)) = crate::hunspell::find(NAMES) else {
+        crate::hunspell::clear_load_error(NAMES[0]);
+        log::info!("French spelling: no Hunspell fr_FR dictionary installed");
+        return AffixDict::default();
+    };
+    crate::hunspell::note_load(NAMES[0], &dic, crate::hunspell::load(&aff, &dic)).unwrap_or_else(|e| {
+        log::warn!("French spelling: {e}");
+        AffixDict::default()
+    })
+}
+
+/// Use this French dictionary from now on (Hunspell `.aff` and `.dic` text, decoded to UTF-8).
+/// On error the current dictionary stays.
+pub fn install_dictionary(aff: &str, dic: &str) -> Result<(), String> {
+    let d = AffixDict::from_hunspell(aff, dic, &[])?;
+    *DICT.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(d));
+    Ok(())
+}
+
+/// Forget the loaded dictionary, so the next check looks for an installed one again.
+pub fn reload_dictionary() {
+    *DICT.write().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+/// The `.dic` file of the French dictionary found in the dictionaries folders now; `None` when
+/// there is none.
+pub fn installed_path() -> Option<std::path::PathBuf> {
+    crate::hunspell::find(NAMES).map(|(_, dic)| dic)
+}
+
+/// Is a French dictionary available (spelling is checked)?
+pub fn has_dictionary() -> bool {
+    !dictionary().is_empty()
+}
+
+/// Is `c` a letter of the Latin script?
+fn is_latin_letter(c: char) -> bool {
+    c.is_alphabetic() && (c < '\u{0250}' || ('\u{1E00}'..='\u{1EFF}').contains(&c))
+}
+
+/// The typographic apostrophes written as the straight one the dictionary uses.
+fn straight(word: &str) -> String {
+    word.chars().map(|c| if c == '’' || c == 'ʼ' { '\'' } else { c }).collect()
+}
+
+/// Is `word` spelled correctly in French? Numbers, single letters, short words in capitals,
+/// words with digits and words in other scripts are accepted, and so is every word when no
+/// French dictionary is installed.
+pub fn is_correct(word: &str) -> bool {
+    is_correct_with(&dictionary(), word)
+}
+
+/// [`is_correct`] with the File › Options › Proofing choices.
+pub fn is_correct_with_options(word: &str, opts: &crate::Options) -> bool {
+    check(&dictionary(), word, opts)
+}
+
+/// [`is_correct`] against a given dictionary (an empty one accepts everything).
+pub fn is_correct_with(d: &AffixDict, word: &str) -> bool {
+    check(d, word, &crate::Options::default())
+}
+
+fn check(d: &AffixDict, word: &str, opts: &crate::Options) -> bool {
+    if d.is_empty() {
+        return true; // no French dictionary installed: no spelling marks
+    }
+    let s = straight(word);
+    let w = s.trim_matches(|c: char| !c.is_alphanumeric() && c != '\'').trim_matches('\'');
+    let n = w.chars().count();
+    if n <= 1 || (opts.ignore_numbers && w.chars().any(|c| c.is_ascii_digit())) || !w.chars().any(char::is_alphabetic) {
+        return true;
+    }
+    if opts.ignore_uppercase && w.chars().all(|c| !c.is_lowercase()) && n <= 6 {
+        return true;
+    }
+    if !w.chars().any(is_latin_letter) {
+        return true; // other scripts: no dictionary
+    }
+    if known(d, w) {
+        return true;
+    }
+    // `peut-être`, `grand-mère` are entries; `a-t-il`, `dis-moi`, `vingt-et-un` are checked by parts.
+    w.contains('-')
+        && w.split('-').all(|p| {
+            p.chars().count() <= 1
+                || (opts.ignore_uppercase && p.chars().all(|c| !c.is_lowercase()) && p.chars().count() <= 6)
+                || known(d, p)
+        })
+}
+
+/// Is one word in the dictionary, the user dictionary, or an elided prefix and a known word?
+fn known(d: &AffixDict, w: &str) -> bool {
+    if d.check(w) || crate::in_user_dictionary(&w.to_lowercase()) {
+        return true;
+    }
+    let Some(i) = w.find('\'') else { return false };
+    let (left, right) = (w.get(..=i).unwrap_or(""), w.get(i + 1..).unwrap_or(""));
+    if right.is_empty() {
+        return false;
+    }
+    let left_ok = left.chars().count() == 2 || ELISIONS.contains(&left.to_lowercase().as_str()) || d.check(left);
+    left_ok && (right.chars().count() <= 1 || known(d, right))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const AFF: &str = "SET UTF-8\n";
+    const DIC: &str = "6\nbonjour\nmonde\nhomme\naujourd'hui\npeut\nêtre\n";
+
+    fn dict() -> AffixDict {
+        AffixDict::from_hunspell(AFF, DIC, &[]).expect("test dictionary")
+    }
+
+    #[test]
+    fn french_words_elisions_and_hyphens() {
+        let d = dict();
+        for w in ["bonjour", "Bonjour", "l'homme", "l’homme", "aujourd'hui", "qu'homme", "peut-être", "a", "2026", "RI"] {
+            assert!(is_correct_with(&d, w), "{w}");
+        }
+        for w in ["bonjuor", "l'hommme", "mondde"] {
+            assert!(!is_correct_with(&d, w), "{w}");
+        }
+    }
+
+    #[test]
+    fn no_dictionary_accepts_everything() {
+        assert!(is_correct_with(&AffixDict::default(), "bonjuor"));
+    }
+}

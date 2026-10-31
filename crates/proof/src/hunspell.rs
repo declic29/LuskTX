@@ -76,6 +76,12 @@ pub fn search_dirs(lo_exts: Option<&[String]>) -> Vec<PathBuf> {
     if let Some(d) = std::env::var_os("WORDCRAFT_DICTIONARIES").filter(|v| !v.is_empty()) {
         dirs.push(PathBuf::from(d));
     }
+    // Dictionaries shipped with the program: a `dictionnaires` folder next to the executable.
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            dirs.push(dir.join("dictionnaires"));
+        }
+    }
     // LibreOffice keeps each language under `…/share/extensions/<dict-xx>`.
     let lo_dirs =
         |prefix: &str| -> Vec<PathBuf> { lo_exts.map_or_else(Vec::new, |exts| exts.iter().map(|e| PathBuf::from(prefix).join(e)).collect()) };

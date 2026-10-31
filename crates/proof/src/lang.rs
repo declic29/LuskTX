@@ -70,7 +70,12 @@ pub enum ProofLang {
     /// spelling). There is no German dictionary or grammar yet, so, as for [`ProofLang::Other`],
     /// no spelling or grammar marks.
     De,
-    /// A language without proofing tools here (`fr-FR`, `ja-JP`, `x-none`…). Like Word without
+    /// French (`fr`, `fr-FR`, `fr-BE`, `fr-CA`, `fr-CH`…): the Hunspell `fr_FR` dictionary of
+    /// Dicollecte (looked up in the dictionaries folders), elision-aware spelling, suggestions
+    /// and generic checks with French messages ([`crate::fr`]). Hyphenation keeps the fallback
+    /// English patterns.
+    Fr,
+    /// A language without proofing tools here (`ja-JP`, `x-none`…). Like Word without
     /// the language's proofing tools: no spelling or grammar marks, so its words are never
     /// flagged as English misspellings. Hyphenation keeps using the English patterns, as before
     /// languages were told apart.
@@ -79,7 +84,7 @@ pub enum ProofLang {
 
 impl ProofLang {
     /// Every language with a spelling dictionary, in display order.
-    pub const PROOFED: [ProofLang; 15] = [
+    pub const PROOFED: [ProofLang; 16] = [
         ProofLang::En,
         ProofLang::EnGb,
         ProofLang::EnCa,
@@ -95,6 +100,7 @@ impl ProofLang {
         ProofLang::EsMx,
         ProofLang::Es419,
         ProofLang::EsUy,
+        ProofLang::Fr,
     ];
 
     /// The proofing language of a BCP 47 tag (`pl-PL`, `en_GB`, `PL`…). The primary subtag
@@ -128,6 +134,8 @@ impl ProofLang {
             ProofLang::spanish(tag)
         } else if ["de", "deu", "ger"].iter().any(|c| primary.eq_ignore_ascii_case(c)) {
             ProofLang::De
+        } else if ["fr", "fra", "fre"].iter().any(|c| primary.eq_ignore_ascii_case(c)) {
+            ProofLang::Fr
         } else {
             ProofLang::Other
         }
@@ -182,6 +190,7 @@ impl ProofLang {
             ProofLang::Id => "id",
             ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => "es",
             ProofLang::De => "de",
+            ProofLang::Fr => "fr",
             ProofLang::Other => "",
         }
     }
@@ -296,6 +305,13 @@ mod tests {
     }
 
     #[test]
+    fn tags_resolve_french() {
+        assert_tags(&["fr", "fr-FR", "FR_fr", "fr-BE", "fr-CA", "fr_FR.UTF-8", " fr-CH ", "fra", "fre"], ProofLang::Fr);
+        assert_eq!(ProofLang::Fr.code(), "fr");
+        assert!(ProofLang::Fr.is_proofed());
+    }
+
+    #[test]
     fn tags_resolve_english_regions() {
         assert_tags(&["en", "en-US", "EN_us", "en-Latn-US", "en-PH", "en-001", "eng", "en_US.UTF-8", "en-x-gb"], ProofLang::En);
         assert_tags(
@@ -358,7 +374,7 @@ mod tests {
 
     #[test]
     fn tags_reject_unknown_or_partial_language_codes() {
-        assert_tags(&["fr-FR", "dex", "x-none", "ja-JP", "plx", "bgx", "trx", "csx", "idx", "inx", "esx", "spax", "e", "-"], ProofLang::Other);
+        assert_tags(&["dex", "x-none", "ja-JP", "plx", "bgx", "trx", "csx", "idx", "inx", "esx", "spax", "e", "-"], ProofLang::Other);
     }
 
     /// #3360, #3553: Spanish is proofed, by region: Spain (and no region), Mexico, Uruguay, and
