@@ -139,11 +139,12 @@ pub fn page(app: &mut WordApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     ui.label(RichText::new(tl!("Options")).font(semibold(26.0)));
     ui.add_space(16.0);
-    let current = if PANES.contains(&app.ui.options_pane.as_str()) { app.ui.options_pane.clone() } else { "general".to_string() };
+    let current = if PANES.contains(&app.ui.options_pane.as_str()) && app.ui.options_pane != "agents" { app.ui.options_pane.clone() } else { "general".to_string() };
     ui.horizontal_top(|ui| {
         ui.vertical(|ui| {
             ui.set_width(170.0);
-            for id in PANES {
+            // The Agents pane (scripts and AI agents) is not offered in Lusk Texte.
+            for id in PANES.iter().copied().filter(|id| *id != "agents") {
                 let label = tl!(pane_label(id));
                 let active = current == id;
                 let (r, resp) = ui.allocate_exact_size(vec2(170.0, 30.0), egui::Sense::click());
@@ -174,7 +175,6 @@ pub fn page(app: &mut WordApp, ui: &mut Ui) {
                 "language" => language(app, ui),
                 "accessibility" => accessibility(app, ui),
                 "advanced" => advanced(app, ui),
-                "agents" => agents(ui),
                 _ => general(app, ui),
             }
         });
@@ -641,11 +641,6 @@ fn templates_folder(app: &mut WordApp, ui: &mut Ui) {
     });
     ui.data_mut(|d| d.insert_temp(id, folder));
     note(ui, "File › New lists the .dotx and .dotm templates here under Personal; Save as Word Template starts here.");
-}
-
-fn agents(ui: &mut Ui) {
-    section(ui, "Agents");
-    ui.label(tl!("Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel."));
 }
 
 /// Interface theme: Light, Dark, or follow the system's appearance (#115).
