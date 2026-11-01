@@ -1,0 +1,13 @@
+Dictionnaire français « toutes variantes » v7.7 de Dicollecte (Olivier R.), licence MPL 2.0.
+Fichiers d'origine : fr-toutesvariantes.aff / .dic (extension Grammalecte pour LibreOffice).
+
+Modifications apportées pour Lusk Texte (le lecteur de dictionnaires ne gère que des drapeaux d'un seul
+caractère et au plus 128 drapeaux distincts) :
+ - suppression de la ligne « FLAG long » et remplacement de chaque drapeau de deux caractères
+   (par exemple L'D'Q') par un caractère unique, dans fr_FR.aff et fr_FR.dic ;
+ - 56 drapeaux rares (verbes irréguliers et mots isolés, utilisés par un seul mot) ont été supprimés ;
+   les formes qu'ils engendraient (environ 1 160) sont écrites explicitement dans fr_FR.dic ;
+ - suppression des drapeaux NOSUGGEST (--) et KEEPCASE (||) sur les mots, et des directives qui leur
+   correspondent (NEEDAFFIX, FORBIDDENWORD, CIRCUMFIX, NOSUGGEST, KEEPCASE, non utilisées ou non gérées) ;
+ - suppression des tables ICONV et OCONV (conversions de caractères à l'entrée et à la sortie).
+Les autres mots, règles d'affixes et leurs conditions sont inchangés. Texte de la licence : LICENCE-dictionnaire-fr.txt.

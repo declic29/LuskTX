@@ -43,10 +43,52 @@ fn load_installed() -> AffixDict {
         log::info!("French spelling: no Hunspell fr_FR dictionary installed");
         return AffixDict::default();
     };
-    crate::hunspell::note_load(NAMES[0], &dic, crate::hunspell::load(&aff, &dic)).unwrap_or_else(|e| {
+    crate::hunspell::note_load(NAMES[0], &dic, load_tolerant(&aff, &dic)).unwrap_or_else(|e| {
         log::warn!("French spelling: {e}");
         AffixDict::default()
     })
+}
+
+/// Load the dictionary; when the loader refuses a directive it doesn't implement (`ICONV` in
+/// Dicollecte's file: input conversions such as `’` → `'`, which [`straight`] does itself), read
+/// the files again without that directive, as many times as needed. The directives that define
+/// the file's format (`SET`, `FLAG`, `PFX`, `SFX`) are never dropped.
+fn load_tolerant(aff: &std::path::Path, dic: &std::path::Path) -> Result<AffixDict, String> {
+    match crate::hunspell::load(aff, dic) {
+        Ok(d) => return Ok(d),
+        Err(e) if !e.contains(" is not supported") => return Err(e),
+        Err(_) => {}
+    }
+    let mut aff_text = std::fs::read_to_string(aff).map_err(|e| format!("{}: {e}", aff.display()))?;
+    let dic_text = std::fs::read_to_string(dic).map_err(|e| format!("{}: {e}", dic.display()))?;
+    let mut dropped: Vec<String> = Vec::new();
+    let mut last = String::new();
+    for _ in 0..40 {
+        let e = match AffixDict::from_hunspell(&aff_text, &dic_text, &[]) {
+            Ok(d) => return Ok(d),
+            Err(e) => e,
+        };
+        last = e.clone();
+        let directive = e
+            .split(" is not supported")
+            .next()
+            .filter(|_| e.contains(" is not supported"))
+            .and_then(|head| head.rsplit(':').next())
+            .and_then(|part| part.split_whitespace().next())
+            .map(str::to_string);
+        let Some(directive) = directive else { return Err(e) };
+        if matches!(directive.as_str(), "SET" | "FLAG" | "SFX" | "PFX") {
+            return Err(e);
+        }
+        log::info!("French spelling: ignoring the unsupported {directive} directive of the dictionary");
+        dropped.push(directive.clone());
+        let cleaned = aff_text.lines().filter(|l| l.split_whitespace().next() != Some(directive.as_str())).collect::<Vec<_>>().join("\n") + "\n";
+        if cleaned.len() == aff_text.len() {
+            return Err(e); // nothing to drop: the problem isn't a directive line
+        }
+        aff_text = cleaned;
+    }
+    Err(format!("too many unsupported directives in the dictionary (ignored: {}; last error: {last})", dropped.join(" ")))
 }
 
 /// Use this French dictionary from now on (Hunspell `.aff` and `.dic` text, decoded to UTF-8).
