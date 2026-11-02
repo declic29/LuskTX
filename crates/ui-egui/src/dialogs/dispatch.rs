@@ -1070,30 +1070,21 @@ fn paste_special_dialog(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool 
 }
 
 fn about_dialog(ui: &mut Ui, d: &mut Dialog) -> bool {
-    let Dialog::About { tab } = d else {
+    let Dialog::About { .. } = d else {
         return false;
     };
     ui.set_width(660.0);
-    let names = ["About", "Contributors", "Models"].map(|n| tl!(n).to_string());
-    if let Some(i) = crate::widgets::dialog_tabs(ui, &names, *tab as usize) {
-        *tab = i as u8;
-    }
+    ui.label(egui::RichText::new("Lusk Texte").font(semibold(22.0)));
+    let build = option_env!("").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!(""));
+    ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
+    ui.label("Un traitement de texte libre et gratuit, Ce que vous écrivez vous appartient.");
     ui.add_space(6.0);
-    match *tab {
-        1 => crate::credits::contributors_ui(ui),
-        2 => crate::credits::models_ui(ui),
-        _ => {
-            ui.label(egui::RichText::new("Lusk Texte").font(semibold(22.0)));
-            let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
-            ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
-            ui.label("Un traitement de texte libre et gratuit, pensé pour être simple à utiliser.\nBasé sur WordCraft, un projet libre écrit en Rust.");
-            ui.add_space(6.0);
-            ui.hyperlink_to("lusk.bzh", "https://www.lusk.bzh");
-            ui.hyperlink_to(tl!("Source code: github.com/storytold/wordcraft"), "https://github.com/storytold/wordcraft");
-            ui.add_space(6.0);
-            ui.label(egui::RichText::new("Lusk Texte est basé sur WordCraft. MIT OU Apache-2.0. Copyright (c) 2026 ArtCraft Team et les contributeurs de WordCraft.").small().weak());
-        }
-    }
+    ui.hyperlink_to("lusk.bzh", "https://www.lusk.bzh");
+    ui.hyperlink_to(tl!(""), "");
+    ui.add_space(6.0);
+    ui.label(egui::RichText::new("Lusk Texte. MIT OU Apache-2.0. Copyright (c) 2026.").small().weak());
+    ui.label(egui::RichText::new("Dictionnaire orthographique français : Dicollecte (Olivier R.), licence MPL 2.0.").small().weak());
+    ui.label(egui::RichText::new("Les licences et crédits complets sont fournis avec le logiciel (fichiers LICENSE, NOTICE et ATTRIBUTION).").small().weak());
     let (ok, cancel) = buttons(ui, tl!("Close"));
     ok || cancel
 }
