@@ -51,6 +51,15 @@ fn cascade_bounds(ctx: &egui::Context, viewport: ViewportId) -> Option<craft_win
     Some(craft_window::Rect::new(tile(center.x, monitor.x), tile(center.y, monitor.y), monitor.x, monitor.y))
 }
 
+/// Lusk Texte : the size of the monitor the main window is on.
+fn screen(ctx: &egui::Context) -> Option<egui::Vec2> {
+    ctx.input_for(ViewportId::ROOT, |i| i.viewport().monitor_size).filter(|m| m.is_finite() && m.x > 0.0 && m.y > 0.0)
+}
+
+/// Room the taskbar takes at the bottom of the screen, and a window's frame and title bar.
+const TASKBAR: f32 = 48.0;
+const FRAME: egui::Vec2 = egui::vec2(16.0, 40.0);
+
 /// The window title for a document called `name`.
 pub(crate) fn title(name: &str, dirty: bool) -> String {
     format!("{name}{} - Lusk Texte", if dirty { " •" } else { "" })
@@ -105,6 +114,12 @@ pub struct Windows {
     input_plugin: bool,
     /// The viewport driver draws the windows this frame, and titles them.
     driven: bool,
+    /// Lusk Texte : View › Window › View Side by Side: the two windows shown side by side.
+    side_by_side: Option<(u64, u64)>,
+    /// Synchronous Scrolling for the side-by-side pair.
+    sync_scroll: bool,
+    /// Each paired window's scroll offset when it last drew, to see how far it moved.
+    sync_last: HashMap<u64, f32>,
 }
 
 impl Windows {
@@ -128,6 +143,9 @@ impl Windows {
             builder: egui::ViewportBuilder::default().with_inner_size([1440.0, 920.0]).with_min_inner_size([760.0, 480.0]),
             input_plugin: false,
             driven: false,
+            side_by_side: None,
+            sync_scroll: false,
+            sync_last: HashMap::new(),
         }
     }
 
@@ -689,6 +707,7 @@ impl WordApp {
         if let Some(w) = self.windows.get_mut(key) {
             w.title = title;
         }
+        self.sync_scroll_after_draw(key);
     }
 
     /// The windows' focus changes and close requests from this frame.
@@ -794,6 +813,107 @@ impl WordApp {
     /// borrowed for the interface).
     pub(crate) fn other_windows(&self) -> impl Iterator<Item = &WindowUi> {
         self.windows.open.iter().filter_map(|w| w.ui.as_deref())
+    }
+}
+
+// --- Lusk Texte : Affichage › Fenêtre › Côte à côte, Défilement synchrone, Réorganiser tout. ---
+
+impl WordApp {
+    /// Whether two windows are shown side by side.
+    pub(crate) fn side_by_side_on(&self) -> bool {
+        self.windows.side_by_side.is_some()
+    }
+
+    /// Whether the side-by-side windows scroll together.
+    pub(crate) fn sync_scroll_on(&self) -> bool {
+        self.windows.side_by_side.is_some() && self.windows.sync_scroll
+    }
+
+    /// Move window `key` to `pos` with `outer` its whole size, frame included.
+    fn place_window(&self, ctx: &egui::Context, key: u64, pos: egui::Pos2, outer: egui::Vec2) {
+        let viewport = self.windows.viewport(key);
+        ctx.send_viewport_cmd_to(viewport, ViewportCommand::Maximized(false));
+        ctx.send_viewport_cmd_to(viewport, ViewportCommand::OuterPosition(pos));
+        ctx.send_viewport_cmd_to(viewport, ViewportCommand::InnerSize((outer - FRAME).max(egui::vec2(400.0, 300.0))));
+    }
+
+    /// View Side by Side: the active window on the left half of the screen, the window used
+    /// before it on the right half, scrolling together; again to stop.
+    pub(crate) fn toggle_side_by_side(&mut self) -> Result<Value, String> {
+        if self.windows.side_by_side.take().is_some() {
+            self.status("Côte à côte désactivé.");
+            return Ok(json!({"sideBySide": false}));
+        }
+        let keys = self.windows.recent_keys();
+        let (Some(&left), Some(&right)) = (keys.first(), keys.get(1)) else {
+            return Err("Ouvrez un deuxième document pour les afficher côte à côte.".into());
+        };
+        let ctx = self.ctx.clone().ok_or("La fenêtre n'est pas encore prête.")?;
+        if let Some(m) = screen(&ctx) {
+            let half = egui::vec2(m.x / 2.0, m.y - TASKBAR);
+            self.place_window(&ctx, left, egui::pos2(0.0, 0.0), half);
+            self.place_window(&ctx, right, egui::pos2(m.x / 2.0, 0.0), half);
+        }
+        self.windows.side_by_side = Some((left, right));
+        self.windows.sync_scroll = true;
+        self.windows.sync_last.clear();
+        self.status("Côte à côte : les deux documents défilent ensemble. Défilement synchrone pour les découpler.");
+        Ok(json!({"sideBySide": true}))
+    }
+
+    /// Synchronous Scrolling on or off for the side-by-side windows.
+    pub(crate) fn toggle_sync_scroll(&mut self) -> Result<Value, String> {
+        if self.windows.side_by_side.is_none() {
+            return Err("Activez d'abord Côte à côte (Affichage › Fenêtre).".into());
+        }
+        self.windows.sync_scroll = !self.windows.sync_scroll;
+        self.windows.sync_last.clear();
+        Ok(json!({"syncScroll": self.windows.sync_scroll}))
+    }
+
+    /// Arrange All: every window one above the other, across the whole width of the screen.
+    pub(crate) fn arrange_all(&mut self) -> Result<Value, String> {
+        let keys: Vec<u64> = self.windows.open.iter().map(|w| w.key).collect();
+        let ctx = self.ctx.clone().ok_or("La fenêtre n'est pas encore prête.")?;
+        let m = screen(&ctx).ok_or("La taille de l'écran n'est pas encore connue.")?;
+        let h = (m.y - TASKBAR) / keys.len().max(1) as f32;
+        for (i, key) in keys.iter().enumerate() {
+            self.place_window(&ctx, *key, egui::pos2(0.0, h * i as f32), egui::vec2(m.x, h));
+        }
+        self.windows.side_by_side = None;
+        Ok(json!({"arranged": keys.len()}))
+    }
+
+    /// After window `key` drew: with Side by Side and Synchronous Scrolling on, how far the active
+    /// window of the pair scrolled goes to the other one (the other one's own move isn't sent back).
+    fn sync_scroll_after_draw(&mut self, key: u64) {
+        let Some((a, b)) = self.windows.side_by_side else { return };
+        if !self.windows.sync_scroll || (key != a && key != b) {
+            return;
+        }
+        // A pair whose window closed ends.
+        if !(self.windows.open.iter().any(|w| w.key == a) && self.windows.open.iter().any(|w| w.key == b)) {
+            self.windows.side_by_side = None;
+            return;
+        }
+        let partner = if key == a { b } else { a };
+        let y = self.canvas.scroll_offset.y;
+        let Some(last) = self.windows.sync_last.insert(key, y) else { return };
+        let delta = y - last;
+        if delta.abs() < 0.5 || self.windows.recent_keys().first() != Some(&key) {
+            return;
+        }
+        let target = self.windows.get_mut(partner).and_then(|w| w.ui.as_mut()).map(|ui| {
+            let target = (ui.canvas.scroll_offset.y + delta).max(0.0);
+            ui.canvas.scroll_request = Some(egui::vec2(ui.canvas.scroll_offset.x, target));
+            target
+        });
+        if let Some(target) = target {
+            self.windows.sync_last.insert(partner, target);
+        }
+        if let Some(ctx) = &self.ctx {
+            ctx.request_repaint();
+        }
     }
 }
 

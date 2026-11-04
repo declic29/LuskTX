@@ -277,7 +277,7 @@ fn template_tile(ui: &mut Ui, app: &mut WordApp, label: &str, template: &str) {
 }
 
 /// The built-in templates in gallery order: display label and the `file.new` template id.
-const TEMPLATES: [(&str, &str); 14] = [
+const TEMPLATES: [(&str, &str); 20] = [
     ("Blank document", "blank"),
     ("Lettre", "letter"),
     ("Lettre de motivation", "coverLetter"),
@@ -286,11 +286,17 @@ const TEMPLATES: [(&str, &str); 14] = [
     ("CV créatif", "resumeCreative"),
     ("Compte rendu de réunion", "minutes"),
     ("Rapport", "report"),
+    ("Devis", "quote"),
     ("Facture", "invoice"),
     ("Note de service", "memo"),
     ("Attestation sur l’honneur", "attestation"),
+    ("Attestation employeur", "employerCertificate"),
     ("Cartes de visite", "businessCards"),
     ("Brochure", "brochure"),
+    ("Invitation", "invitation"),
+    ("Faire-part de naissance", "birthAnnouncement"),
+    ("Menu", "menu"),
+    ("Certificat", "certificate"),
     ("Studio handbook (sample)", "sample"),
 ];
 

@@ -717,6 +717,216 @@ pub fn brochure_fr() -> Document {
     d
 }
 
+/// Un paragraphe avec un espace avant et après, en points.
+fn spaced(mut p: Paragraph, before: f32, after: f32) -> Paragraph {
+    p.props.space_before = Some(before);
+    p.props.space_after = Some(after);
+    p
+}
+
+/// Un cadre autour de la page entière.
+fn page_border(d: &mut Document, rgb: Rgb, style: BorderStyle, width: f32) {
+    let b = Border { style, width, color: Some(rgb), space: 24.0 };
+    d.last_section.page_borders = Some(Borders { top: Some(b), left: Some(b), bottom: Some(b), right: Some(b), ..Default::default() });
+}
+
+/// Une ligne centrée.
+fn center(text: &str, props: CharProps) -> Block {
+    Block::Para(aligned(run_para(text, props), Align::Center))
+}
+
+/// Une ligne centrée avec un espace avant et après.
+fn center_spaced(text: &str, props: CharProps, before: f32, after: f32) -> Block {
+    Block::Para(aligned(spaced(run_para(text, props), before, after), Align::Center))
+}
+
+/// Une invitation : un cadre, le titre de l'événement et les informations pratiques.
+pub fn invitation_fr() -> Document {
+    let mut d = document_fr("Invitation");
+    let rose = Rgb(0xB8, 0x3B, 0x5E);
+    let grey = Rgb(0x59, 0x59, 0x59);
+    let ink = Rgb(0x26, 0x26, 0x26);
+    page_border(&mut d, rose, BorderStyle::Double, 3.0);
+    let b = vec![
+        center_spaced("VOUS ÊTES INVITÉ(E)", CharProps { spacing: Some(3.0), ..colored(grey, 12.0, true) }, 60.0, 18.0),
+        center_spaced("Anniversaire de Prénom", colored(rose, 34.0, true), 0.0, 6.0),
+        center("pour fêter ses 40 ans", CharProps { italic: Some(true), ..colored(grey, 15.0, false) }),
+        center_spaced("Samedi jj mois aaaa à 19 h", colored(ink, 16.0, true), 48.0, 4.0),
+        center("Nom du lieu", colored(ink, 14.0, false)),
+        center("Adresse · Code postal Ville", colored(grey, 12.0, false)),
+        center_spaced("Au programme : apéritif, dîner et soirée dansante. Tenue de fête conseillée !", colored(grey, 12.0, false), 48.0, 30.0),
+        center_spaced("Merci de confirmer votre venue avant le jj/mm", colored(rose, 12.0, true), 24.0, 2.0),
+        center("06 00 00 00 00 · prenom.nom@exemple.fr", colored(grey, 12.0, false)),
+    ];
+    blocks(&mut d, b);
+    d
+}
+
+/// Un faire-part de naissance.
+pub fn birth_announcement_fr() -> Document {
+    let mut d = document_fr("Faire-part de naissance");
+    let blue = Rgb(0x3A, 0x7C, 0xA5);
+    let grey = Rgb(0x59, 0x59, 0x59);
+    let ink = Rgb(0x26, 0x26, 0x26);
+    page_border(&mut d, blue, BorderStyle::Single, 1.5);
+    let mut b = vec![
+        center_spaced("Nous avons la joie de vous annoncer la naissance de", CharProps { italic: Some(true), ..colored(grey, 15.0, false) }, 72.0, 20.0),
+        center_spaced("Prénom", colored(blue, 44.0, true), 0.0, 24.0),
+    ];
+    for (k, v) in [("Né(e) le", "jj mois aaaa à hh h mm"), ("à", "Ville"), ("Poids :", "3,2 kg"), ("Taille :", "50 cm")] {
+        let mut p = Paragraph::new();
+        add(&mut p, &format!("{k} "), colored(grey, 13.0, false));
+        add(&mut p, v, colored(ink, 13.0, true));
+        b.push(Block::Para(aligned(spaced(p, 0.0, 4.0), Align::Center)));
+    }
+    b.push(center_spaced("Ses parents, Prénom et Prénom,", colored(grey, 14.0, false), 40.0, 2.0));
+    b.push(center("et sa grande sœur Prénom sont aux anges.", colored(grey, 14.0, false)));
+    b.push(center_spaced("Adresse · Code postal Ville", colored(grey, 11.0, false), 40.0, 0.0));
+    blocks(&mut d, b);
+    d
+}
+
+/// Un menu de repas ou de restaurant : plats et prix reliés par des points de conduite.
+pub fn menu_fr() -> Document {
+    let mut d = document_fr("Menu");
+    let wine = Rgb(0x7A, 0x2E, 0x3B);
+    let grey = Rgb(0x59, 0x59, 0x59);
+    let ink = Rgb(0x26, 0x26, 0x26);
+    page_border(&mut d, wine, BorderStyle::Double, 2.0);
+    let price_tab = Some(vec![TabStop { pos: A4_TEXT, align: TabAlign::Right, leader: TabLeader::Dot }]);
+    let mut b = vec![
+        center_spaced("Menu", colored(wine, 40.0, true), 24.0, 0.0),
+        center("Nom du restaurant ou de l’événement", CharProps { italic: Some(true), ..colored(grey, 14.0, false) }),
+    ];
+    for (section, dishes) in [
+        ("Entrées", [("Velouté de saison, croûtons dorés", "8,00 €"), ("Salade de chèvre chaud au miel", "9,50 €")]),
+        ("Plats", [("Filet de poisson, beurre blanc et légumes", "18,00 €"), ("Suprême de volaille, sauce aux morilles", "17,50 €")]),
+        ("Desserts", [("Tarte fine aux pommes, crème fraîche", "7,00 €"), ("Moelleux au chocolat, glace vanille", "7,50 €")]),
+    ] {
+        b.push(center_spaced(&section.to_uppercase(), CharProps { spacing: Some(2.0), ..colored(wine, 14.0, true) }, 26.0, 8.0));
+        for (dish, price) in dishes {
+            let mut p = Paragraph::new();
+            add(&mut p, dish, colored(ink, 12.5, false));
+            add(&mut p, &format!("\t{price}"), colored(ink, 12.5, true));
+            p.props.tabs = price_tab.clone();
+            b.push(Block::Para(spaced(p, 0.0, 6.0)));
+        }
+    }
+    b.push(center_spaced("Menu complet (entrée, plat, dessert) : 29,00 €", colored(wine, 13.0, true), 26.0, 4.0));
+    b.push(center("Prix nets, service compris. Liste des allergènes disponible sur demande.", CharProps { italic: Some(true), ..colored(grey, 10.5, false) }));
+    blocks(&mut d, b);
+    d
+}
+
+/// Une attestation employeur (attestation de travail).
+pub fn employer_certificate_fr() -> Document {
+    let mut d = document_fr("Attestation employeur");
+    let navy = Rgb(0x1F, 0x3A, 0x5F);
+    let justified = |t: &str| Block::Para(aligned(para(t), Align::Justify));
+    let b = vec![
+        Block::Para(bold_para("Nom de l’entreprise")),
+        Block::Para(para("Adresse · Code postal Ville")),
+        Block::Para(para("SIRET : 000 000 000 00000 · Téléphone : 01 00 00 00 00")),
+        center_spaced("ATTESTATION EMPLOYEUR", CharProps { spacing: Some(2.0), ..colored(navy, 20.0, true) }, 48.0, 30.0),
+        justified(
+            "Je soussigné(e) Prénom Nom, agissant en qualité de fonction (gérant, directeur des ressources humaines…) de la société Nom de l’entreprise,",
+        ),
+        Block::Para(para("")),
+        justified(
+            "atteste que Madame / Monsieur Prénom Nom, né(e) le jj/mm/aaaa, demeurant Adresse, Code postal Ville, est employé(e) dans notre entreprise depuis le jj/mm/aaaa en qualité de intitulé du poste, dans le cadre d’un contrat à durée indéterminée (ou : déterminée, jusqu’au jj/mm/aaaa), à temps complet (ou : partiel).",
+        ),
+        Block::Para(para("")),
+        justified("À ce jour, l’intéressé(e) n’est ni démissionnaire, ni en période d’essai, ni sous le coup d’une procédure de licenciement."),
+        Block::Para(para("")),
+        justified("Cette attestation est délivrée à la demande de l’intéressé(e), pour servir et valoir ce que de droit."),
+        Block::Para(para("")),
+        Block::Para(aligned(para("Fait à Ville, le jj/mm/aaaa"), Align::Right)),
+        Block::Para(aligned(para("Prénom Nom, fonction"), Align::Right)),
+        Block::Para(aligned(run_para("Signature et cachet de l’entreprise", CharProps { italic: Some(true), ..Default::default() }), Align::Right)),
+    ];
+    blocks(&mut d, b);
+    d
+}
+
+/// Un devis : émetteur, client, lignes, totaux, validité et « bon pour accord ».
+pub fn quote_fr() -> Document {
+    let mut d = document_fr("Devis");
+    let mut no = para("Devis n° 2026-001 · Date : jj/mm/aaaa · Valable jusqu’au : jj/mm/aaaa");
+    no.props.space_after = Some(12.0);
+    let b = vec![
+        Block::Para(styled("Devis", "Title")),
+        Block::Para(no),
+        table(
+            &[
+                &["Émetteur", "Client"],
+                &["Nom ou raison sociale", "Nom ou raison sociale"],
+                &["Adresse", "Adresse"],
+                &["Code postal Ville", "Code postal Ville"],
+                &["SIRET : 000 000 000 00000", "Téléphone · courriel"],
+            ],
+            true,
+        ),
+        Block::Para(para("")),
+        Block::Para(bold_para("Objet : description de la prestation ou des travaux")),
+        Block::Para(para("")),
+        table(
+            &[
+                &["Désignation", "Quantité", "Prix unitaire HT", "Total HT"],
+                &["Prestation, fourniture ou main-d’œuvre", "1", "0,00 €", "0,00 €"],
+                &["Prestation, fourniture ou main-d’œuvre", "1", "0,00 €", "0,00 €"],
+                &["Prestation, fourniture ou main-d’œuvre", "1", "0,00 €", "0,00 €"],
+                &["", "", "Total HT", "0,00 €"],
+                &["", "", "TVA 20 %", "0,00 €"],
+                &["", "", "Total TTC", "0,00 €"],
+            ],
+            true,
+        ),
+        Block::Para(para("")),
+        Block::Para(bold_para("Conditions")),
+        Block::Para(para("Délai de réalisation : à convenir. Acompte de 30 % à la signature, solde à la livraison. Devis gratuit.")),
+        Block::Para(para("")),
+        table(&[&["Bon pour accord", ""], &["Date :", "Signature du client, précédée de la mention « Bon pour accord » :"], &["", ""]], true),
+    ];
+    blocks(&mut d, b);
+    d
+}
+
+/// Un certificat (de réussite, de participation…) : A4 à l'italienne dans un double cadre doré.
+pub fn certificate_fr() -> Document {
+    let mut d = document_fr("Certificat");
+    let s = &mut d.last_section;
+    s.page_w = A4_H;
+    s.page_h = A4_W;
+    s.landscape = true;
+    let gold = Rgb(0xA6, 0x7C, 0x1F);
+    let navy = Rgb(0x1F, 0x3A, 0x5F);
+    let grey = Rgb(0x59, 0x59, 0x59);
+    page_border(&mut d, gold, BorderStyle::Double, 4.5);
+    let width = A4_H - 2.0 * 72.0;
+    let mut sign = Table::new(2, 2, width);
+    sign.props.style = None;
+    for (c, label) in ["Date", "Signature"].iter().enumerate() {
+        if let Some(cell) = sign.rows.get_mut(0).and_then(|r| r.cells.get_mut(c)) {
+            cell.blocks = vec![para_block(aligned(spaced(para("______________________"), 30.0, 0.0), Align::Center))];
+        }
+        if let Some(cell) = sign.rows.get_mut(1).and_then(|r| r.cells.get_mut(c)) {
+            cell.blocks = vec![para_block(aligned(run_para(label, colored(grey, 11.0, false)), Align::Center))];
+        }
+    }
+    let b = vec![
+        center_spaced("CERTIFICAT", CharProps { spacing: Some(6.0), ..colored(navy, 40.0, true) }, 6.0, 0.0),
+        center("de réussite", CharProps { italic: Some(true), ..colored(gold, 20.0, false) }),
+        center_spaced("décerné à", colored(grey, 14.0, false), 26.0, 6.0),
+        center_spaced("Prénom Nom", colored(navy, 34.0, true), 0.0, 14.0),
+        center("pour avoir suivi avec succès la formation « Intitulé de la formation »", colored(grey, 14.0, false)),
+        center("organisée par Nom de l’organisme, du jj/mm/aaaa au jj/mm/aaaa.", colored(grey, 14.0, false)),
+        Block::Para(para("")),
+        Block::Table(sign),
+    ];
+    blocks(&mut d, b);
+    d
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -738,6 +948,12 @@ mod tests {
             resume_creative_fr(),
             business_cards_fr(),
             brochure_fr(),
+            invitation_fr(),
+            birth_announcement_fr(),
+            menu_fr(),
+            employer_certificate_fr(),
+            quote_fr(),
+            certificate_fr(),
         ] {
             assert!(d.word_count() > 5);
             let l = wordcraft_layout::layout(&d, &mut wordcraft_layout::LayoutCache::new(), &Default::default());

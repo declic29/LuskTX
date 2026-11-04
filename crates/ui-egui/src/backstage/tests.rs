@@ -354,16 +354,26 @@ fn template_search_matches_labels_case_insensitively() {
             "resumeCreative",
             "minutes",
             "report",
+            "quote",
             "invoice",
             "memo",
             "attestation",
+            "employerCertificate",
             "businessCards",
             "brochure",
+            "invitation",
+            "birthAnnouncement",
+            "menu",
+            "certificate",
             "sample"
         ]
     );
     assert_eq!(ids("  LETTER "), ["letter"]);
-    assert_eq!(ids("re"), ["letter", "coverLetter", "resume", "resumeSerious", "resumeCreative", "minutes", "report", "invoice", "brochure"]);
+    assert_eq!(
+        ids("re"),
+        ["letter", "coverLetter", "resume", "resumeSerious", "resumeCreative", "minutes", "report", "invoice", "brochure", "birthAnnouncement"]
+    );
+    assert_eq!(ids("attestation"), ["attestation", "employerCertificate"]);
     assert_eq!(ids("cv"), ["resume", "resumeSerious", "resumeCreative"]);
     assert_eq!(ids("facture"), ["invoice"]);
     assert!(ids("no such template").is_empty());

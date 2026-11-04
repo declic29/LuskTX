@@ -92,8 +92,8 @@ pub fn tool_definitions() -> Value {
         tool(
             "new_document",
             "New document",
-            "Start a document: blank, sample, letter, resume, report, coverLetter, minutes, invoice, memo, attestation, resumeSerious, resumeCreative, businessCards or brochure. It opens beside the documents already open and becomes the active one; the reply's `id` addresses it (`doc`).",
-            obj(json!({"template": s("blank|sample|letter|resume|report|coverLetter|minutes|invoice|memo|attestation|resumeSerious|resumeCreative|businessCards|brochure")}), &[]),
+            "Start a document: blank, sample, letter, resume, report, coverLetter, minutes, invoice, memo, attestation, resumeSerious, resumeCreative, businessCards, brochure, invitation, birthAnnouncement, menu, employerCertificate, quote or certificate. It opens beside the documents already open and becomes the active one; the reply's `id` addresses it (`doc`).",
+            obj(json!({"template": s("blank|sample|letter|resume|report|coverLetter|minutes|invoice|memo|attestation|resumeSerious|resumeCreative|businessCards|brochure|invitation|birthAnnouncement|menu|employerCertificate|quote|certificate")}), &[]),
             false
         ),
         tool(

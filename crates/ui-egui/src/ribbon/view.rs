@@ -91,8 +91,13 @@ pub(super) fn view(app: &mut WordApp, ui: &mut Ui) {
     });
     group(ui, "Window", None, app, |ui, app| {
         big(ui, app, "newWindow", "New\nWindow", "view.newWindow", json!({}), false);
-        big(ui, app, "arrangeAll", "Arrange\nAll", "view.arrangeAll", json!({}), false);
+        big(ui, app, "arrangeAll", "Arrange\nAll", "ui.arrangeAll", json!({}), false);
         big(ui, app, "split", "Split", "view.split", json!({}), false);
+        // Lusk Texte : comparer deux documents côte à côte, en défilant ensemble.
+        let side = app.side_by_side_on();
+        big_toggle(ui, app, "sideBySide", "Côte\nà côte", "ui.sideBySide", side);
+        let sync = app.sync_scroll_on();
+        big_toggle(ui, app, "syncScroll", "Défilement\nsynchrone", "ui.syncScroll", sync);
         menu_button(
             ui,
             app,

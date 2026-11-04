@@ -485,6 +485,21 @@ impl WordApp {
     pub(crate) fn ui_command(&mut self, id: &str, p: &Value) -> Option<Result<Value, String>> {
         let s = |k: &str| p.get(k).and_then(Value::as_str);
         Some(Ok(match id {
+            // Affichage › Fenêtre : Côte à côte, Défilement synchrone, Réorganiser tout.
+            "ui.sideBySide" | "ui.syncScroll" | "ui.arrangeAll" => {
+                let r = match id {
+                    "ui.sideBySide" => self.toggle_side_by_side(),
+                    "ui.syncScroll" => self.toggle_sync_scroll(),
+                    _ => self.arrange_all(),
+                };
+                match r {
+                    Ok(v) => v,
+                    Err(e) => {
+                        self.status(e.clone());
+                        return Some(Err(e));
+                    }
+                }
+            }
             // Accueil › Voix › Dicter : la saisie vocale du système écrit au curseur.
             "ui.dictate" => {
                 let Some(start) = &self.services.dictate else {
