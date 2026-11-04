@@ -82,6 +82,9 @@ pub struct Services {
     pub forget_font: Option<Box<dyn Fn(&str)>>,
     /// Web: request browser to query and load local installed fonts (`window.queryLocalFonts()`).
     pub load_system_fonts: Option<Box<dyn Fn()>>,
+    /// Lusk Texte : Accueil › Voix › Dicter. Starts the system's voice typing (Windows + H on
+    /// Windows), which writes at the caret; the error says why it couldn't. None: no dictation.
+    pub dictate: Option<Box<dyn Fn() -> Result<(), String>>>,
     /// Desktop: File › Options › General › Make WordCraft the default for Word documents (#295),
     /// only from that button (never a programmatic command). Windows opens the Settings app's
     /// Default apps page (apps can't set defaults themselves); Linux and BSD set it with

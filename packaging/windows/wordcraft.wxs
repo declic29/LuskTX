@@ -3,18 +3,18 @@
   <?ifndef HasCraftFontLicences ?>
   <?define HasCraftFontLicences=0 ?>
   <?endif?>
-  <Package Name="WordCraft" Manufacturer="Learning Machines LLC" Version="$(var.Version)" UpgradeCode="075497F9-E861-45D0-9C7F-A74F8C34E6BA" Scope="perUserOrMachine" Compressed="yes" Language="1033">
-    <SummaryInformation Description="WordCraft word processor" Manufacturer="Learning Machines LLC" />
+  <Package Name="Lusk Texte" Manufacturer="Learning Machines LLC" Version="$(var.Version)" UpgradeCode="075497F9-E861-45D0-9C7F-A74F8C34E6BA" Scope="perUserOrMachine" Compressed="yes" Language="1033">
+    <SummaryInformation Description="Lusk Texte, traitement de texte" Manufacturer="Learning Machines LLC" />
     <?include $(sys.SOURCEFILEDIR)install-policy.wxi?>
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
-    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of WordCraft is already installed." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Une version plus récente de Lusk Texte est déjà installée." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon Id="WordcraftIcon.ico" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="WordcraftIcon.ico" />
-    <Property Id="ARPURLINFOABOUT" Value="https://getartcraft.com/apps/wordcraft" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://getartcraft.com/apps/wordcraft" />
+    <Property Id="ARPURLINFOABOUT" Value="https://www.lusk.bzh" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://www.lusk.bzh" />
     <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
 
     <!-- Installer UI (#198): WixUI_Minimal is welcome + license, progress, then a finish page so
@@ -23,7 +23,7 @@
          LICENSE-APACHE. The finish page offers to launch WordCraft (ticked by default) through
          WixShellExec (WixToolset.Util.wixext); silent installs (/qn) never show it. -->
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch WordCraft" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Lancer Lusk Texte" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <Property Id="WixShellExecTarget" Value="[#WordcraftExe]" />
     <CustomAction Id="LaunchWordcraft" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
@@ -34,12 +34,12 @@
 
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="CraftSuiteFolder" Name="ArtCraft">
-        <Directory Id="INSTALLFOLDER" Name="WordCraft" />
+        <Directory Id="INSTALLFOLDER" Name="Lusk Texte" />
       </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
 
-    <Feature Id="Main" Title="WordCraft" Level="1">
+    <Feature Id="Main" Title="Lusk Texte" Level="1">
       <ComponentGroupRef Id="AppNotices" />
       <?if $(var.HasCraftFontLicences) = 1 ?>
       <ComponentGroupRef Id="CraftFontLicences" />
@@ -60,11 +60,11 @@
     <ComponentGroup Id="WordcraftFiles" Directory="INSTALLFOLDER">
       <Component Id="WordcraftApp" Guid="855DCEC6-9285-444F-9382-9654B83B34F6">
         <File Id="WordcraftExe" Source="$(var.BinDir)\wordcraft.exe" KeyPath="yes">
-          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="WordCraft" Description="WordCraft word processor" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="WordcraftIcon.ico" IconIndex="0" />
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Lusk Texte" Description="Lusk Texte, traitement de texte" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="WordcraftIcon.ico" IconIndex="0" />
         </File>
 
         <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\wordcraft.exe" Value="[#WordcraftExe]" Type="string" />
-      <RegistryValue Root="HKMU" Key="Software\WordCraft" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+      <RegistryValue Root="HKMU" Key="Software\LuskTexte" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
       </Component>
 
       <!-- File associations (#295). Each document type gets a WordCraft ProgId (name, icon, open
@@ -75,69 +75,69 @@
            extension's default: the installer never takes over .docx from another app. Markdown and
            plain text are only "Open with" candidates. Removed again on uninstall. -->
       <Component Id="WordcraftFileTypes" Guid="EFF89E6A-F9B8-49F9-B3AE-E243347484B4">
-        <RegistryValue Root="HKMU" Key="Software\RegisteredApplications" Name="WordCraft" Value="Software\WordCraft\Capabilities" Type="string" KeyPath="yes" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities" Name="ApplicationName" Value="WordCraft" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities" Name="ApplicationDescription" Value="Write and design documents; open and save Word files." Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities" Name="ApplicationIcon" Value="&quot;[#WordcraftExe]&quot;,0" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe" Name="FriendlyAppName" Value="WordCraft" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\RegisteredApplications" Name="LuskTexte" Value="Software\LuskTexte\Capabilities" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities" Name="ApplicationName" Value="Lusk Texte" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities" Name="ApplicationDescription" Value="Rédigez et mettez en page vos documents ; ouvrez et enregistrez des fichiers Word." Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities" Name="ApplicationIcon" Value="&quot;[#WordcraftExe]&quot;,0" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe" Name="FriendlyAppName" Value="Lusk Texte" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
 
-        <ProgId Id="WordCraft.Document" Description="Word Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.Document\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.docx\OpenWithProgids" Name="WordCraft.Document" Value="" Type="string" />
+        <ProgId Id="LuskTexte.Document" Description="Word Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.Document\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.docx\OpenWithProgids" Name="LuskTexte.Document" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".docx" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".docx" Value="WordCraft.Document" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".docx" Value="LuskTexte.Document" Type="string" />
 
-        <ProgId Id="WordCraft.DocumentMacroEnabled" Description="Word Macro-Enabled Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.DocumentMacroEnabled\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.docm\OpenWithProgids" Name="WordCraft.DocumentMacroEnabled" Value="" Type="string" />
+        <ProgId Id="LuskTexte.DocumentMacroEnabled" Description="Word Macro-Enabled Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.DocumentMacroEnabled\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.docm\OpenWithProgids" Name="LuskTexte.DocumentMacroEnabled" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".docm" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".docm" Value="WordCraft.DocumentMacroEnabled" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".docm" Value="LuskTexte.DocumentMacroEnabled" Type="string" />
 
-        <ProgId Id="WordCraft.Template" Description="Word Template" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.Template\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.dotx\OpenWithProgids" Name="WordCraft.Template" Value="" Type="string" />
+        <ProgId Id="LuskTexte.Template" Description="Word Template" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.Template\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dotx\OpenWithProgids" Name="LuskTexte.Template" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".dotx" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".dotx" Value="WordCraft.Template" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".dotx" Value="LuskTexte.Template" Type="string" />
 
-        <ProgId Id="WordCraft.TemplateMacroEnabled" Description="Word Macro-Enabled Template" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.TemplateMacroEnabled\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.dotm\OpenWithProgids" Name="WordCraft.TemplateMacroEnabled" Value="" Type="string" />
+        <ProgId Id="LuskTexte.TemplateMacroEnabled" Description="Word Macro-Enabled Template" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.TemplateMacroEnabled\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dotm\OpenWithProgids" Name="LuskTexte.TemplateMacroEnabled" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".dotm" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".dotm" Value="WordCraft.TemplateMacroEnabled" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".dotm" Value="LuskTexte.TemplateMacroEnabled" Type="string" />
 
-        <ProgId Id="WordCraft.LegacyDocument" Description="Legacy Word Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.LegacyDocument\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.doc\OpenWithProgids" Name="WordCraft.LegacyDocument" Value="" Type="string" />
+        <ProgId Id="LuskTexte.LegacyDocument" Description="Legacy Word Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.LegacyDocument\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.doc\OpenWithProgids" Name="LuskTexte.LegacyDocument" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".doc" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".doc" Value="WordCraft.LegacyDocument" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".doc" Value="LuskTexte.LegacyDocument" Type="string" />
 
-        <ProgId Id="WordCraft.LegacyTemplate" Description="Legacy Word Template" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.LegacyTemplate\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.dot\OpenWithProgids" Name="WordCraft.LegacyTemplate" Value="" Type="string" />
+        <ProgId Id="LuskTexte.LegacyTemplate" Description="Legacy Word Template" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.LegacyTemplate\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.dot\OpenWithProgids" Name="LuskTexte.LegacyTemplate" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".dot" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".dot" Value="WordCraft.LegacyTemplate" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".dot" Value="LuskTexte.LegacyTemplate" Type="string" />
 
-        <ProgId Id="WordCraft.RichText" Description="Rich Text Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.RichText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.rtf\OpenWithProgids" Name="WordCraft.RichText" Value="" Type="string" />
+        <ProgId Id="LuskTexte.RichText" Description="Rich Text Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.RichText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.rtf\OpenWithProgids" Name="LuskTexte.RichText" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".rtf" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".rtf" Value="WordCraft.RichText" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".rtf" Value="LuskTexte.RichText" Type="string" />
 
-        <ProgId Id="WordCraft.OpenDocumentText" Description="OpenDocument Text" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.OpenDocumentText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.odt\OpenWithProgids" Name="WordCraft.OpenDocumentText" Value="" Type="string" />
+        <ProgId Id="LuskTexte.OpenDocumentText" Description="OpenDocument Text" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.OpenDocumentText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.odt\OpenWithProgids" Name="LuskTexte.OpenDocumentText" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".odt" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\WordCraft\Capabilities\FileAssociations" Name=".odt" Value="WordCraft.OpenDocumentText" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskTexte\Capabilities\FileAssociations" Name=".odt" Value="LuskTexte.OpenDocumentText" Type="string" />
 
-        <ProgId Id="WordCraft.Markdown" Description="Markdown Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.Markdown\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.md\OpenWithProgids" Name="WordCraft.Markdown" Value="" Type="string" />
+        <ProgId Id="LuskTexte.Markdown" Description="Markdown Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.Markdown\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.md\OpenWithProgids" Name="LuskTexte.Markdown" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".md" Value="" Type="string" />
 
-        <ProgId Id="WordCraft.PlainText" Description="Text Document" Icon="WordcraftExe" IconIndex="0" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\WordCraft.PlainText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.txt\OpenWithProgids" Name="WordCraft.PlainText" Value="" Type="string" />
+        <ProgId Id="LuskTexte.PlainText" Description="Text Document" Icon="WordcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskTexte.PlainText\shell\open\command" Value="&quot;[#WordcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.txt\OpenWithProgids" Name="LuskTexte.PlainText" Value="" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\wordcraft.exe\SupportedTypes" Name=".txt" Value="" Type="string" />
       </Component>
 

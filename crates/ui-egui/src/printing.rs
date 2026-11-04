@@ -1,5 +1,4 @@
 //! Localized print-page wording around the shared, backend-independent controls.
-use craft_ui::printing::Labels;
 pub use craft_ui::printing::{Discover, Duplex, Feedback, Printer, Settings, State};
 
 /// Native submission adds WordCraft's PDF-page collation setting and spooler options to the shared spooler settings.
@@ -22,19 +21,65 @@ pub fn commands(app: &crate::WordApp) -> Vec<serde_json::Value> {
 /// Builds translated print labels, draws the shared print-settings panel, and shows the current
 /// feedback message.
 pub fn show(state: &mut State, ui: &mut egui::Ui, discover: &Discover, translate: impl Fn(&str) -> String) {
-    let labels = Labels {
-        printer: &translate("Printer"),
-        select_printer: &translate("Select a printer"),
-        refresh: &translate("Refresh printers"),
-        copies: &translate("Copies"),
-        duplex: &translate("Two-sided printing"),
-        printer_default: &translate("Printer default"),
-        one_sided: &translate("One-sided"),
-        long_edge: &translate("Two-sided: long edge"),
-        short_edge: &translate("Two-sided: short edge"),
-        grayscale: &translate("Grayscale"),
-    };
-    state.show(ui, egui::Id::unique("wordcraft_print_settings"), discover, &labels);
+    // Lusk Texte : les réglages de `craft_ui::printing::State::show` (imprimante, copies, recto
+    // verso, niveaux de gris), avec une icône devant chaque intitulé comme dans les autres pages
+    // du menu Fichier. La liste des imprimantes est cherchée la première fois que la page s'affiche.
+    let loaded = egui::Id::unique("lusk_printers_loaded");
+    if !ui.ctx().data(|d| d.get_temp::<bool>(loaded).unwrap_or(false)) && state.refresh(discover) {
+        ui.ctx().data_mut(|d| d.insert_temp(loaded, true));
+    }
+    state.poll(ui.ctx());
+    let t = &translate;
+    ui.push_id(egui::Id::unique("wordcraft_print_settings"), |ui| {
+        ui.add_enabled_ui(!state.busy(), |ui| {
+            let width = ui.available_width().clamp(32.0, 230.0);
+            let printer_label = crate::print_page::icon_label(ui, "print", &t("Printer"));
+            let shown = craft_ui::printing::shown_names(&state.printers);
+            let selected = state.printers.iter().zip(&shown).find(|(p, _)| p.name == state.settings.printer).map(|(_, text)| text.clone());
+            let current = if state.settings.printer.is_empty() { t("Select a printer") } else { selected.unwrap_or_else(|| state.settings.printer.clone()) };
+            craft_ui::ComboBox::from_id_salt("printer")
+                .width(width)
+                .wrap_mode(egui::TextWrapMode::Truncate)
+                .selected_text(current)
+                .show_ui(ui, |ui| {
+                    for (printer, text) in state.printers.iter().zip(&shown) {
+                        ui.selectable_value(&mut state.settings.printer, printer.name.clone(), text);
+                    }
+                })
+                .response
+                .labelled_by(printer_label.id);
+            if ui.add_enabled(!state.discovering(), egui::Button::new(t("Refresh printers"))).clicked() {
+                state.refresh(discover);
+            }
+            ui.horizontal(|ui| {
+                let label = crate::print_page::icon_label(ui, "copy", &t("Copies"));
+                ui.add(egui::DragValue::new(&mut state.settings.copies).range(1..=999)).labelled_by(label.id);
+            });
+            let choices = [
+                (None, t("Printer default")),
+                (Some(Duplex::Off), t("One-sided")),
+                (Some(Duplex::LongEdge), t("Two-sided: long edge")),
+                (Some(Duplex::ShortEdge), t("Two-sided: short edge")),
+            ];
+            let duplex_label = crate::print_page::icon_label(ui, "duplex", &t("Two-sided printing"));
+            let current = choices.iter().find(|(value, _)| *value == state.settings.duplex).map_or_else(|| t("Printer default"), |(_, text)| text.clone());
+            craft_ui::ComboBox::from_id_salt("duplex")
+                .width(width)
+                .wrap_mode(egui::TextWrapMode::Truncate)
+                .selected_text(current)
+                .show_ui(ui, |ui| {
+                    for (value, text) in &choices {
+                        ui.selectable_value(&mut state.settings.duplex, *value, text.as_str());
+                    }
+                })
+                .response
+                .labelled_by(duplex_label.id);
+            ui.horizontal(|ui| {
+                crate::print_page::paint_icon(ui, "grayscale");
+                ui.checkbox(&mut state.settings.grayscale, t("Grayscale"));
+            });
+        });
+    });
     if let Some(message) = &state.message {
         ui.label(feedback(message, translate));
     }

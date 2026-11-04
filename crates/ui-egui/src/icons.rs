@@ -1388,6 +1388,26 @@ fn paint_file_and_tools(pen: &Pen, name: &str) -> bool {
         }
 
         // The built-in file browser (#576): a folder, a file and the home folder.
+        // Lusk Texte : recto verso, une page devant une autre marquée « 2 ».
+        "duplex" => {
+            pen.line(&[(9.0, 17.0), (3.0, 17.0), (3.0, 5.0), (7.5, 5.0)]);
+            pen.page(8.5, 2.5, 16.5, 14.5);
+            pen.text(12.5, 9.0, 6.5, "2", a, true);
+        }
+        // Lusk Texte : niveaux de gris, un carré mi-foncé mi-clair.
+        "grayscale" => {
+            pen.frect(4.0, 4.0, 10.0, 16.0, Color32::from_gray(90));
+            pen.frect(10.0, 4.0, 16.0, 16.0, Color32::from_gray(205));
+            pen.rect(4.0, 4.0, 16.0, 16.0, c);
+        }
+        // Lusk Texte : un nuage, pour l'espace de stockage en ligne (OneDrive).
+        "cloud" => {
+            let blue = Color32::from_rgb(0x1E, 0x78, 0xD4);
+            pen.fcircle(6.5, 12.0, 3.5, blue);
+            pen.fcircle(10.5, 9.0, 4.5, blue);
+            pen.fcircle(14.5, 11.5, 3.5, blue);
+            pen.frect(6.5, 11.0, 14.5, 15.5, blue);
+        }
         "folder" => {
             pen.frect(2.5, 4.5, 8.5, 7.0, yellow);
             pen.frect(2.5, 6.5, 17.5, 16.0, yellow);

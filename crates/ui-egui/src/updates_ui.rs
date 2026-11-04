@@ -5,6 +5,12 @@ use crate::WordApp;
 #[cfg(not(target_arch = "wasm32"))]
 use craft_update::updater::{Action, Status, Updater};
 
+/// Lusk Texte : where its releases are published (GitHub Releases of `declic29/LuskTX`), instead
+/// of WordCraft's. The id stays `wordcraft` so release assets keep the names the packaging
+/// scripts give them (`wordcraft-<version>-…`).
+#[cfg(not(target_arch = "wasm32"))]
+pub const LUSK_TEXTE: craft_update::app::App = craft_update::app::App::new("wordcraft", "Lusk Texte", "Traitement de texte", "declic29/LuskTX");
+
 pub(crate) struct Runtime {
     #[cfg(not(target_arch = "wasm32"))]
     updater: Updater,
@@ -24,7 +30,7 @@ impl Default for Runtime {
     fn default() -> Self {
         Self {
             #[cfg(not(target_arch = "wasm32"))]
-            updater: Updater::new(&craft_update::suite::WORDCRAFT, env!("CARGO_PKG_VERSION")),
+            updater: Updater::new(&LUSK_TEXTE, env!("CARGO_PKG_VERSION")),
             #[cfg(not(target_arch = "wasm32"))]
             startup_check: false,
             #[cfg(not(target_arch = "wasm32"))]
@@ -92,7 +98,7 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
             Status::Idle => (false, None),
             Status::Checking => (true, None),
             Status::UpToDate => {
-                (true, Some(tl!("WordCraft {version} is currently the newest version available.").replace("{version}", env!("CARGO_PKG_VERSION"))))
+                (true, Some(tl!("Lusk Texte {version} is currently the newest version available.").replace("{version}", env!("CARGO_PKG_VERSION"))))
             }
             Status::Failed(e) => (true, Some(tl!("Could not check for updates:\n{error}").replace("{error}", e))),
         };

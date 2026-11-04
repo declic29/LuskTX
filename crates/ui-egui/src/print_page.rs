@@ -201,7 +201,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         ui.add_enabled(!app.printing.busy(), egui::Checkbox::new(&mut app.ui.print.collate, tl!("Collate copies")));
                     }
                 } else {
-                    let copies_label = ui.label(egui::RichText::new(tl!("Copies")).font(medium(13.0)));
+                    let copies_label = icon_label(ui, "copy", tl!("Copies"));
                     ui.horizontal(|ui| {
                         let mut n = app.ui.print.copies;
                         ui.add(egui::DragValue::new(&mut n).range(1..=wordcraft_engine::print::MAX_COPIES).speed(0.2)).labelled_by(copies_label.id);
@@ -212,7 +212,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                     });
                 }
 
-                let pages_label = ui.label(egui::RichText::new(tl!("Pages")).font(medium(13.0)));
+                let pages_label = icon_label(ui, "multiplePages", tl!("Pages"));
                 if choice(ui, "print_range", &mut app.ui.print.range, &RANGES, &pages_label) {
                     // Show the first page that will print.
                     app.ui.print.preview = if app.ui.print.range == "all" { 0 } else { current.0.min(total.saturating_sub(1)) };
@@ -227,10 +227,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                     .labelled_by(pages_label.id);
                 }
                 choice_named(ui, "print_parity", &mut app.ui.print.parity, &PARITIES, tl!("Pages in the range"));
-                let orientation_label = ui.label(egui::RichText::new(tl!("Orientation")).font(medium(13.0)));
+                let orientation_label = icon_label(ui, "orientation", tl!("Orientation"));
                 choice(ui, "print_orientation", &mut app.ui.print.orientation, &ORIENTATIONS, &orientation_label);
                 // Word: Pages per sheet › Scale to paper size. Only the printout changes.
-                let paper_label = ui.label(egui::RichText::new(tl!("Scale to paper size")).font(medium(13.0)));
+                let paper_label = icon_label(ui, "size", tl!("Scale to paper size"));
                 let papers: Vec<(&str, &str)> =
                     std::iter::once((NO_SCALING, "No Scaling")).chain(wordcraft_geom::PAPER_SIZES.iter().map(|(n, _, _)| (*n, *n))).collect();
                 choice(ui, "print_paper", &mut app.ui.print.paper, &papers, &paper_label);
@@ -370,4 +370,21 @@ pub fn export_formats(app: &mut WordApp, ui: &mut Ui) {
         }
         ui.add_space(4.0);
     }
+}
+
+/// Lusk Texte : une icône de 16 points, dans la couleur des icônes de l'interface.
+pub(crate) fn paint_icon(ui: &mut Ui, icon: &str) {
+    let t = Tokens::get(ui.ctx());
+    let (r, _) = ui.allocate_exact_size(vec2(16.0, 16.0), Sense::hover());
+    icons::paint(ui.painter(), r, icon, t.icon, t.accent);
+}
+
+/// Lusk Texte : l'intitulé d'un réglage précédé de son icône. Renvoie l'intitulé, pour y relier
+/// le contrôle (`labelled_by`).
+pub(crate) fn icon_label(ui: &mut Ui, icon: &str, text: &str) -> egui::Response {
+    ui.horizontal(|ui| {
+        paint_icon(ui, icon);
+        ui.label(egui::RichText::new(text).font(medium(13.0)))
+    })
+    .inner
 }

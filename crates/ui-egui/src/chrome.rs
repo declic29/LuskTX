@@ -4,7 +4,7 @@ use egui::{Align2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::json;
 use wordcraft_doc::{PartKind, StoryRef};
 
-use crate::theme::{Tokens, TypeRung, fit_text, medium, paint_text, regular, semibold, text_width};
+use crate::theme::{Tokens, TypeRung, fit_text, paint_text, regular, semibold, text_width};
 use crate::{WordApp, icons};
 
 /// Why the caret's language isn't spell-checked (dictionary unreadable or missing), if it isn't.
@@ -16,7 +16,7 @@ pub(crate) fn dictionary_problem(lang: &str, unreadable: &Option<(std::path::Pat
         )),
         (None, Some(name)) => Some(crate::i18n::fmt(
             tl!(
-                "No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations."
+                "No spelling dictionary for {language} is installed, so it isn't checked. Lusk Texte looks for the Hunspell dictionary {name} in its dictionaries folder and in the usual system locations."
             ),
             &[("language", lang), ("name", name)],
         )),
@@ -346,12 +346,16 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                 }
                 qat_end = ui.min_rect().max.x;
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    // Account / community.
-                    let (r, resp) = ui.allocate_exact_size(vec2(control_h, control_h), Sense::click());
-                    ui.painter().circle_filled(r.center(), control_h / 2.0 - 1.0, t.accent);
+                    // Account / community: le logo Lusk Texte (remplace la pastille d'initiales).
+                    let logo = account_logo(ui.ctx());
+                    let logo_size = logo.size_vec2();
+                    let logo_w = control_h * logo_size.x / logo_size.y;
+                    let (r, resp) = ui.allocate_exact_size(vec2(logo_w, control_h), Sense::click());
+                    if resp.hovered() {
+                        ui.painter().rect_filled(r.expand(2.0), 4.0, t.hover);
+                    }
+                    ui.painter().image(logo.id(), r, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, tl!("Account")));
-                    let initials: String = app.session.user_initials().chars().take(2).collect();
-                    ui.painter().text(r.center(), Align2::CENTER_CENTER, initials, semibold(10.5), t.on_accent);
                     if resp.on_hover_text(format!("{} — set your name in File › Options", app.session.author)).clicked() {
                         let _ = app.run("ui.backstage", json!({"value": true, "page": "options", "pane": "general"}));
                     }
@@ -448,6 +452,24 @@ fn search_box(app: &mut WordApp, ui: &mut Ui, control_h: f32) {
 
 /// Barre de recherche Lusk: ouvre le métamoteur breton dans le navigateur par défaut.
 /// Seul le texte tapé dans ce champ est envoyé; jamais le contenu du document.
+/// Le logo Lusk Texte du bouton de compte, intégré au binaire et chargé une seule fois en texture.
+pub(crate) fn account_logo(ctx: &egui::Context) -> egui::TextureHandle {
+    let id = egui::Id::unique("account_logo");
+    if let Some(h) = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)) {
+        return h;
+    }
+    let img = image::load_from_memory(include_bytes!("../../../assets/logo-lusk-texte.png"))
+        .expect("assets/logo-lusk-texte.png doit être un PNG valide")
+        .to_rgba8();
+    let h = ctx.load_texture(
+        "account_logo",
+        egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw()),
+        egui::TextureOptions::LINEAR,
+    );
+    ctx.data_mut(|d| d.insert_temp(id, h.clone()));
+    h
+}
+
 fn lusk_box(ui: &mut Ui, control_h: f32) {
     // Adresse de la page de résultats de Lusk, avec {q} à la place du texte cherché.
     // Exemple: Some("https://www.lusk.bzh/<chemin>?q={q}")
@@ -464,7 +486,7 @@ fn lusk_box(ui: &mut Ui, control_h: f32) {
             .collect()
     }
 
-    let id = egui::Id::new("lusk_search_query");
+    let id = egui::Id::unique("lusk_search_query");
     let mut texte: String = ui.data_mut(|d| d.get_temp::<String>(id).unwrap_or_default());
     let mut lancer = false;
 

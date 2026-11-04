@@ -227,7 +227,7 @@ fn controls(tab: &str) -> Vec<Control> {
             c("Find", "edit.find"),
             d("Replace", "replace"),
             m("Select", "select.all"),
-            c("Dictate", "tools.dictate"),
+            c("Dictate", "ui.dictate"),
             c("Editor", "review.spelling"),
         ],
         "Insert" => vec![

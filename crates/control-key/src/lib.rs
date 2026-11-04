@@ -4,22 +4,38 @@
 use std::path::{Path, PathBuf};
 
 /// The app's settings folder (preferences, logs, key files): macOS
-/// `~/Library/Application Support/WordCraft`, Windows `%APPDATA%\WordCraft`, otherwise
-/// `$XDG_CONFIG_HOME/wordcraft` or `~/.config/wordcraft`.
+/// `~/Library/Application Support/Lusk Texte`, Windows `%APPDATA%\LuskTexte`, otherwise
+/// `$XDG_CONFIG_HOME/lusk-texte` or `~/.config/lusk-texte`. The folder WordCraft used before
+/// (`WordCraft` / `wordcraft`) is moved there the first time ([`migrated`]).
 /// `WORDCRAFT_PROFILE_DIR` overrides the entire folder for isolated runs.
 pub fn settings_dir() -> Option<PathBuf> {
     if let Some(path) = std::env::var_os("WORDCRAFT_PROFILE_DIR").filter(|p| !p.is_empty()) {
         return Some(PathBuf::from(path));
     }
-    if cfg!(target_os = "macos") {
-        std::env::var_os("HOME").map(|h| PathBuf::from(h).join("Library/Application Support/WordCraft"))
+    let (base, new, old) = if cfg!(target_os = "macos") {
+        (std::env::var_os("HOME").map(|h| PathBuf::from(h).join("Library/Application Support")), "Lusk Texte", "WordCraft")
     } else if cfg!(windows) {
-        std::env::var_os("APPDATA").map(|a| PathBuf::from(a).join("WordCraft"))
+        (std::env::var_os("APPDATA").map(PathBuf::from), "LuskTexte", "WordCraft")
     } else {
-        std::env::var_os("XDG_CONFIG_HOME")
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
-            .map(|c| c.join("wordcraft"))
+        (
+            std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config"))),
+            "lusk-texte",
+            "wordcraft",
+        )
+    };
+    base.map(|b| migrated(b.join(new), b.join(old)))
+}
+
+/// Lusk Texte : les réglages enregistrés sous l'ancien nom (WordCraft) passent une fois pour
+/// toutes dans le nouveau dossier, par un simple renommage. Tant que ce renommage n'a pas pu se
+/// faire (l'ancien dossier ouvert par une autre instance, par exemple), l'ancien dossier sert.
+fn migrated(new: PathBuf, old: PathBuf) -> PathBuf {
+    if new.exists() || !old.is_dir() {
+        return new;
+    }
+    match std::fs::rename(&old, &new) {
+        Ok(()) => new,
+        Err(_) => old,
     }
 }
 
@@ -81,7 +97,7 @@ mod tests {
     fn settings_dir_is_the_apps_folder() {
         if let Some(d) = settings_dir() {
             let name = d.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            assert!(name == "wordcraft" || name == "WordCraft", "{}", d.display());
+            assert!(["lusk-texte", "LuskTexte", "Lusk Texte", "wordcraft", "WordCraft"].contains(&name), "{}", d.display());
         }
     }
 }

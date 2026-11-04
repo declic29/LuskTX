@@ -237,6 +237,18 @@ fn handle_primary_press(
     if clicks <= 1 {
         app.canvas.hf_press_switched = false;
     }
+    // Lusk Texte : un simple clic dans le corps du texte quitte l'en-tête ou le pied de page
+    // (Word demande un double-clic, ce qui laisse croire qu'on ne peut plus écrire dans la page).
+    if !mods.shift && hf_zone.is_none() && matches!(part_kind(app, story), Some(PartKind::Header | PartKind::Footer)) && !in_text_box(app) {
+        app.canvas.column_drag = None;
+        app.canvas.hf_press_switched = true;
+        let _ = app.run("insert.closeHeader", json!({}));
+        if let Some(pos) = app.session.layout().hit(page, x, y, StoryRef::Body) {
+            app.session.sel = wordcraft_engine::Selection::caret(pos);
+        }
+        app.session.page_hint = page;
+        return;
+    }
     // A double-click that enters or leaves a header/footer is handled on release.
     let hf_switch = hf_enter || app.canvas.hf_press_switched || (matches!(story, StoryRef::Part(_)) && !in_text_box(app) && hf_zone.is_none());
     // Clicking into a footnote/endnote or a text box edits it; clicking outside a text box goes
@@ -383,10 +395,16 @@ fn pointer_story(app: &WordApp, layout: &DocLayout, page: usize, x: f32, y: f32,
 
 fn handle_completed_click(app: &mut WordApp, pointer: &PagePointer<'_>) -> bool {
     let PagePointer { resp, layout, page, x, y, story, .. } = *pointer;
+    // Lusk Texte : egui compte les clics dans toute la fenêtre, si bien qu'un double-clic sur
+    // « Document vierge » (ou sur un bouton du menu Fichier) finissait sur la page comme un
+    // double-clic dans la marge et créait un en-tête. Seuls comptent les clics posés sur la page.
+    let page_clicks = app.canvas.last_press.map_or(0, |(_, _, n)| n);
+    let double_clicked = resp.double_clicked() && page_clicks >= 2;
+    let triple_clicked = resp.triple_clicked() && page_clicks >= 3;
     // The press already selected the word or paragraph (and a drag may have grown it).
-    let released_clicks = if resp.triple_clicked() {
+    let released_clicks = if triple_clicked {
         3
-    } else if resp.double_clicked() {
+    } else if double_clicked {
         2
     } else {
         0
@@ -404,7 +422,7 @@ fn handle_completed_click(app: &mut WordApp, pointer: &PagePointer<'_>) -> bool 
         None
     };
     let hf_enter = enters_header_footer(app, story, hf_zone);
-    if resp.double_clicked() {
+    if double_clicked {
         // Its first press already moved into the header/footer and placed the caret.
         if app.canvas.hf_press_switched {
             return true;
@@ -438,7 +456,7 @@ fn handle_completed_click(app: &mut WordApp, pointer: &PagePointer<'_>) -> bool 
         let _ = app.run("select.word", json!({}));
         return true;
     }
-    if resp.triple_clicked() {
+    if triple_clicked {
         let _ = app.run("select.paragraph", json!({"cell": true}));
         return true;
     }

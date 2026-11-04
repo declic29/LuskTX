@@ -86,3 +86,5 @@ getrandom = "0.3"
 
 [target.'cfg(windows)'.dependencies]
 craft-update = { workspace = true }
+# Lusk Texte : Dicter envoie Windows + H (la saisie vocale de Windows).
+enigo = "0.2"

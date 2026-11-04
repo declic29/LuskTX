@@ -86,6 +86,32 @@ pub(crate) fn list_dir(dir: &Path, exts: &[String], cap: usize) -> std::io::Resu
     Ok(listing)
 }
 
+/// Les dossiers OneDrive synchronisés sur cet ordinateur, avec leur nom affiché (« OneDrive »,
+/// « OneDrive - Entreprise »…). Windows les indique dans les variables OneDriveConsumer
+/// (compte personnel), OneDriveCommercial (compte professionnel) et OneDrive ; ailleurs (Linux
+/// avec un client OneDrive), on regarde ~/OneDrive. Vide quand OneDrive n'est pas installé.
+pub(crate) fn onedrive_dirs() -> Vec<(String, PathBuf)> {
+    let mut found: Vec<(String, PathBuf)> = Vec::new();
+    let candidates = ["OneDriveConsumer", "OneDriveCommercial", "OneDrive"]
+        .iter()
+        .filter_map(|v| std::env::var_os(v))
+        .filter(|p| !p.is_empty())
+        .map(PathBuf::from)
+        .chain(home().map(|h| h.join("OneDrive")));
+    for dir in candidates {
+        if !dir.is_dir() {
+            continue;
+        }
+        let key = dir.canonicalize().unwrap_or_else(|_| dir.clone());
+        if found.iter().any(|(_, d)| d.canonicalize().unwrap_or_else(|_| d.clone()) == key) {
+            continue;
+        }
+        let label = dir.file_name().map_or_else(|| "OneDrive".to_string(), |n| n.to_string_lossy().into_owned());
+        found.push((label, dir));
+    }
+    found
+}
+
 /// The user's home folder.
 pub(crate) fn home() -> Option<PathBuf> {
     std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")).filter(|h| !h.is_empty()).map(PathBuf::from)
@@ -292,6 +318,24 @@ impl WordApp {
         self.show_file_browser(req, after, false);
     }
 
+    /// Le navigateur intégré ouvert directement dans `dir` (Fichier › Ouvrir / Enregistrer sous ›
+    /// OneDrive) : `purpose` vaut "save" pour Enregistrer sous, sinon on ouvre un document.
+    pub(crate) fn browse_folder(&mut self, purpose: &str, dir: PathBuf) {
+        self.give_up_file_dialog();
+        if self.file_browser.open.is_some() {
+            return;
+        }
+        let (req, after) = if purpose == "save" {
+            (
+                FileDialogRequest::Save { name: self.default_save_name(), dir: None },
+                AfterPick::SaveAs { after: crate::file_dialogs::AfterSave::Nothing, document: self.session.document_id() },
+            )
+        } else {
+            (FileDialogRequest::Open { purpose: "document".into() }, AfterPick::OpenDocument { document: self.session.document_id() })
+        };
+        self.file_browser.open = Some(Box::new(FileBrowser::new(req, after, dir, false)));
+    }
+
     /// Close the browser with this answer (`None`: cancelled) and finish what it was for.
     pub(crate) fn close_file_browser(&mut self, picked: Option<PathBuf>) {
         let Some(b) = self.file_browser.open.take() else { return };
@@ -332,7 +376,7 @@ fn body(ui: &mut Ui, b: &mut FileBrowser, t: &Tokens) -> Option<Option<PathBuf>>
     if b.unavailable {
         ui.label(
             egui::RichText::new(tl!(
-                "The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity."
+                "The system file dialog isn't available, so Lusk Texte shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity."
             ))
             .color(t.text_dim),
         );

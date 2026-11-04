@@ -101,6 +101,13 @@ impl WindowGeometry {
         };
         let position = rect.map(|r| [r.min.x, r.min.y]);
         let monitor = window.monitor_size.map(|s| [s.x, s.y]);
+        // Lusk Texte : une fenêtre réduite (ou en cours de réduction) est parfois signalée hors de
+        // tout écran, en haut à gauche ; ces coordonnées-là ne sont pas enregistrées.
+        if let (Some(p), Some(m)) = (position, window.monitor_size)
+            && off_screen(p, size, m)
+        {
+            return prev;
+        }
         Self { position, width: size.x, height: size.y, maximized, monitor }.sanitized().or(prev)
     }
 
@@ -151,7 +158,10 @@ impl WindowGeometry {
         }
         let saved = egui::Vec2::from(self.monitor?);
         let now = window.monitor_size.filter(|s| s.is_finite() && s.x > 0.0 && s.y > 0.0)?;
-        if (now - saved).length() <= 1.0 {
+        // Lusk Texte : une position enregistrée hors de l'écran est replacée elle aussi, même
+        // quand l'écran n'a pas changé.
+        let lost = self.position.is_some_and(|p| off_screen(p, egui::vec2(self.width, self.height), now));
+        if (now - saved).length() <= 1.0 && !lost {
             return None;
         }
         let free = now - egui::vec2(self.width, self.height);
@@ -185,6 +195,17 @@ impl WindowGeometry {
         let free = monitor - (size + frame);
         Some((egui::pos2((free.x / 2.0).max(0.0), (free.y / 2.0).max(0.0)), size))
     }
+}
+
+/// Whether a window at `position` (top-left corner) of `size` lies entirely outside the primary
+/// monitor of `monitor` size on both axes at once: off screen above and to the side, where no
+/// second monitor puts it in practice (a monitor beside the main one shares its rows, one above
+/// shares its columns). This is where Windows reports a minimized window.
+fn off_screen(position: [f32; 2], size: egui::Vec2, monitor: egui::Vec2) -> bool {
+    let [x, y] = position;
+    let overlaps_columns = x < monitor.x && x + size.x > 0.0;
+    let overlaps_rows = y < monitor.y && y + size.y > 0.0;
+    !overlaps_columns && !overlaps_rows
 }
 
 /// Checks the restored geometry in `pending` once, and only once the monitor size is known: while
@@ -481,5 +502,22 @@ mod tests {
         assert_eq!(system.fit_on_monitor(&i), None);
         // Wayland reports no rects.
         assert_eq!(system.fit_on_monitor(&RawWindowState { monitor_size: Some(laptop), ..Default::default() }), None);
+    }
+
+    /// Lusk Texte : la fenêtre enregistrée en (-1920, -1080) sur un écran de 1920 × 1080 (hors de
+    /// l'écran en haut à gauche) est replacée au centre, et une telle position n'est pas enregistrée.
+    #[test]
+    fn a_window_saved_off_screen_comes_back() {
+        let screen = egui::vec2(1920.0, 1080.0);
+        let lost = WindowGeometry { position: Some([-1920.0, -1080.0]), width: 1440.0, height: 920.0, maximized: false, monitor: Some([1920.0, 1080.0]) };
+        let on = egui::Rect::from_min_size(egui::pos2(-1920.0, -1080.0), egui::vec2(1440.0, 920.0));
+        assert_eq!(lost.rescue_position(&raw(on, screen)), Some(egui::pos2(240.0, 80.0)));
+        // A second monitor to the left or above shares rows or columns with the main one: kept.
+        assert!(!off_screen([-1920.0, 0.0], egui::vec2(1440.0, 920.0), screen));
+        assert!(!off_screen([0.0, -1080.0], egui::vec2(1440.0, 920.0), screen));
+        assert!(off_screen([-32000.0, -32000.0], egui::vec2(160.0, 28.0), screen));
+        // Tracking an off-screen frame keeps what was saved before.
+        let good = WindowGeometry { position: Some([100.0, 80.0]), width: 1440.0, height: 920.0, maximized: false, monitor: Some([1920.0, 1080.0]) };
+        assert_eq!(WindowGeometry::track(Some(good), &raw(on, screen)), Some(good));
     }
 }

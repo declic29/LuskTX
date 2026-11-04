@@ -1,2 +1,5 @@
 [alias]
 xtask = "run --package xtask --"
+
+[env]
+CRAFT_I18N_DIR = 'C:\craft-i18n'

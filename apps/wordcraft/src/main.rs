@@ -15,6 +15,7 @@ mod apple_events;
 mod clipboard;
 mod control_server;
 mod default_apps;
+mod dictate;
 mod file_dialogs;
 #[cfg(any(target_os = "windows", target_os = "macos", test))]
 mod graphics;
@@ -67,10 +68,15 @@ impl eframe::App for App {
         // Another document window's state is the one it last painted with: the host reports only
         // the root window's for this frame.
         let active = self.0.active_viewport();
+        // Lusk Texte : a window that hasn't been drawn yet has no viewport in egui, and reading its
+        // input would create one, empty; eframe then opened a blank window and recreated it, which
+        // left every new document's window hidden in the taskbar. Until then the last geometry stays.
         let tracked = if active == egui::ViewportId::ROOT {
             window
-        } else {
+        } else if self.0.active_viewport_drawn() {
             ctx.input_for(active, |i| RawWindowState::from_viewport(Some(i.viewport()), Some(i.viewport_rect())))
+        } else {
+            RawWindowState::default()
         };
         self.0.ui.window = WindowGeometry::track(prev, &tracked);
         // The first frame, once the monitor is known (as `take_rescue` waits for): maximize a
@@ -278,6 +284,8 @@ fn services(file_dialog: file_dialogs::Hook, ctx: &egui::Context) -> Services {
         set_clipboard_html: Some(Box::new(clipboard::set_html)),
         clipboard_rtf: Some(Box::new(clipboard::rtf)),
         clipboard_formats: Some(Box::new(clipboard::formats)),
+        #[cfg(windows)]
+        dictate: Some(Box::new(dictate::start)),
         ..Default::default()
     }
 }
@@ -292,7 +300,7 @@ fn app_icon() -> Option<egui::IconData> {
 }
 
 const USAGE: &str = "\
-wordcraft — the WordCraft desktop app
+wordcraft — the Lusk Texte desktop app
 
 USAGE:
   wordcraft [--sample] [--control PORT] [FILE…]
@@ -350,7 +358,7 @@ fn open_non_unicode(app: &mut WordApp, path: &std::path::Path) {
 fn main() -> eframe::Result {
     // Windows: the update helper is a copy of this program started with `--finish-update`.
     #[cfg(windows)]
-    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
+    if let Some(result) = craft_update::self_update::finish(&wordcraft_ui_egui::updates_ui::LUSK_TEXTE, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
         std::process::exit(i32::from(result.is_err()));
     }
     // First, so the panic hook and every start-up warning are recorded (`logging`).

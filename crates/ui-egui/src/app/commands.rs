@@ -485,6 +485,26 @@ impl WordApp {
     pub(crate) fn ui_command(&mut self, id: &str, p: &Value) -> Option<Result<Value, String>> {
         let s = |k: &str| p.get(k).and_then(Value::as_str);
         Some(Ok(match id {
+            // Accueil › Voix › Dicter : la saisie vocale du système écrit au curseur.
+            "ui.dictate" => {
+                let Some(start) = &self.services.dictate else {
+                    return Some(Err("La dictée vocale n'est pas disponible sur ce système.".into()));
+                };
+                if let Err(e) = start() {
+                    self.status(e.clone());
+                    return Some(Err(e));
+                }
+                self.canvas.want_focus = true;
+                self.status("Dictée : parlez, le texte s'écrit à l'emplacement du curseur. Windows + H pour arrêter.");
+                Value::Null
+            }
+            // Aide › Aide : la fenêtre d'aide intégrée.
+            "ui.help" => {
+                if let Some(ctx) = self.ctx.clone() {
+                    crate::help::open(&ctx);
+                }
+                Value::Null
+            }
             "ui.checkForUpdates" | "help.checkForUpdates" => {
                 crate::updates_ui::check(self);
                 Value::Null
@@ -727,7 +747,7 @@ impl WordApp {
             // MCP get an error.
             "ui.makeDefaultApp" => {
                 return Some(Err(
-                    "making WordCraft the default app needs a click in File › Options › General; scripts and agents can't change system defaults"
+                    "making Lusk Texte the default app needs a click in File › Options › General; scripts and agents can't change system defaults"
                         .into(),
                 ));
             }
@@ -795,20 +815,20 @@ impl WordApp {
     /// command, so nothing programmatic (control channel, MCP, macros) can change system defaults.
     pub(crate) fn make_default_app(&mut self) -> Result<Value, String> {
         let Some(hook) = self.services.make_default_app.as_ref() else {
-            return Err("WordCraft can't change the default apps here; use your system's settings".into());
+            return Err("Lusk Texte can't change the default apps here; use your system's settings".into());
         };
         match hook() {
             Ok(DefaultApp::SettingsOpened) => {
-                self.status(tl!("In Default apps, choose WordCraft for the document types you want it to open."));
+                self.status(tl!("In Default apps, choose Lusk Texte for the document types you want it to open."));
                 Ok(json!({"settingsOpened": true}))
             }
             Ok(DefaultApp::MadeDefault) => {
-                self.status(tl!("WordCraft is now the default app for Word documents."));
+                self.status(tl!("Lusk Texte is now the default app for Word documents."));
                 Ok(json!({"default": true}))
             }
             Err(e) => {
                 log::warn!("make default app: {e}");
-                let msg = i18n::fmt(tl!("Couldn't make WordCraft the default: {error}"), &[("error", &e)]);
+                let msg = i18n::fmt(tl!("Couldn't make Lusk Texte the default: {error}"), &[("error", &e)]);
                 self.status(msg.clone());
                 Err(msg)
             }
@@ -1019,6 +1039,7 @@ pub(crate) fn works_without_document(id: &str) -> bool {
             | "ui.caretAnimation"
             | "ui.startScreen"
             | "ui.checkForUpdates"
+            | "ui.help"
     ) || id.starts_with("help.")
 }
 

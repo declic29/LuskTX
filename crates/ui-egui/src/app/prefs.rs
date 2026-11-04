@@ -47,8 +47,9 @@ impl WordApp {
         self.legacy_interface_size =
             self.ui.legacy_interface_size.take().filter(|_| self.ui.interface_size.is_auto()).and_then(|old| theme::legacy_interface_percent(&old));
         // The session owns the name from here on; `prefs` copies it back when saving.
+        // « WordCraft User » était l'ancien nom par défaut : il laisse place au nouveau, « Utilisateur ».
         let author = std::mem::take(&mut self.ui.author);
-        if !author.trim().is_empty() {
+        if !author.trim().is_empty() && author.trim() != "WordCraft User" {
             self.session.author = author;
         }
         self.session.initials = std::mem::take(&mut self.ui.initials).chars().take(wordcraft_engine::cmd::options::MAX_INITIALS_CHARS).collect();

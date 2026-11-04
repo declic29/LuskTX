@@ -17,7 +17,7 @@ fn main() {
         .set("ProductName", "Lusk Texte")
         .set("FileDescription", "Lusk Texte, Traitement de texte")
         .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Lusk Texte. Basé sur WordCraft, Copyright (c) the WordCraft authors. MIT OR Apache-2.0.")
+        .set("LegalCopyright", "Lusk Texte. Logiciel libre sous licence MIT OR Apache-2.0.")
         .set("OriginalFilename", "wordcraft.exe")
         .set("InternalName", "wordcraft");
     if let Err(e) = res.compile() {

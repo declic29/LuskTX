@@ -220,7 +220,7 @@ fn recovery_page_follows_the_theme() {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn recovery_does_not_replace_an_explicit_new_document() {
-    for template in ["Blank document", "Report"] {
+    for template in ["Blank document", "Rapport"] {
         let (mut app, root) = recovery_fixture();
         app.ui.backstage = true;
         app.ui.backstage_page = "home".into();
@@ -343,10 +343,29 @@ fn recovery_restore_opens_beside_unsaved_work_without_autosave_permission() {
 #[test]
 fn template_search_matches_labels_case_insensitively() {
     let ids = |q: &str| matching_templates(q).into_iter().map(|(_, id)| id).collect::<Vec<_>>();
-    assert_eq!(ids(""), ["blank", "sample", "letter", "resume", "report"]);
+    assert_eq!(
+        ids(""),
+        [
+            "blank",
+            "letter",
+            "coverLetter",
+            "resume",
+            "resumeSerious",
+            "resumeCreative",
+            "minutes",
+            "report",
+            "invoice",
+            "memo",
+            "attestation",
+            "businessCards",
+            "brochure",
+            "sample"
+        ]
+    );
     assert_eq!(ids("  LETTER "), ["letter"]);
-    assert_eq!(ids("re"), ["resume", "report"]);
-    assert_eq!(ids("résumé"), ["resume"]);
+    assert_eq!(ids("re"), ["letter", "coverLetter", "resume", "resumeSerious", "resumeCreative", "minutes", "report", "invoice", "brochure"]);
+    assert_eq!(ids("cv"), ["resume", "resumeSerious", "resumeCreative"]);
+    assert_eq!(ids("facture"), ["invoice"]);
     assert!(ids("no such template").is_empty());
 }
 
@@ -393,7 +412,7 @@ fn new_lists_personal_templates_and_opens_one() {
     assert!(h.query_by_label("Personal").is_some(), "New has a Personal section");
     assert!(h.query_by_label("Team memo").is_some(), "{:?}", h.state().user_templates_dir());
     assert!(h.query_by_label("Legal").is_some(), "a subfolder is a category");
-    assert!(h.query_by_label("Report").is_some(), "the built-in templates stay");
+    assert!(h.query_by_label("Rapport").is_some(), "the built-in templates stay");
 
     // The search covers both.
     let search = h.state().window_id("backstage_template_search");

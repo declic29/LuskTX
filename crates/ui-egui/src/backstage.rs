@@ -277,8 +277,22 @@ fn template_tile(ui: &mut Ui, app: &mut WordApp, label: &str, template: &str) {
 }
 
 /// The built-in templates in gallery order: display label and the `file.new` template id.
-const TEMPLATES: [(&str, &str); 5] =
-    [("Blank document", "blank"), ("Studio handbook (sample)", "sample"), ("Letter", "letter"), ("Résumé", "resume"), ("Report", "report")];
+const TEMPLATES: [(&str, &str); 14] = [
+    ("Blank document", "blank"),
+    ("Lettre", "letter"),
+    ("Lettre de motivation", "coverLetter"),
+    ("CV simple", "resume"),
+    ("CV sérieux", "resumeSerious"),
+    ("CV créatif", "resumeCreative"),
+    ("Compte rendu de réunion", "minutes"),
+    ("Rapport", "report"),
+    ("Facture", "invoice"),
+    ("Note de service", "memo"),
+    ("Attestation sur l’honneur", "attestation"),
+    ("Cartes de visite", "businessCards"),
+    ("Brochure", "brochure"),
+    ("Studio handbook (sample)", "sample"),
+];
 
 /// How many templates Home shows before "More templates" (the rest are on New).
 const HOME_TEMPLATES: usize = 4;
@@ -580,21 +594,46 @@ pub(crate) fn open_recent(app: &mut WordApp, path: &str) -> Result<(), String> {
 
 fn open_page(app: &mut WordApp, ui: &mut Ui) {
     heading(ui, "Open");
-    if ui.button(egui::RichText::new(tl!("Browse…")).font(medium(14.0))).clicked() {
+    if crate::widgets::icon_text_button(ui, "folder", tl!("Browse…"), medium(14.0)).clicked() {
         let _ = app.run("ui.openFileDialog", json!({}));
     }
     // Linux and the BSDs (#576): the system dialog needs a file chooser portal or zenity; when it
     // doesn't show up, WordCraft's own browser is always one click away.
     #[cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))]
     if ui
-        .button(egui::RichText::new(tl!("Browse in WordCraft…")).font(medium(14.0)))
-        .on_hover_text(tl!("Open a file with WordCraft's own browser when the system file dialog doesn't appear."))
+        .button(egui::RichText::new(tl!("Browse in Lusk Texte…")).font(medium(14.0)))
+        .on_hover_text(tl!("Open a file with Lusk Texte's own browser when the system file dialog doesn't appear."))
         .clicked()
     {
         let _ = app.run("ui.fileBrowser", json!({}));
     }
+    #[cfg(not(target_arch = "wasm32"))]
+    onedrive_buttons(app, ui, "open");
     ui.add_space(18.0);
     open_list(app, ui);
+}
+
+/// Un bouton par dossier OneDrive synchronisé sur cet ordinateur : il ouvre le navigateur intégré
+/// directement dans ce dossier, pour ouvrir (`purpose` "open") ou enregistrer ("save") un
+/// document. Windows se charge ensuite d'envoyer le fichier sur OneDrive. Rien quand OneDrive
+/// n'est pas installé.
+#[cfg(not(target_arch = "wasm32"))]
+fn onedrive_buttons(app: &mut WordApp, ui: &mut Ui, purpose: &str) {
+    let dirs = crate::file_browser::onedrive_dirs();
+    if dirs.is_empty() {
+        return;
+    }
+    ui.add_space(8.0);
+    for (label, dir) in dirs {
+        let tip = if purpose == "save" {
+            format!("Enregistrer dans votre espace OneDrive ({})", dir.display())
+        } else {
+            format!("Ouvrir un document de votre espace OneDrive ({})", dir.display())
+        };
+        if crate::widgets::icon_text_button(ui, "cloud", &label, medium(14.0)).on_hover_text(tip).clicked() {
+            app.browse_folder(purpose, dir);
+        }
+    }
 }
 
 /// Save As: Browse… asks where to save. It has no recent-documents list: clicking one of those
@@ -606,13 +645,14 @@ fn save_as_page(app: &mut WordApp, ui: &mut Ui) {
         ui.label(egui::RichText::new(&error).color(ui.visuals().error_fg_color));
         ui.add_space(6.0);
     }
-    if ui.button(egui::RichText::new(tl!("Browse…")).font(medium(14.0))).clicked() {
+    if crate::widgets::icon_text_button(ui, "folder", tl!("Browse…"), medium(14.0)).clicked() {
         app.save_as_dialog();
     }
+    #[cfg(not(target_arch = "wasm32"))]
+    onedrive_buttons(app, ui, "save");
     // A Word template in the user templates folder, which File › New lists under Personal (#2852).
     ui.add_space(8.0);
-    if ui
-        .button(egui::RichText::new(tl!("Save as Word Template…")).font(medium(14.0)))
+    if crate::widgets::icon_text_button(ui, "documentTemplate", tl!("Save as Word Template…"), medium(14.0))
         .on_hover_text(tl!("Saves a .dotx template in your templates folder. It shows up in File › New under Personal."))
         .clicked()
     {

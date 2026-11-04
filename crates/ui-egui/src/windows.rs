@@ -36,6 +36,21 @@ use wordcraft_engine::WindowView;
 
 use crate::{WordApp, documents, window_ui::WindowUi};
 
+/// Lusk Texte : l'écran où placer une nouvelle fenêtre, celui qui contient le centre de la
+/// fenêtre `viewport` (et non son coin, qui déborde de l'écran quand elle est agrandie). L'écran
+/// principal quand cette fenêtre est réduite ou n'a pas encore de position.
+fn cascade_bounds(ctx: &egui::Context, viewport: ViewportId) -> Option<craft_window::Rect> {
+    let (outer, monitor, minimized) = ctx.input_for(viewport, |i| (i.viewport().outer_rect, i.viewport().monitor_size, i.viewport().minimized));
+    let monitor = monitor.filter(|m| m.is_finite() && m.x > 0.0 && m.y > 0.0)?;
+    let center = outer
+        .filter(|r| r.is_finite() && minimized != Some(true))
+        .map(|r| r.center())
+        .filter(|c| c.x.abs() < 16_000.0 && c.y.abs() < 16_000.0)
+        .unwrap_or(egui::pos2(monitor.x / 2.0, monitor.y / 2.0));
+    let tile = |p: f32, len: f32| (p / len).floor() * len;
+    Some(craft_window::Rect::new(tile(center.x, monitor.x), tile(center.y, monitor.y), monitor.x, monitor.y))
+}
+
 /// The window title for a document called `name`.
 pub(crate) fn title(name: &str, dirty: bool) -> String {
     format!("{name}{} - Lusk Texte", if dirty { " •" } else { "" })
@@ -269,6 +284,18 @@ impl WordApp {
     /// How many windows are open.
     pub fn window_count(&self) -> usize {
         if self.windows.native { self.windows.open.len() } else { 1 }
+    }
+
+    /// Lusk Texte : whether the active window has been drawn at least once, so egui knows its
+    /// viewport. Reading the input of a viewport egui doesn't know creates it empty, and eframe
+    /// then opens a blank window and recreates it with the real settings: the new document's
+    /// window stayed hidden in the taskbar.
+    pub fn active_viewport_drawn(&self) -> bool {
+        if self.active_viewport() == ViewportId::ROOT {
+            return true;
+        }
+        let key = self.windows.recent_keys().first().copied().unwrap_or(self.windows.shown);
+        self.windows.get(key).and_then(|w| w.id).is_some_and(|id| self.windows.list.outer_rect(id).is_some())
     }
 
     /// The egui viewport of the active window, the one focused last: control input,
@@ -584,7 +611,14 @@ impl WordApp {
             self.after_windows();
             return;
         }
+        // A window not drawn yet has no viewport in egui: reading its input would create it empty.
+        let active_viewport = if self.active_viewport_drawn() { self.active_viewport() } else { ViewportId::ROOT };
         let Some(mut viewports) = self.windows.viewports.take() else { return };
+        // Lusk Texte : sous Windows, une fenêtre agrandie déborde de quelques points (en -8, -8) ;
+        // la bibliothèque en déduisait un écran situé en haut à gauche et y plaçait les nouveaux
+        // documents, hors de vue. Les nouvelles fenêtres se placent sur l'écran du centre de la
+        // fenêtre active.
+        viewports.set_bounds(cascade_bounds(&ctx, active_viewport));
         let mut list = std::mem::take(&mut self.windows.list);
         self.windows.recent = list.recent().filter_map(|id| list.get(id).copied()).collect();
         let titles: HashMap<u64, String> = self.windows.open.iter().map(|w| (w.key, w.title.clone())).collect();
@@ -595,7 +629,7 @@ impl WordApp {
             &mut list,
             |_, key| match titles.get(key).filter(|t| !t.is_empty()) {
                 Some(t) => base.clone().with_title(t.clone()),
-                None => base.clone().with_title("WordCraft"),
+                None => base.clone().with_title("Lusk Texte"),
             },
             |ui, _, key| self.draw_window(ui, *key),
         );

@@ -1255,7 +1255,7 @@ fn encrypt_password_dialog(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bo
     });
     ui.label(
         egui::RichText::new(tl!(
-            "Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password."
+            "Keep the password somewhere safe: without it nobody, Lusk Texte included, can open the document. Leave both boxes empty to remove the password."
         ))
         .small()
         .weak(),

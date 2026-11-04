@@ -68,7 +68,7 @@ pub fn tool_definitions() -> Value {
         tool(
             "list_commands",
             "List commands",
-            "Every WordCraft command: id, label, ribbon location, shortcut and params. Filter with `query`.",
+            "Every Lusk Texte command: id, label, ribbon location, shortcut and params. Filter with `query`.",
             obj(json!({"query": s("Case-insensitive filter on id/label/location")}), &[]),
             true
         ),
@@ -92,8 +92,8 @@ pub fn tool_definitions() -> Value {
         tool(
             "new_document",
             "New document",
-            "Start a document: blank, sample, letter, resume or report. It opens beside the documents already open and becomes the active one; the reply's `id` addresses it (`doc`).",
-            obj(json!({"template": s("blank|sample|letter|resume|report")}), &[]),
+            "Start a document: blank, sample, letter, resume, report, coverLetter, minutes, invoice, memo, attestation, resumeSerious, resumeCreative, businessCards or brochure. It opens beside the documents already open and becomes the active one; the reply's `id` addresses it (`doc`).",
+            obj(json!({"template": s("blank|sample|letter|resume|report|coverLetter|minutes|invoice|memo|attestation|resumeSerious|resumeCreative|businessCards|brochure")}), &[]),
             false
         ),
         tool(
@@ -149,8 +149,8 @@ pub fn tool_definitions() -> Value {
             obj(json!({}), &[]),
             true
         ),
-        tool("parity", "Feature parity", "WordCraft's command coverage of the word-processor feature catalog.", obj(json!({}), &[]), true),
-        tool("screenshot", "Screenshot app", "Screenshot of the whole WordCraft window (desktop app only).", obj(json!({}), &[]), true),
+        tool("parity", "Feature parity", "Lusk Texte's command coverage of the word-processor feature catalog.", obj(json!({}), &[]), true),
+        tool("screenshot", "Screenshot app", "Screenshot of the whole Lusk Texte window (desktop app only).", obj(json!({}), &[]), true),
         tool(
             "click",
             "Click",
