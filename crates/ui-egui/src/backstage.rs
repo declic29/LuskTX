@@ -226,6 +226,32 @@ fn heading(ui: &mut Ui, s: &str) {
 
 /// Draws a template thumbnail and caption as one accessible button, lazily renders and caches a
 /// region-aware page preview, and creates a document from the template on click.
+/// The width a template tile takes: its 150-point thumbnail, or its caption when that is wider.
+fn caption_width(ui: &Ui, caption: &str) -> f32 {
+    ui.painter().layout_no_wrap(caption.to_owned(), regular(12.5), ui.visuals().text_color()).size().x.max(150.0)
+}
+
+/// Splits tiles into rows that fit the available width, so the gallery wraps onto new lines.
+fn tile_rows<T>(ui: &Ui, items: impl IntoIterator<Item = T>, width: impl Fn(&Ui, &T) -> f32) -> Vec<Vec<T>> {
+    let max = ui.available_width().max(150.0);
+    let mut rows: Vec<Vec<T>> = Vec::new();
+    let mut used = 0.0;
+    for item in items {
+        let w = width(ui, &item);
+        match rows.last_mut() {
+            Some(row) if !row.is_empty() && used + 18.0 + w <= max => {
+                used += 18.0 + w;
+                row.push(item);
+            }
+            _ => {
+                used = w;
+                rows.push(vec![item]);
+            }
+        }
+    }
+    rows
+}
+
 fn template_tile(ui: &mut Ui, app: &mut WordApp, label: &str, template: &str) {
     let t = Tokens::get(ui.ctx());
     ui.vertical(|ui| {
@@ -301,7 +327,7 @@ const TEMPLATES: [(&str, &str); 20] = [
 ];
 
 /// How many templates Home shows before "More templates" (the rest are on New).
-const HOME_TEMPLATES: usize = 4;
+const HOME_TEMPLATES: usize = 8;
 
 /// The templates whose English or translated label, or id, contains `query` (case-insensitive;
 /// the id lets "resume" find "Résumé"); all of them for an empty query.
@@ -364,12 +390,16 @@ fn new_page(app: &mut WordApp, ui: &mut Ui) {
         return;
     }
     if !found.is_empty() {
-        ui.horizontal_wrapped(|ui| {
-            ui.spacing_mut().item_spacing = vec2(18.0, 18.0);
-            for (label, template) in found {
-                template_tile(ui, app, label, template);
-            }
-        });
+        let rows = tile_rows(ui, found, |ui, (label, _)| caption_width(ui, crate::i18n::tc("template", label)));
+        for row in rows {
+            ui.horizontal(|ui| {
+                ui.spacing_mut().item_spacing = vec2(18.0, 18.0);
+                for (label, template) in row {
+                    template_tile(ui, app, label, template);
+                }
+            });
+            ui.add_space(18.0);
+        }
     }
     // Personal: the user templates folder's templates; a folder per category, as in Word.
     let Some(folder) = folder else { return };
@@ -407,12 +437,16 @@ fn new_page(app: &mut WordApp, ui: &mut Ui) {
             ui.label(egui::RichText::new(category).font(medium(13.5)).color(t.text));
             ui.add_space(6.0);
         }
-        ui.horizontal_wrapped(|ui| {
-            ui.spacing_mut().item_spacing = vec2(18.0, 18.0);
-            for p in personal_found.iter().filter(|p| p.category == category) {
-                personal_tile(ui, app, p);
-            }
-        });
+        let in_category: Vec<_> = personal_found.iter().filter(|p| p.category == category).collect();
+        for row in tile_rows(ui, in_category, |_, _| 150.0) {
+            ui.horizontal(|ui| {
+                ui.spacing_mut().item_spacing = vec2(18.0, 18.0);
+                for p in row {
+                    personal_tile(ui, app, p);
+                }
+            });
+            ui.add_space(18.0);
+        }
     }
 }
 
