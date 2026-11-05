@@ -413,6 +413,8 @@ impl WordApp {
             ctx.input_mut(|i| i.smooth_scroll_delta = scroll::unsmoothed_scroll(i, &opts));
         }
         self.handle_ui_input_events(&ctx);
+        // A new window fades in rather than appearing all at once.
+        self.fade_in(&ctx);
         // Fonts installed by `logic` take effect on the next frame.
         if self.fonts_frames < 2 {
             self.fonts_frames += 1;

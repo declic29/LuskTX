@@ -75,6 +75,27 @@ impl WordApp {
         }
     }
 
+    /// The fade-in of a new window: a veil in the panel colour over the whole window, which
+    /// dissolves over a short moment. Skipped when animation effects are off.
+    pub(super) fn fade_in(&self, ctx: &egui::Context) {
+        const SECS: f64 = 0.6;
+        if !self.animations_on() {
+            return;
+        }
+        let id = egui::Id::unique(("lusk_fade_in", ctx.viewport_id()));
+        let now = ctx.input(|i| i.time);
+        let start = ctx.data_mut(|d| *d.get_temp_mut_or_insert_with(id, || now));
+        let p = ((now - start) / SECS).clamp(0.0, 1.0) as f32;
+        if p >= 1.0 {
+            return;
+        }
+        // Ease out: quick at first, then settling gently.
+        let veil = (1.0 - p).powi(3);
+        let fill = theme::Tokens::get(ctx).panel.gamma_multiply(veil);
+        ctx.layer_painter(egui::LayerId::new(egui::Order::Debug, id)).rect_filled(ctx.content_rect(), 0.0, fill);
+        ctx.request_repaint();
+    }
+
     /// Dialogs, panes and other overlays drawn over the window. A command that brings another
     /// window's state in ends the drawing: the rest would be the other window's.
     pub(super) fn show_overlays(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
