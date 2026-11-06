@@ -304,9 +304,16 @@ pub fn specs() -> Vec<CommandSpec> {
         CommandSpec::new("book.exportEpub", "Export EPUB", "Livre", |s, v| {
             let path = p::req_str(v, "path")?;
             let path = if path.to_ascii_lowercase().ends_with(".epub") { path.to_string() } else { format!("{path}.epub") };
-            let bytes = book::epub::write(&s.doc).map_err(CmdError::Failed)?;
+            let wanted = book::settings(&s.doc).is_some_and(|b| !b.cover_image.trim().is_empty());
+            let cover = book::epub::cover_picture(&s.doc);
+            let has_cover = cover.is_some();
+            let bytes = book::epub::write_with_cover(&s.doc, cover).map_err(CmdError::Failed)?;
             crate::io::write_file(&path, &bytes).map_err(CmdError::Failed)?;
-            Ok(json!({"path": path, "bytes": bytes.len()}))
+            let mut out = json!({"path": path, "bytes": bytes.len(), "cover": has_cover});
+            if wanted && !has_cover {
+                out["warning"] = json!("L'image de couverture est introuvable : l'EPUB n'a pas de couverture.");
+            }
+            Ok(out)
         })
         .params(r#"{"path": string}"#)
         .pure(),

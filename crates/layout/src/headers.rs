@@ -257,7 +257,14 @@ pub(crate) fn headers_footers(ctx: &mut Ctx, pages: &mut [Page], sections: &[(us
             first_of_section.insert(i);
         }
     }
+    // Lusk Texte, Mode Livre: in a book (its settings in the `LuskLivre` custom property) the
+    // blank page before a section starting on the right side stays blank, as in printed books:
+    // no running head, no page number.
+    let plain_fillers = ctx.doc.custom_prop("LuskLivre").is_some();
     for (i, page) in pages.iter_mut().enumerate() {
+        if plain_fillers && page.filler {
+            continue;
+        }
         let Some((_, sect)) = sections.get(page.section) else { continue };
         // Inherit header/footer references from earlier sections (Word's "link to previous").
         let pick = |linked: &Linked| -> Option<u32> {

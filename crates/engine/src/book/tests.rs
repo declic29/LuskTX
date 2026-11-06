@@ -346,3 +346,51 @@ fn drop_caps_open_chapters_when_asked() {
     // The preset of the contemporary novel asks for them.
     assert!(preset("romanContemporain").unwrap().settings().drop_caps);
 }
+
+/// The book's language goes to the whole text (the default and the Normal style), an unknown
+/// one falls back to French, and a book made before the setting keeps its text's language.
+#[test]
+fn the_book_language_applies_to_the_text() {
+    let mut base = Document::new();
+    base.styles.default_chr.lang = Some("en-US".into());
+    let doc = new_document(base, &BookSettings { title: "Essai".into(), ..BookSettings::default() });
+    assert_eq!(doc.styles.default_chr.lang.as_deref(), Some("fr-FR"), "French by default, even on an English document");
+    assert_eq!(settings(&doc).unwrap().lang, "fr-FR");
+    let mut doc2 = doc.clone();
+    apply_settings(&mut doc2, &BookSettings { lang: "br-FR".into(), ..settings(&doc).unwrap() });
+    assert_eq!(doc2.styles.default_chr.lang.as_deref(), Some("br-FR"));
+    assert_eq!(BookSettings { lang: "xx-<script>".into(), ..BookSettings::default() }.sanitized().lang, "fr-FR");
+    // Settings saved before `lang` existed.
+    let mut old = doc.clone();
+    let mut v: serde_json::Value = serde_json::from_str(old.custom_prop(PROP).unwrap()).unwrap();
+    v.as_object_mut().unwrap().remove("lang");
+    let json = v.to_string();
+    assert!(!json.contains("\"lang\""));
+    old.set_custom_prop(PROP, &json);
+    old.styles.default_chr.lang = Some("en-GB".into());
+    assert_eq!(settings(&old).unwrap().lang, "en-GB");
+}
+
+/// The blank page before a chapter that starts on a right-hand page stays blank in a book: no
+/// running head, no page number. Outside a book it keeps its header and footer, as in Word.
+#[test]
+fn blank_verso_pages_stay_blank() {
+    let mut doc = book();
+    insert(&mut doc, ElementKind::Chapter, "Un", None, None).unwrap();
+    insert(&mut doc, ElementKind::Chapter, "Deux", None, None).unwrap();
+    let mut s = crate::Session::new(doc.clone());
+    let layout = s.layout();
+    let fillers: Vec<usize> = layout.pages.iter().enumerate().filter(|(_, p)| p.filler).map(|(i, _)| i).collect();
+    assert!(!fillers.is_empty(), "chapters start on right-hand pages");
+    for &i in &fillers {
+        let p = &layout.pages[i];
+        assert!(p.header.is_empty() && p.footer.is_empty(), "page {}: blank", i + 1);
+    }
+    // The page before the blank one (a chapter's last page) still has its folio.
+    assert!(layout.pages.iter().any(|p| !p.filler && !p.footer.is_empty()), "folios elsewhere");
+    let mut plain = doc;
+    plain.remove_custom_prop(PROP);
+    let mut s = crate::Session::new(plain);
+    let layout = s.layout();
+    assert!(layout.pages.iter().any(|p| p.filler && !p.footer.is_empty()), "a plain document keeps them");
+}

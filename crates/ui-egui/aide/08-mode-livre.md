@@ -4,9 +4,9 @@ Le Mode Livre organise un roman, un récit, une biographie, un essai ou un recue
 
 ## Créer un livre
 
-1. Cliquez sur **Livre** à droite de la barre de titre, ou sur la vignette **Livre** dans **Fichier › Nouveau**.
+1. Cliquez sur **Livre** à droite de la barre de titre, sur **Créer un livre** dans la barre de gauche de l'onglet **Fichier**, ou sur la vignette **Livre** dans **Fichier › Nouveau**.
 2. Choisissez un **modèle éditorial** (roman classique, roman contemporain, roman de poche, essai, biographie, poésie) : il règle d'un coup le format, la police, l'interligne, les marges, les titres courants, le numéro de page et les lettrines.
-3. Indiquez le **titre**, le **sous-titre** éventuel, l'**auteur** et le **type d'ouvrage**.
+3. Indiquez le **titre**, le **sous-titre** éventuel, l'**auteur**, le **type d'ouvrage** et la **langue du livre** (français par défaut ; elle règle l'orthographe, la césure, le contrôle de la typographie et la langue de l'EPUB).
 4. Ajustez si besoin le **format** (A5, poche, 6 × 9 pouces, A4, A6 ou personnalisé), le **papier** (blanc ou crème), la **police**, la **taille**, l'**interlignage**, l'**alignement** et les **marges**. L'aperçu de la double page se met à jour à chaque réglage.
 5. Cliquez sur **Créer le livre**.
 
@@ -51,9 +51,9 @@ Tout changement de réglage s'applique aussitôt à l'ensemble du livre.
 ### Le reste de la mise en page
 
 - **Marges miroir** : la marge intérieure est toujours côté reliure, à gauche sur les pages de droite et à droite sur les pages de gauche.
-- Chaque chapitre, chaque partie et chaque page liminaire **commence sur une page de droite** ; une page blanche est ajoutée automatiquement si nécessaire.
+- Chaque chapitre, chaque partie et chaque page liminaire **commence sur une page de droite** ; une page blanche est ajoutée automatiquement si nécessaire. Elle reste entièrement blanche, sans titre courant ni numéro, comme dans un livre imprimé.
 - Les pages liminaires sont numérotées **i, ii, iii**, le corps du livre **1, 2, 3** à partir du premier chapitre.
-- La **césure française** est activée, le texte est justifié avec un **retrait de première ligne**, et les veuves et orphelines sont évitées.
+- La **césure** de la langue du livre est activée, le texte est justifié avec un **retrait de première ligne**, et les veuves et orphelines sont évitées.
 
 ## Voir le livre comme il sera imprimé
 
@@ -89,7 +89,7 @@ Dans l'onglet **Livre**, groupe **Publier** :
 
 - **PDF pour l'imprimeur** : les dimensions exactes du livre, les polices incorporées, le fond perdu ajouté autour de chaque page et la zone de coupe indiquée (boîtes TrimBox et BleedBox).
 - **PDF pour la lecture** : pour lire à l'écran ou partager, avec les signets des chapitres et les numéros de page du livre (i, ii… puis 1, 2…).
-- **EPUB** : le livre numérique pour liseuses (EPUB 3), un fichier par chapitre, une table des matières, et les notes de bas de page en notes cliquables. Il est validé par EPUBCheck, l'outil officiel.
+- **EPUB** : le livre numérique pour liseuses (EPUB 3), un fichier par chapitre, une table des matières, et les notes de bas de page en notes cliquables. L'image de première de couverture choisie dans le Studio Couverture devient la couverture de l'EPUB, affichée dans la bibliothèque des liseuses. Il est validé par EPUBCheck, l'outil officiel.
 
 Le livre reste modifiable dans tous les cas : enregistrez aussi en **.docx** ou en **.odt** (Fichier › Enregistrer sous) si votre éditeur vous le demande.
 

@@ -166,7 +166,9 @@ fn style_sheet(font: &str, indent_mm: f32, justify: bool) -> String {
          nav ol {{ list-style: none; padding-left: 1em; }}\n\
          a.noteref {{ text-decoration: none; }}\n\
          section.notes {{ margin-top: 2em; border-top: 1px solid #999; font-size: 0.85em; }}\n\
-         aside.note p {{ text-indent: 0; margin: 0.4em 0; }}\n",
+         aside.note p {{ text-indent: 0; margin: 0.4em 0; }}\n\
+         section.cover {{ margin: 0; padding: 0; text-align: center; height: 100%; }}\n\
+         section.cover img {{ max-width: 100%; max-height: 100%; }}\n",
         font.replace(['"', '\\', '<', '>'], ""),
         indent_mm.clamp(0.0, 30.0),
         if justify { "justify" } else { "left" }
@@ -187,7 +189,39 @@ fn identifier(doc: &Document, title: &str, author: &str) -> String {
 }
 
 /// The EPUB 3 package of `doc` (a book, or any document: then one content document).
+/// The front cover picture of the book (`coverImage`, the Studio Couverture's picture) in a
+/// format every reading system shows (PNG, JPEG, GIF, WebP; anything else becomes PNG), with its
+/// extension and media type. `None` without a picture or when it can't be read.
+pub fn cover_picture(doc: &Document) -> Option<(Vec<u8>, &'static str, &'static str)> {
+    let s = settings(doc)?;
+    if s.cover_image.trim().is_empty() {
+        return None;
+    }
+    cover_from_bytes(super::cover::read_picture(&s.cover_image).ok()?)
+}
+
+fn cover_from_bytes(bytes: Vec<u8>) -> Option<(Vec<u8>, &'static str, &'static str)> {
+    match wordcraft_formats::model::sniff_image(&bytes)? {
+        "png" => Some((bytes, "png", "image/png")),
+        "jpeg" => Some((bytes, "jpg", "image/jpeg")),
+        "gif" => Some((bytes, "gif", "image/gif")),
+        "webp" => Some((bytes, "webp", "image/webp")),
+        _ => {
+            let img = image::load_from_memory(&bytes).ok()?;
+            let mut png = Vec::new();
+            img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).ok()?;
+            Some((png, "png", "image/png"))
+        }
+    }
+}
+
+/// The book as an EPUB 3 file, with the front cover picture when the book has one.
 pub fn write(doc: &Document) -> Result<Vec<u8>, String> {
+    write_with_cover(doc, cover_picture(doc))
+}
+
+/// [`write`] with the cover given (`None`: no cover page).
+pub fn write_with_cover(doc: &Document, cover: Option<(Vec<u8>, &'static str, &'static str)>) -> Result<Vec<u8>, String> {
     let s = settings(doc).unwrap_or_default();
     let title = if !s.title.is_empty() {
         s.title.clone()
@@ -283,6 +317,16 @@ pub fn write(doc: &Document) -> Result<Vec<u8>, String> {
         "<item id=\"nav\" href=\"nav.xhtml\" media-type=\"application/xhtml+xml\" properties=\"nav\"/>\n<item id=\"css\" href=\"style.css\" media-type=\"text/css\"/>\n",
     );
     let mut spine = String::new();
+    // The cover: its picture marked `cover-image` (EPUB 3), the `cover` meta older readers
+    // look for, and a first page that shows it.
+    let cover_page = cover.as_ref().map(|(_, ext, mime)| {
+        let href = format!("images/couverture.{ext}");
+        manifest.push_str(&format!("<item id=\"cover-image\" href=\"{href}\" media-type=\"{mime}\" properties=\"cover-image\"/>\n"));
+        manifest.push_str("<item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n");
+        spine.push_str("<itemref idref=\"cover\" linear=\"yes\"/>\n");
+        let body = format!("<section epub:type=\"cover\" class=\"cover\">\n<img src=\"{href}\" alt=\"Couverture : {}\"/>\n</section>", esc(&title));
+        (href, page(&title, &lang, &body))
+    });
     for (i, (file, _, _)) in files.iter().enumerate() {
         manifest.push_str(&format!("<item id=\"t{i}\" href=\"{file}\" media-type=\"application/xhtml+xml\"/>\n"));
         spine.push_str(&format!("<itemref idref=\"t{i}\"/>\n"));
@@ -292,8 +336,9 @@ pub fn write(doc: &Document) -> Result<Vec<u8>, String> {
     }
     let creator = if author.is_empty() { String::new() } else { format!("<dc:creator>{}</dc:creator>\n", esc(&author)) };
     let isbn = if s.isbn.is_empty() { String::new() } else { format!("<dc:source>urn:isbn:{}</dc:source>\n", esc(&s.isbn.replace([' ', '-'], ""))) };
+    let cover_meta = if cover.is_some() { "<meta name=\"cover\" content=\"cover-image\"/>\n" } else { "" };
     let opf = format!(
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{id}</dc:identifier>\n<dc:title>{}</dc:title>\n{creator}{isbn}<dc:language>{lang}</dc:language>\n<meta property=\"dcterms:modified\">{modified}</meta>\n</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{id}</dc:identifier>\n<dc:title>{}</dc:title>\n{creator}{isbn}<dc:language>{lang}</dc:language>\n<meta property=\"dcterms:modified\">{modified}</meta>\n{cover_meta}</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
         esc(&title)
     );
     let container = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">\n<rootfiles>\n<rootfile full-path=\"OEBPS/content.opf\" media-type=\"application/oebps-package+xml\"/>\n</rootfiles>\n</container>\n";
@@ -318,6 +363,10 @@ pub fn write(doc: &Document) -> Result<Vec<u8>, String> {
         }
         for p in &pictures {
             put(&format!("OEBPS/{}", p.name), &p.bytes, stored)?;
+        }
+        if let (Some((bytes, _, _)), Some((href, xhtml))) = (&cover, &cover_page) {
+            put("OEBPS/cover.xhtml", xhtml.as_bytes(), deflated)?;
+            put(&format!("OEBPS/{href}"), bytes, stored)?;
         }
         zip.finish().map_err(|e| e.to_string())?;
     }
@@ -462,9 +511,10 @@ mod tests {
         };
         let dir = std::env::temp_dir().join(format!("lusk-epubcheck-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        for (name, doc) in [("livre.epub", rich_book()), ("vide.epub", Document::new())] {
+        let cover = Some((tiny_png(60, 90), "png", "image/png"));
+        for (name, doc, cover) in [("livre.epub", rich_book(), cover), ("vide.epub", Document::new(), None)] {
             let path = dir.join(name);
-            std::fs::write(&path, write(&doc).unwrap()).unwrap();
+            std::fs::write(&path, write_with_cover(&doc, cover).unwrap()).unwrap();
             let out = std::process::Command::new("java").arg("-jar").arg(&jar).arg(&path).output().expect("java runs");
             let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
             let bad: Vec<&str> = text.lines().filter(|l| l.starts_with("ERROR") || l.starts_with("FATAL") || l.starts_with("WARNING")).collect();
@@ -475,6 +525,36 @@ mod tests {
         } else {
             eprintln!("EPUB kept in {}", dir.display());
         }
+    }
+
+    fn tiny_png(w: u32, h: u32) -> Vec<u8> {
+        let mut png = Vec::new();
+        let img = image::RgbaImage::from_pixel(w, h, image::Rgba([30, 90, 160, 255]));
+        image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        png
+    }
+
+    /// The front cover goes first, marked `cover-image`; a BMP picture becomes PNG; no picture,
+    /// no cover page.
+    #[test]
+    fn the_cover_picture_opens_the_book() {
+        let bytes = write_with_cover(&rich_book(), Some((tiny_png(60, 90), "png", "image/png"))).unwrap();
+        let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
+        let opf = entry(&mut zip, "OEBPS/content.opf");
+        assert!(opf.contains("properties=\"cover-image\"") && opf.contains("<meta name=\"cover\" content=\"cover-image\"/>"), "{opf}");
+        let first = opf.find("<itemref").unwrap();
+        assert!(opf[first..].starts_with("<itemref idref=\"cover\""), "the cover is the first page");
+        let cover = entry(&mut zip, "OEBPS/cover.xhtml");
+        assert!(well_formed(&cover) && cover.contains("images/couverture.png") && cover.contains("Couverture : Les Marées &amp; la mer"));
+        assert!(zip.by_name("OEBPS/images/couverture.png").is_ok());
+        let mut bmp = Vec::new();
+        image::DynamicImage::ImageRgba8(image::RgbaImage::new(4, 4)).write_to(&mut std::io::Cursor::new(&mut bmp), image::ImageFormat::Bmp).unwrap();
+        let (_, ext, mime) = cover_from_bytes(bmp).unwrap();
+        assert_eq!((ext, mime), ("png", "image/png"));
+        assert!(cover_from_bytes(b"pas une image".to_vec()).is_none());
+        let plain = write(&rich_book()).unwrap();
+        let mut zip = zip::ZipArchive::new(std::io::Cursor::new(plain)).unwrap();
+        assert!(!entry(&mut zip, "OEBPS/content.opf").contains("cover"));
     }
 
     /// Footnotes become EPUB 3 note references and asides; lists, tables, links and pictures

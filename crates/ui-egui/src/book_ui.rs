@@ -542,9 +542,16 @@ fn wizard(app: &mut WordApp, ctx: &egui::Context) {
                                         .interact(Sense::click())
                                         .on_hover_cursor(egui::CursorIcon::PointingHand);
                                     if resp.clicked() {
-                                        let keep = (w.s.title.clone(), w.s.subtitle.clone(), w.s.author.clone(), w.s.cover, w.s.header_parts.clone());
+                                        let keep = (
+                                            w.s.title.clone(),
+                                            w.s.subtitle.clone(),
+                                            w.s.author.clone(),
+                                            w.s.cover,
+                                            w.s.header_parts.clone(),
+                                            w.s.lang.clone(),
+                                        );
                                         w.s = p.settings();
-                                        (w.s.title, w.s.subtitle, w.s.author, w.s.cover, w.s.header_parts) = keep;
+                                        (w.s.title, w.s.subtitle, w.s.author, w.s.cover, w.s.header_parts, w.s.lang) = keep;
                                     }
                                 }
                             });
@@ -561,6 +568,19 @@ fn wizard(app: &mut WordApp, ctx: &egui::Context) {
                                     ui.selectable_value(&mut w.s.kind, (*kid).to_string(), *label);
                                 }
                             });
+                        });
+                        field(ui, "Langue du livre", |ui| {
+                            let current = book::LANGUAGES.iter().find(|l| l.0 == w.s.lang).map_or("Français (France)", |l| l.1);
+                            craft_ui::ComboBox::from_id_salt("lusk_book_lang")
+                                .selected_text(current)
+                                .width(200.0)
+                                .show_ui(ui, |ui| {
+                                    for (tag, label) in book::LANGUAGES {
+                                        ui.selectable_value(&mut w.s.lang, (*tag).to_string(), *label);
+                                    }
+                                })
+                                .response
+                                .on_hover_text("Orthographe, césure, contrôle de la typographie et langue de l'EPUB");
                         });
                         section_title(ui, &t, "Format et papier");
                         field(ui, "Format", |ui| {

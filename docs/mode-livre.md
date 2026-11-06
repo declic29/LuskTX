@@ -29,6 +29,13 @@ Document reste inchangé.
   `STYLEREF 1`, `aucun`, `manuel` : le livre ne touche plus aux en-têtes) et `folio`
   (`basCentre`, `basExterieur`, `hautExterieur`, `aucun`). Page de titre, dédicace, épigraphe et
   pages de partie : rien ; première page d'un chapitre : pas de titre courant.
+- **Pages blanches de verso** : la page blanche ajoutée pour qu'un chapitre commence sur une page
+  de droite (`Page::filler` dans la mise en page) n'a ni titre courant ni folio dans un livre
+  (document portant la propriété `LuskLivre`) ; ailleurs elle garde en-tête et pied, comme Word.
+- **Langue du livre** (`lang`, `LANGUAGES`) : français (France) par défaut, appliquée par
+  `apply_settings` à la langue par défaut du texte et au style Normal ; orthographe, césure,
+  contrôle typographique et langue de l'EPUB en dépendent. Un livre antérieur au réglage garde
+  la langue de son texte.
 - **Lettrines** (`dropCaps`) : 3 lignes sur le premier paragraphe de chaque chapitre ; une
   lettrine d'une autre taille posée par l'utilisateur est conservée.
 - **Préréglages** : roman classique, roman contemporain, roman de poche, essai, biographie,
@@ -52,7 +59,10 @@ Document reste inchangé.
   sorties des URI `data:`), `nav.xhtml` d'après la structure, feuille de style typographique,
   `content.opf` (titre, auteur, langue, ISBN, `dcterms:modified`, identifiant stable). Les appels
   de note deviennent des signets le temps de l'export HTML, puis des liens `epub:type="noteref"`
-  vers des `aside epub:type="footnote"` en fin de fichier.
+  vers des `aside epub:type="footnote"` en fin de fichier. L'image de première de couverture
+  (`coverImage`) ouvre le livre : `cover.xhtml` en tête du `spine`, image `cover-image`
+  (convertie en PNG si besoin) et `<meta name="cover">` pour les anciennes liseuses ; si
+  l'image est introuvable, l'export le signale et l'EPUB part sans couverture.
 - **Validation EPUBCheck** : le test `book::epub::tests::epubcheck_finds_nothing_wrong` exporte un
   livre complet (pages liminaires, partie, chapitres, sous-chapitre, notes, liste, tableau, image,
   lien) et un document vide, et exige zéro erreur et zéro avertissement d'EPUBCheck (W3C, BSD)
@@ -140,7 +150,3 @@ Toutes les actions passent par des commandes : elles sont annulables, accessible
 raccourcis, à la recherche de commandes, à la ligne de commande et au pilotage MCP. Le test
 `hostile_params_never_panic` les exerce avec des paramètres invalides.
 
-## Pistes
-
-- Pages blanches de verso sans titre courant ni folio (aujourd'hui elles reprennent ceux de la
-  section).

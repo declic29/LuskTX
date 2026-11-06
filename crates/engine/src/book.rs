@@ -94,7 +94,24 @@ pub struct BookSettings {
     pub back_text: String,
     pub isbn: String,
     pub barcode_space: bool,
+    /// The book's language ([`LANGUAGES`]): proofing, French hyphenation and typography checks,
+    /// the EPUB's language. `fr-FR` unless the author chooses another.
+    pub lang: String,
 }
+
+/// The languages a book can be written in: tag and label.
+pub const LANGUAGES: &[(&str, &str)] = &[
+    ("fr-FR", "Français (France)"),
+    ("fr-BE", "Français (Belgique)"),
+    ("fr-CH", "Français (Suisse)"),
+    ("fr-CA", "Français (Canada)"),
+    ("br-FR", "Breton"),
+    ("en-GB", "Anglais (Royaume-Uni)"),
+    ("en-US", "Anglais (États-Unis)"),
+    ("es-ES", "Espagnol"),
+    ("it-IT", "Italien"),
+    ("de-DE", "Allemand"),
+];
 
 /// The running heads offered: id and label.
 pub const RUNNING_HEADS: &[(&str, &str)] = &[
@@ -148,6 +165,7 @@ impl Default for BookSettings {
             back_text: String::new(),
             isbn: String::new(),
             barcode_space: true,
+            lang: "fr-FR".into(),
         })
     }
 }
@@ -230,6 +248,7 @@ impl Preset {
             back_text: String::new(),
             isbn: String::new(),
             barcode_space: true,
+            lang: "fr-FR".into(),
         }
     }
 }
@@ -404,6 +423,9 @@ impl BookSettings {
         self.cover_image = clean(&self.cover_image, 1000);
         // The back-cover text keeps its line breaks.
         self.back_text = self.back_text.chars().filter(|c| *c == '\n' || !c.is_control()).take(5000).collect::<String>().trim().to_string();
+        if !LANGUAGES.iter().any(|(tag, _)| *tag == self.lang) {
+            self.lang = "fr-FR".into();
+        }
         self.isbn =
             self.isbn.chars().filter(|c| c.is_ascii_digit() || matches!(c, '-' | ' ' | 'X' | 'x')).take(20).collect::<String>().trim().to_string();
         self
@@ -419,7 +441,15 @@ impl BookSettings {
 /// The book settings a document holds, if it is a book.
 pub fn settings(doc: &Document) -> Option<BookSettings> {
     let json = doc.custom_prop(PROP)?;
-    serde_json::from_str::<BookSettings>(json).ok().map(BookSettings::sanitized)
+    let mut s = serde_json::from_str::<BookSettings>(json).ok()?;
+    // A book made before the language setting: the language its text already has.
+    if !json.contains("\"lang\"")
+        && let Some(lang) = doc.styles.default_chr.lang.as_deref()
+        && LANGUAGES.iter().any(|(tag, _)| *tag == lang)
+    {
+        s.lang = lang.to_string();
+    }
+    Some(s.sanitized())
 }
 
 /// Is this document a book?
@@ -1148,8 +1178,13 @@ pub fn apply_settings(doc: &mut Document, s: &BookSettings) {
     }
     doc.settings.mirror_margins = true;
     doc.settings.auto_hyphenation = true;
-    if doc.styles.default_chr.lang.is_none() {
-        doc.styles.default_chr.lang = Some("fr-FR".into());
+    // The book's language for the whole text: the default, and the Normal style when it names
+    // one of its own (a document begun with another language keeps its other runs' languages).
+    doc.styles.default_chr.lang = Some(s.lang.clone());
+    if let Some(normal) = doc.styles.get_mut("Normal")
+        && normal.chr.lang.is_some()
+    {
+        normal.chr.lang = Some(s.lang.clone());
     }
     let align = if s.align == "left" { Align::Left } else { Align::Justify };
     if let Some(normal) = doc.styles.get_mut("Normal") {

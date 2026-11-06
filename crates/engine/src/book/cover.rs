@@ -47,13 +47,13 @@ fn para(text: &str, props: &CharProps, align: Align, before: f32) -> Block {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn read_picture(path: &str) -> Result<Vec<u8>, String> {
+pub(super) fn read_picture(path: &str) -> Result<Vec<u8>, String> {
     crate::io::read_file_capped(path, MAX_PICTURE, "image de couverture")
 }
 
 /// The browser can't read a path on the user's computer.
 #[cfg(target_arch = "wasm32")]
-fn read_picture(path: &str) -> Result<Vec<u8>, String> {
+pub(super) fn read_picture(path: &str) -> Result<Vec<u8>, String> {
     let _ = MAX_PICTURE;
     Err(format!("{path} : image inaccessible depuis le navigateur"))
 }

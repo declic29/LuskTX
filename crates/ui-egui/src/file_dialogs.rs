@@ -301,8 +301,12 @@ impl WordApp {
                     "epub" => self.run("book.exportEpub", json!({"path": path})),
                     other => self.run("book.exportPdf", json!({"path": path, "purpose": if other == "reading" { "reading" } else { "print" }})),
                 };
-                if r.is_ok() {
-                    self.status(format!("Livre exporté : {path}"));
+                match &r {
+                    Ok(v) if v.get("warning").is_some() => {
+                        self.status(format!("Livre exporté : {path}. {}", v["warning"].as_str().unwrap_or_default()));
+                    }
+                    Ok(_) => self.status(format!("Livre exporté : {path}")),
+                    Err(_) => {}
                 }
                 r
             }

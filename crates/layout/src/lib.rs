@@ -291,6 +291,8 @@ pub struct Page {
     /// The top-level body tables placed on this page as floating tables (`w:tblpPr`): a click
     /// outside one doesn't land in its cells ([`DocLayout::hit`]).
     pub float_tables: Vec<Path>,
+    /// The blank page added so the next section starts on the right side (odd or even page).
+    pub filler: bool,
 }
 
 /// The whole layout.
