@@ -48,6 +48,8 @@ pub(crate) use state::{lenient_order, lenient_places};
 pub enum Pane {
     /// SmartArt Design › Text Pane, while a SmartArt graphic WordCraft can edit is selected.
     SmartArtText,
+    /// Mode Livre (Lusk Texte): the book's elements.
+    Book,
     Navigation,
     Clipboard,
     Styles,
@@ -63,6 +65,7 @@ impl Pane {
     fn title(self) -> &'static str {
         match self {
             Self::SmartArtText => "Text Pane",
+            Self::Book => "Livre",
             Self::Navigation => "Navigation",
             Self::Clipboard => "Clipboard",
             Self::Styles => "Styles",
@@ -78,6 +81,7 @@ impl Pane {
     fn default_state(self) -> PaneState {
         let (edge, width) = match self {
             Self::SmartArtText => (Edge::Start, 250.0),
+            Self::Book => (Edge::Start, 280.0),
             Self::Navigation => (Edge::Start, 260.0),
             Self::Clipboard => (Edge::Start, 250.0),
             Self::Styles => (Edge::End, 250.0),
@@ -95,6 +99,7 @@ impl Pane {
     pub fn key(self) -> &'static str {
         match self {
             Self::SmartArtText => "smartArtText",
+            Self::Book => "book",
             Self::Navigation => "navigation",
             Self::Clipboard => "clipboard",
             Self::Styles => "styles",
@@ -107,8 +112,9 @@ impl Pane {
         }
     }
 
-    const ALL: [Self; 10] = [
+    const ALL: [Self; 11] = [
         Self::SmartArtText,
+        Self::Book,
         Self::Navigation,
         Self::Clipboard,
         Self::Styles,
@@ -128,6 +134,7 @@ impl Pane {
     fn close_command(self) -> Option<&'static str> {
         match self {
             Self::SmartArtText => Some("smartArt.textPane"),
+            Self::Book => Some("view.bookPane"),
             Self::Navigation => Some("view.navigationPane"),
             Self::Clipboard => Some("edit.clipboardPane"),
             Self::Styles => Some("view.stylesPane"),
@@ -150,6 +157,7 @@ impl PaneContent<Pane> for Content<'_> {
         let app = &mut *self.app;
         match pane {
             Pane::SmartArtText => crate::dialogs_smart_art::text_pane(app, ui),
+            Pane::Book => crate::book_ui::pane(app, ui),
             Pane::Navigation => nav(app, ui),
             Pane::Clipboard => clipboard(app, ui),
             Pane::Styles => styles(app, ui),

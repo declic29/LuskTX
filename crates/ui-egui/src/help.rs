@@ -14,7 +14,7 @@ use crate::{WordApp, icons};
 
 /// Les guides : titre et icône dans le sommaire, texte. Le texte accepte `# titre`,
 /// `## sous-titre`, les listes `- …` et `1. …`, et `**gras**`.
-const GUIDES: [(&str, &str, &str); 7] = [
+const GUIDES: [(&str, &str, &str); 8] = [
     ("Bien démarrer", "homeFolder", include_str!("../aide/01-bien-demarrer.md")),
     ("Créer, ouvrir et enregistrer", "open", include_str!("../aide/02-fichiers.md")),
     ("Mettre en forme le texte", "bold", include_str!("../aide/03-mise-en-forme.md")),
@@ -22,6 +22,7 @@ const GUIDES: [(&str, &str, &str); 7] = [
     ("Images, tableaux et objets", "picture", include_str!("../aide/05-images-tableaux.md")),
     ("Vérifier et réviser", "spelling", include_str!("../aide/06-verifier-reviser.md")),
     ("Imprimer, exporter et partager", "print", include_str!("../aide/07-imprimer-partager.md")),
+    ("Écrire un livre (Mode Livre)", "coverPage", include_str!("../aide/08-mode-livre.md")),
 ];
 
 /// Les deux pages générées, après les guides.
@@ -30,7 +31,8 @@ const SHORTCUTS: usize = GUIDES.len() + 1;
 const GENERATED: [(usize, &str, &str); 2] = [(REFERENCE, "Toutes les commandes", "search"), (SHORTCUTS, "Raccourcis clavier", "bullets")];
 
 /// L'ordre des onglets du ruban, pour classer la référence.
-const TAB_ORDER: [&str; 13] = ["File", "Home", "Insert", "Draw", "Design", "Layout", "References", "Mailings", "Review", "View", "Developer", "Zotero", "Help"];
+const TAB_ORDER: [&str; 13] =
+    ["File", "Home", "Insert", "Draw", "Design", "Layout", "References", "Mailings", "Review", "View", "Developer", "Zotero", "Help"];
 
 /// Taille et interligne du texte des pages.
 const TEXT: f32 = 14.0;
@@ -99,18 +101,21 @@ pub(crate) fn show(app: &WordApp, ctx: &egui::Context) {
             .show_separator_line(false)
             .frame(egui::Frame::NONE.fill(t.nav).inner_margin(Margin { left: 0, right: 0, top: 18, bottom: 12 }))
             .show(ui, |ui| nav(ui, &mut st, embedded, &mut close));
-        egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.panel).inner_margin(Margin { left: 56, right: 32, top: 32, bottom: 0 })).show(ui, |ui| {
-            let searching = !st.query.trim().is_empty();
-            ScrollArea::vertical().id_salt(("help_page", st.page, searching)).auto_shrink([false, false]).show(ui, |ui| {
-                ui.set_max_width(PAGE_W.min(ui.available_width() - 24.0));
-                if searching {
-                    results(app, ui, &mut st);
-                } else {
-                    page(app, ui, st.page);
-                }
-                ui.add_space(48.0);
-            });
-        });
+        egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.panel).inner_margin(Margin { left: 56, right: 32, top: 32, bottom: 0 })).show(
+            ui,
+            |ui| {
+                let searching = !st.query.trim().is_empty();
+                ScrollArea::vertical().id_salt(("help_page", st.page, searching)).auto_shrink([false, false]).show(ui, |ui| {
+                    ui.set_max_width(PAGE_W.min(ui.available_width() - 24.0));
+                    if searching {
+                        results(app, ui, &mut st);
+                    } else {
+                        page(app, ui, st.page);
+                    }
+                    ui.add_space(48.0);
+                });
+            },
+        );
     });
     if close {
         st.open = false;

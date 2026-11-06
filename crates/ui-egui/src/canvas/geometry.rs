@@ -163,6 +163,37 @@ pub(super) fn place_pages(sizes: &[(f32, f32)], markup: f32, scale: f32, cols: u
     (rects, vec2(content_w, y.max(avail.y)))
 }
 
+/// Mode Livre's open book: pages in double pages that touch at the spine, the first page alone
+/// on the right as in a printed book, each spread centred in `avail_w`. Returns the screen-space
+/// rects (relative to the content's top-left) and the content size.
+pub(super) fn place_spreads(sizes: &[(f32, f32)], scale: f32, avail: egui::Vec2) -> (Vec<Rect>, egui::Vec2) {
+    let scale = if scale.is_finite() { scale.clamp(0.01, 10.0) } else { PX_PER_PT };
+    let avail = vec2(if avail.x.is_finite() { avail.x.max(0.0) } else { 0.0 }, if avail.y.is_finite() { avail.y.max(0.0) } else { 0.0 });
+    let maxw = sizes.iter().map(|&(w, _)| sane_dim(w, 1e5)).fold(0.0f32, f32::max).max(72.0) * scale;
+    let content_w = (2.0 * maxw + 2.0 * GAP).max(avail.x);
+    let spine = content_w / 2.0;
+    let mut rects = Vec::with_capacity(sizes.len());
+    let mut y = GAP;
+    let mut row_h = 0.0f32;
+    for (i, &(w, h)) in sizes.iter().enumerate() {
+        let (w, h) = (sane_dim(w, 1e5) * scale, sane_dim(h, 1e6) * scale);
+        // Page 1 (index 0) and every odd page number are right-hand pages.
+        let right = i.is_multiple_of(2);
+        let x = if right { spine } else { spine - w };
+        rects.push(Rect::from_min_size(pos2(x, y), vec2(w, h)));
+        row_h = row_h.max(h);
+        // A right-hand page ends its spread; the next spread starts below.
+        if right {
+            y += row_h + GAP;
+            row_h = 0.0;
+        }
+    }
+    if row_h > 0.0 {
+        y += row_h + GAP;
+    }
+    (rects, vec2(content_w, y.max(avail.y)))
+}
+
 pub fn geometry(app: &WordApp, l: &DocLayout, avail: egui::Vec2) -> Geometry {
     let v = &app.session.view;
     let markup = markup_width(app);
@@ -189,6 +220,13 @@ pub fn geometry(app: &WordApp, l: &DocLayout, avail: egui::Vec2) -> Geometry {
     }
     if !scale.is_finite() {
         scale = PX_PER_PT;
+    }
+    // Mode Livre: the open book, in double pages.
+    if v.book_spreads && !web {
+        let sizes: Vec<(f32, f32)> = l.pages.iter().map(|p| (p.w, p.h)).collect();
+        let (rects, size) = place_spreads(&sizes, scale, avail);
+        let bands = rects.iter().map(|r| (0.0, r.height())).collect();
+        return Geometry { rects, size, scale, cols: 2, bands };
     }
     // Pages flow side by side in Print Layout whenever more than one fits across; One Page and
     // Page Width show one per row (and so does a zoom after One Page, #768), Web Layout has no pages. Reading Mode is handled above.
@@ -237,4 +275,27 @@ pub fn sync_fit_zoom(app: &mut WordApp, scale: f32) {
         return;
     }
     v.zoom = (scale / PX_PER_PT).clamp(0.1, 5.0);
+}
+
+#[cfg(test)]
+mod spread_tests {
+    use super::*;
+
+    /// Mode Livre's open book: page 1 alone on the right, then pages 2–3, 4–5… side by side,
+    /// touching at the spine.
+    #[test]
+    fn spreads_put_the_first_page_alone_on_the_right() {
+        let sizes = vec![(420.0, 595.0); 5];
+        let (r, size) = place_spreads(&sizes, 1.0, vec2(1200.0, 800.0));
+        let spine = size.x / 2.0;
+        assert_eq!(r.len(), 5);
+        assert!((r[0].min.x - spine).abs() < 0.01, "page 1 starts at the spine");
+        assert!((r[1].max.x - spine).abs() < 0.01 && (r[2].min.x - spine).abs() < 0.01, "pages 2 and 3 meet at the spine");
+        assert!((r[1].min.y - r[2].min.y).abs() < 0.01, "on one row");
+        assert!(r[1].min.y > r[0].max.y, "below page 1");
+        assert!((r[3].min.y - r[4].min.y).abs() < 0.01 && r[3].min.y > r[2].max.y);
+        // Hostile sizes stay finite.
+        let (r, _) = place_spreads(&[(f32::NAN, -1.0), (1e9, 1e9)], f32::INFINITY, vec2(f32::NAN, 0.0));
+        assert!(r.iter().all(|r| r.min.x.is_finite() && r.max.y.is_finite()));
+    }
 }

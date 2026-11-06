@@ -289,7 +289,9 @@ impl WordApp {
     pub(crate) fn default_save_name(&self) -> String {
         let ext = self.session.path.as_ref().and_then(|p| p.extension()).map(|e| e.to_string_lossy().to_string());
         match ext {
-            Some(e) if wordcraft_engine::io::is_word_package(&e) => format!("{}.{e}", self.title_stem()),
+            Some(e) if wordcraft_engine::io::is_word_package(&e) || e.eq_ignore_ascii_case("lusklivre") => format!("{}.{e}", self.title_stem()),
+            // A new book is saved as a book project (Mode Livre).
+            _ if wordcraft_engine::book::is_book(&self.session.doc) => format!("{}.lusklivre", self.title_stem()),
             _ => format!("{}.docx", self.title_stem()),
         }
     }

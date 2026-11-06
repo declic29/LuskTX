@@ -344,6 +344,9 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                 if app.ui.quick_access_toolbar {
                     quick_access(ui, app);
                 }
+                // Mode Document | Mode Livre (Lusk Texte).
+                ui.add_space(10.0);
+                crate::book_ui::mode_switch(app, ui, control_h);
                 qat_end = ui.min_rect().max.x;
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     // Account / community: le logo Lusk Texte (remplace la pastille d'initiales).
@@ -458,9 +461,10 @@ pub(crate) fn account_logo(ctx: &egui::Context) -> egui::TextureHandle {
     if let Some(h) = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)) {
         return h;
     }
+    // Un PNG illisible (impossible avec le fichier intégré) donne un pixel transparent, jamais un plantage.
     let img = image::load_from_memory(include_bytes!("../../../assets/logo-lusk-texte.png"))
-        .expect("assets/logo-lusk-texte.png doit être un PNG valide")
-        .to_rgba8();
+        .map(|i| i.to_rgba8())
+        .unwrap_or_else(|_| image::RgbaImage::new(1, 1));
     let h = ctx.load_texture(
         "account_logo",
         egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw()),
@@ -498,10 +502,7 @@ fn lusk_box(ui: &mut Ui, control_h: f32) {
     {
         lancer = true;
     }
-    let champ = ui.add_sized(
-        vec2(220.0, control_h),
-        egui::TextEdit::singleline(&mut texte).hint_text("Rechercher sur Lusk…"),
-    );
+    let champ = ui.add_sized(vec2(220.0, control_h), egui::TextEdit::singleline(&mut texte).hint_text("Rechercher sur Lusk…"));
     if champ.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
         lancer = true;
     }

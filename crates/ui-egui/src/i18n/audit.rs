@@ -113,6 +113,20 @@ fn english_words(text: &str) -> bool {
     plain.as_bytes().windows(2).any(|w| w[0].is_ascii_alphabetic() && w[1].is_ascii_alphabetic())
 }
 
+/// Lusk Texte's own additions (the Book mode, the French help, the title bar) are written in
+/// French, the app's language, rather than in English for the catalog: they have no English
+/// source to translate. Recognized by French letters, French typography (a space before `:`),
+/// French function words, or the few short names that have none of those.
+fn lusk_french(plain: &str) -> bool {
+    const NAMES: [&str; 9] = ["Lusk Texte", "lusk.bzh", "Aide", "Chercher", "Document", "Livre", "GUIDE", "GUIDES", "Utilisateur"];
+    const WORDS: [&str; 13] = ["et", "le", "la", "les", "des", "du", "en", "OU", "Le", "La", "Rechercher", "Raccourcis", "sur"];
+    NAMES.contains(&plain)
+        || plain.trim_start_matches(['—', ' ']).starts_with("Lusk Texte")
+        || plain.chars().any(|c| "àâçéèêëîïôûùœÀÉÈÇ’".contains(c))
+        || plain.contains(" : ")
+        || plain.split(|c: char| !c.is_alphabetic()).any(|w| WORDS.contains(&w))
+}
+
 /// Text that is right to show untranslated: what the author or the machine supplied, not the
 /// interface's own wording.
 struct Exempt<'a> {
@@ -209,6 +223,7 @@ impl<'a> Exempt<'a> {
             || matches!(plain, "WordCraft" | "WordCraft User" | "Discord" | "https://" | "auto" | "I. II. III." | "i. ii. iii." | "I, II, III, …" | "i, ii, iii, …")
             || plain == "CONFIDENTIAL" // the watermark dialog's text: document content, kept as typed
             || plain == "Figure 1" // the caption dialog's sample: the label goes into the document as is
+            || lusk_french(plain) // Lusk Texte's own interface, written in French from the start
     }
 }
 

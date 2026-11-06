@@ -449,6 +449,16 @@ impl Document {
         self.story_word_count(StoryRef::Body)
     }
 
+    /// Word count of the top-level body blocks in `range` (list labels included, counted from the
+    /// start of the range); out-of-range ends are clamped.
+    pub fn body_word_count(&self, range: std::ops::Range<usize>) -> usize {
+        let end = range.end.min(self.body.len());
+        let Some(slice) = self.body.get(range.start.min(end)..end) else { return 0 };
+        let bl: Blocks = slice.to_vec();
+        let mut counters = numbering::Counters::default();
+        story_word_count_of(&bl, &self.numbering, &self.styles, &mut counters, 0)
+    }
+
     /// Word's default count: the body plus its text boxes, footnotes and endnotes.
     pub fn word_count_including_notes(&self) -> usize {
         self.counted_stories().iter().map(|s| self.story_word_count(*s)).sum()

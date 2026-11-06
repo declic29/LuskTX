@@ -2586,6 +2586,12 @@ fn drag_floating_picture(wrap: &str, header: bool, preselect: bool) {
                 h.step();
             }
             assert!(wordcraft_engine::cmd::objects::object_selection(&h.state().session).is_none(), "a click still selects text");
+            if header && !preselect {
+                // Lusk Texte: a single click in the body leaves the header (Word wants a
+                // double-click), so open the header again before pressing its picture.
+                assert!(!matches!(h.state().session.sel.focus.story, wordcraft_doc::StoryRef::Part(_)), "a click in the body leaves the header");
+                h.state_mut().run("insert.editHeader", json!({})).unwrap();
+            }
             if preselect {
                 let end = Pos { off: pos.off + wordcraft_doc::para::OBJ.len_utf8(), ..pos.clone() };
                 h.state_mut().run("select.range", json!({"anchor": pos, "focus": end})).unwrap();

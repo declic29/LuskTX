@@ -597,7 +597,7 @@ fn start_screen_shows_file_home_and_esc_leaves_no_document() {
     let a = h.state_mut();
     assert!(!a.ui.backstage, "Esc leaves the Start screen");
     assert!(!a.has_document(), "for an empty window, not a blank document");
-    assert_eq!(a.sent_title, "WordCraft", "the window is titled with the app alone");
+    assert_eq!(a.sent_title, "Lusk Texte", "the window is titled with the app alone");
     // The ribbon's commands are off, but Help, the File tab and the settings work.
     for id in ["format.bold", "text.insert", "file.save", "file.saveAs", "file.print", "edit.paste", "insert.table", "ui.print"] {
         assert!(!widgets::enabled(a, id), "{id} is off with no document");
@@ -3357,7 +3357,7 @@ fn the_print_preview_fills_the_pane_zooms_and_scrolls_both_ways() {
 #[test]
 fn the_default_app_button_shows_only_with_the_hosts_hook() {
     use egui_kittest::kittest::Queryable;
-    const LABEL: &str = "Make WordCraft the default for Word documents…";
+    const LABEL: &str = "Make Lusk Texte the default for Word documents…";
     for hook in [false, true] {
         let calls = std::rc::Rc::new(std::cell::Cell::new(0));
         let mut a = app();
@@ -3670,6 +3670,9 @@ fn the_font_box_lists_recently_used_fonts_first() {
     a.run("format.font", json!({"name": "Recent Font Beta"})).unwrap();
     let mut h = harness(a);
     h.run_steps(6);
+    // The title bar's search box is an empty text field too: count the empty fields before.
+    let empty = |h: &egui_kittest::Harness<'static, WordApp>| h.query_all(By::new().role(Role::TextInput).value("")).count();
+    let empty_before = empty(&h);
     h.get(By::new().role(Role::TextInput).value("Recent Font Beta")).focus();
     h.step();
     let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
@@ -3682,7 +3685,7 @@ fn the_font_box_lists_recently_used_fonts_first() {
     assert_eq!(h.query_all_by_label("Recent Font Alpha").count(), 0);
     h.event(key(egui::Key::Backspace, egui::Modifiers::NONE));
     h.run_steps(2);
-    assert!(h.query(By::new().role(Role::TextInput).value("")).is_some(), "Backspace cleared the query");
+    assert_eq!(empty(&h), empty_before + 1, "Backspace cleared the query");
     assert!(h.query_by_label("Recently Used Fonts").is_some(), "the section shows while nothing is typed");
     assert!(h.query_by_label("All Fonts").is_some());
     assert_eq!(h.query_all_by_label("Recent Font Beta").count(), 1);

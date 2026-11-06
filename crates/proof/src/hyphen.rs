@@ -15,6 +15,9 @@
 //!
 //! **Bulgarian**: the Bulgarian syllable rules ([`crate::bg`]); no pattern file or word list.
 //!
+//! **French**: the TeX French patterns ([`Patterns::fr`], by Daniel Flipo, Bernard Gaulle and
+//! Arthur Reutenauer, MIT); elided words (`l’indépendance`) never break at the apostrophe.
+//!
 //! **German**: the TeX German patterns for the reformed spelling ([`Patterns::de`]), also for
 //! Swiss text, whose `ss` the patterns split like any double consonant (`Stras-se`).
 //!
@@ -42,6 +45,8 @@ static IT_PAT: &str = include_str!("../../../assets/hyphenation/it.pat");
 /// hyph-utf8's `hyph-de-1996.tex` (reformed spelling), unmodified (MIT; the notice is in the
 /// file's header).
 static DE_PAT: &str = include_str!("../../../assets/hyphenation/de.pat");
+/// hyph-utf8's `hyph-fr.tex`, unmodified (MIT; the notice is in the file's header).
+static FR_PAT: &str = include_str!("../../../assets/hyphenation/fr.pat");
 
 impl Dictionary {
     /// The bundled US English dictionary (decoded on first use).
@@ -88,6 +93,12 @@ impl Patterns {
     pub fn de() -> &'static Patterns {
         static P: OnceLock<Patterns> = OnceLock::new();
         P.get_or_init(|| Patterns::parse(DE_PAT))
+    }
+
+    /// The bundled French patterns (parsed on first use; the file has no exception words).
+    pub fn fr() -> &'static Patterns {
+        static P: OnceLock<Patterns> = OnceLock::new();
+        P.get_or_init(|| Patterns::parse(FR_PAT))
     }
 }
 
@@ -146,6 +157,8 @@ fn core_breaks(core: &[char], lang: ProofLang) -> (Vec<usize>, Source) {
         ProofLang::Pt => return core_breaks_patterns(Patterns::pt(), core),
         ProofLang::It => return core_breaks_patterns(Patterns::it(), core),
         ProofLang::De => return core_breaks_patterns(Patterns::de(), core),
+        // The core's apostrophes are already `'`, the patterns' spelling (`2'2`: never a break there).
+        ProofLang::Fr => return core_breaks_patterns(Patterns::fr(), core),
         _ => {}
     }
     if lang == ProofLang::Ru && core.iter().all(|&c| crate::ru::is_cyrillic(c)) {
@@ -888,6 +901,28 @@ mod tests {
         assert_eq!(p.len(), 36_709);
         // The file has no exception words, and its `\message{…}` line adds none.
         assert_eq!(p.exception_count(), 0);
+    }
+
+    #[test]
+    fn french_patterns_load() {
+        let p = Patterns::fr();
+        assert_eq!(p.len(), 1145);
+        assert_eq!(p.exception_count(), 0);
+    }
+
+    #[test]
+    fn french_words_follow_the_french_patterns() {
+        let fr = |w: &str| hyphenate_word_in(w, &Limits::default(), ProofLang::Fr);
+        assert_eq!(fr("anticonstitutionnellement"), "an-ti-cons-ti-tu-tion-nel-le-ment");
+        assert_eq!(fr("développement"), "dé-ve-lop-pe-ment");
+        assert_eq!(fr("typographie"), "ty-po-gra-phie");
+        assert_eq!(fr("extraordinaire"), "ex-tra-or-di-naire");
+        assert_eq!(fr("manuscrit"), "ma-nus-crit");
+        // Elision: never a break at the apostrophe, typographic or straight.
+        assert_eq!(fr("l’indépendance"), "l’in-dé-pen-dance");
+        assert_eq!(fr("l'indépendance"), "l'in-dé-pen-dance");
+        assert_eq!(fr("presqu’île"), "pres-qu’île");
+        assert_eq!(word_breaks_in("chapitre", ProofLang::Fr).1, Source::Patterns);
     }
 
     #[test]

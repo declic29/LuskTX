@@ -39,7 +39,8 @@ pub type FileDialogAnswer = Result<Vec<String>, String>;
 const MAX_FONTS_PER_PICK: usize = 2000;
 
 const PICTURES: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "wmf", "emf"];
-const DOCUMENTS: &[&str] = &["docx", "docm", "dotx", "dotm", "doc", "dot", "odt", "rtf", "txt", "md", "html", "htm", "tex", "json", "xml"];
+const DOCUMENTS: &[&str] =
+    &["docx", "lusklivre", "docm", "dotx", "dotm", "doc", "dot", "odt", "rtf", "txt", "md", "html", "htm", "tex", "json", "xml"];
 
 /// The file types Open offers, as (label, extensions; `*` is any file): pictures for Insert/Change
 /// Picture, recipient lists for Select Recipients › Use an Existing List…, documents otherwise.
@@ -79,6 +80,10 @@ pub(crate) enum AfterPick {
     ForDialog,
     /// Put the picked document into the Compare dialog (original or revised, #412).
     ComparePath { revised: bool },
+    /// Mode Livre: write the book there as `print` PDF, `reading` PDF or `epub`.
+    BookExport { what: String },
+    /// Mode Livre: the picture for the front cover (Studio Couverture).
+    CoverImage,
 }
 
 /// What to do once Save As has written the document.
@@ -289,6 +294,24 @@ impl WordApp {
                 let Some(path) = picked else { return Ok(json!({"cancelled": true})) };
                 crate::dialogs_review::set_compare_path(self, revised, path);
                 Ok(json!({"picked": true}))
+            }
+            AfterPick::BookExport { what } => {
+                let Some(path) = picked else { return Ok(json!({"cancelled": true})) };
+                let r = match what.as_str() {
+                    "epub" => self.run("book.exportEpub", json!({"path": path})),
+                    other => self.run("book.exportPdf", json!({"path": path, "purpose": if other == "reading" { "reading" } else { "print" }})),
+                };
+                if r.is_ok() {
+                    self.status(format!("Livre exporté : {path}"));
+                }
+                r
+            }
+            AfterPick::CoverImage => {
+                let Some(path) = picked else { return Ok(json!({"cancelled": true})) };
+                if let Some(ctx) = self.ctx.clone() {
+                    crate::book_ui::cover_image_picked(self, &ctx, path);
+                }
+                Ok(Value::Null)
             }
             AfterPick::Export { ext } => {
                 let Some(path) = picked else { return Ok(json!({"cancelled": true})) };

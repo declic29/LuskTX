@@ -11,3 +11,5 @@ plan/
 # Lusk Texte : journaux de compilation et de lancement
 build-log.txt
 run-log.txt
+# Lusk Texte : EPUBCheck téléchargé par outils/test-epub.ps1
+/outils/epubcheck/

@@ -2462,3 +2462,40 @@ fn baseline_is_the_most_shared_y() {
     assert_eq!(baseline(&[(1, 0.0, 9.0), (2, 3.0, 4.0)]), Some(4.0));
     assert_eq!(baseline(&[(1, 0.0, -0.0), (2, 3.0, 0.0)]), Some(0.0));
 }
+
+/// Lusk Texte's print PDF: a bleed grows the sheet around the page, the page itself is the trim
+/// box, and page labels carry the book's numbering (i, ii… then 1, 2…).
+#[test]
+fn print_pdf_has_bleed_trim_box_and_page_labels() {
+    let mut d = Document::new();
+    d.body = vec![para_block(Paragraph::with_text("Il était une fois.", CharProps::default()))];
+    let plain = export(&d, &PdfOptions { compress: false, ..Default::default() }).unwrap();
+    let raw = String::from_utf8_lossy(&plain);
+    assert!(!raw.contains("/TrimBox") && !raw.contains("/PageLabels"));
+    let w = d.last_section.page_w;
+    let h = d.last_section.page_h;
+    let bytes = export(&d, &PdfOptions { compress: false, bleed: 9.0, page_labels: true, ..Default::default() }).unwrap();
+    let raw = String::from_utf8_lossy(&bytes);
+    assert!(raw.contains("/TrimBox") && raw.contains("/BleedBox"), "print boxes");
+    assert!(raw.contains("/PageLabels"), "page labels");
+    let media = format!("/MediaBox[0 0 {} {}]", fmt_num(w + 18.0), fmt_num(h + 18.0));
+    assert!(raw.contains(&media), "the sheet grows by the bleed on each side: {media}");
+    // The text is still there, moved by the bleed.
+    assert!(extract_text(&bytes).iter().any(|t| t.contains("Il était une fois")));
+    // A cover drawn to its full size: only the trim box, inside.
+    let bytes = export(&d, &PdfOptions { compress: false, trim_inset: 9.0, ..Default::default() }).unwrap();
+    let raw = String::from_utf8_lossy(&bytes);
+    assert!(raw.contains("/TrimBox"));
+    let media = format!("/MediaBox[0 0 {} {}]", fmt_num(w), fmt_num(h));
+    assert!(raw.contains(&media));
+    // Hostile values are clamped, never a crash.
+    assert!(export(&d, &PdfOptions { bleed: f32::NAN, trim_inset: -5.0, ..Default::default() }).is_ok());
+    assert!(export(&d, &PdfOptions { bleed: 1e9, ..Default::default() }).is_ok());
+}
+
+/// A number as krilla writes it: no trailing zeros.
+fn fmt_num(v: f32) -> String {
+    let s = format!("{v:.3}");
+    let s = s.trim_end_matches('0').trim_end_matches('.');
+    s.to_string()
+}

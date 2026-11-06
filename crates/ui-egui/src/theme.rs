@@ -408,7 +408,7 @@ impl Tokens {
             balloon: Color32::from_rgb(0x2B, 0x2B, 0x2B),
             markup_area: Color32::from_rgb(0x1B, 0x1B, 0x1B),
             markup_edge: Color32::from_rgb(0x3A, 0x3A, 0x3A),
-            resolved_text: Color32::from_rgb(0x5B, 0xC0, 0x8A),
+            resolved_text: Color32::from_rgb(0x6C, 0xCB, 0x97),
             author_colors: [
                 Color32::from_rgb(0x7F, 0xA8, 0xF2),
                 Color32::from_rgb(0xE5, 0x78, 0x6B),

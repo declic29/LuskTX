@@ -95,6 +95,13 @@ impl WordApp {
         {
             self.canvas.context_menu_from_keys = true;
         }
+        // Mode Livre : chaque enregistrement demandé d'un livre garde une version (historique).
+        if id == "file.save"
+            && let Ok(v) = &r
+            && v.get("saved").and_then(Value::as_bool) == Some(true)
+        {
+            crate::book_ui::auto_version(self);
+        }
         let r = system_clipboard::explain(self, id, r);
         // Check Accessibility shows its findings in the Accessibility pane, kept up to date there.
         if id == "file.accessibility" && r.is_ok() {
@@ -511,6 +518,37 @@ impl WordApp {
                 }
                 self.canvas.want_focus = true;
                 self.status("Dictée : parlez, le texte s'écrit à l'emplacement du curseur. Windows + H pour arrêter.");
+                Value::Null
+            }
+            // Mode Livre : l'assistant de création, ou les réglages du livre ouvert.
+            "ui.bookWizard" => {
+                let mode = match s("mode") {
+                    Some("settings") if wordcraft_engine::book::is_book(&self.session.doc) => crate::book_ui::WizardMode::Settings,
+                    Some("convert") => crate::book_ui::WizardMode::Convert,
+                    _ => crate::book_ui::WizardMode::New,
+                };
+                if let Some(ctx) = self.ctx.clone() {
+                    crate::book_ui::open_wizard(self, &ctx, mode);
+                }
+                Value::Null
+            }
+            // Mode Livre : le Studio Couverture.
+            "ui.bookCover" => {
+                if let Some(ctx) = self.ctx.clone() {
+                    crate::book_ui::open_studio(self, &ctx);
+                }
+                Value::Null
+            }
+            // Mode Livre : exporter le livre (PDF imprimeur, PDF lecture, EPUB).
+            "ui.bookExport" => {
+                crate::book_ui::ask_export(self, s("what").unwrap_or("print"));
+                Value::Null
+            }
+            // Mode Livre : le panneau Livre sur son onglet Plan ou Pages (miniatures).
+            "ui.bookPaneTab" => {
+                if let Some(ctx) = self.ctx.clone() {
+                    crate::book_ui::show_pane_tab(self, &ctx, crate::book_ui::PaneTab::from_id(s("tab").unwrap_or("plan")));
+                }
                 Value::Null
             }
             // Aide › Aide : la fenêtre d'aide intégrée.
@@ -1055,6 +1093,7 @@ pub(crate) fn works_without_document(id: &str) -> bool {
             | "ui.startScreen"
             | "ui.checkForUpdates"
             | "ui.help"
+            | "ui.bookWizard"
     ) || id.starts_with("help.")
 }
 

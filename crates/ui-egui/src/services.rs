@@ -95,6 +95,9 @@ pub struct Services {
     /// used while File › Options names none. File › New lists personal templates from it and Save
     /// as Word Template starts in it. `None` (web) hides personal templates.
     pub templates_dir: Option<std::path::PathBuf>,
+    /// Desktop (Lusk Texte, Mode Livre): the folder of the books' version history (`Versions` in
+    /// the settings folder), on this computer only. `None` (web) hides the history.
+    pub versions_dir: Option<std::path::PathBuf>,
 }
 
 /// Files delivered asynchronously.

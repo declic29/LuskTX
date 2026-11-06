@@ -3,7 +3,7 @@
 //! the program. Elisions (`l'homme`, `qu'il`, `aujourd'hui`) are accepted whole or as an elided
 //! prefix plus a known word. Suggestions are single edits (accents first) kept when the
 //! dictionary knows the result. Grammar is limited to generic repeated-word and spacing checks
-//! with French messages; hyphenation keeps the English fallback.
+//! with French messages; hyphenation uses the bundled French patterns ([`crate::hyphen::Patterns::fr`]).
 
 pub mod grammar;
 mod suggest;
@@ -164,9 +164,7 @@ fn check(d: &AffixDict, word: &str, opts: &crate::Options) -> bool {
     // `peut-être`, `grand-mère` are entries; `a-t-il`, `dis-moi`, `vingt-et-un` are checked by parts.
     w.contains('-')
         && w.split('-').all(|p| {
-            p.chars().count() <= 1
-                || (opts.ignore_uppercase && p.chars().all(|c| !c.is_lowercase()) && p.chars().count() <= 6)
-                || known(d, p)
+            p.chars().count() <= 1 || (opts.ignore_uppercase && p.chars().all(|c| !c.is_lowercase()) && p.chars().count() <= 6) || known(d, p)
         })
 }
 

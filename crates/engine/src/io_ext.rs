@@ -8,6 +8,8 @@ pub fn open(ext: &str, bytes: &[u8], page: &wordcraft_doc::SectionProps) -> Opti
     match ext {
         "docx" | "docm" | "dotx" | "dotm" => Some(wordcraft_docx::read(bytes).map_err(|e| e.to_string())),
         "doc" | "dot" => Some(wordcraft_docbin::read(bytes).map_err(|e| e.to_string())),
+        // Lusk Texte's book project: the manuscript and the book's settings.
+        "lusklivre" => Some(crate::book::read_project(bytes)),
         // Word XML Document (Flat OPC) or Word 2003 XML, told apart by the root element.
         "xml" => Some(wordcraft_docx::read_xml(bytes).map_err(|e| e.to_string())),
         // HTML, Markdown, ODT, RTF…: pictures fit the text width (see `io::fit_pictures`).
@@ -27,6 +29,9 @@ pub fn save(ext: &str, doc: &Document, opts: &crate::io::ExportOptions) -> Optio
         return Some(wordcraft_docx::write_as(doc, flavor).map_err(|e| e.to_string()));
     }
     match ext {
+        "lusklivre" => Some(crate::book::write_project(doc)),
+        // Mode Livre: EPUB 3 for e-readers.
+        "epub" => Some(crate::book::epub::write(doc)),
         "xml" if opts.word2003 => Some(wordcraft_docx::write_wordml2003(doc).map_err(|e| e.to_string())),
         "xml" => Some(wordcraft_docx::write_flat(doc).map_err(|e| e.to_string())),
         "png" => Some(render_png(doc, 0, 2.0, opts)),
@@ -35,6 +40,10 @@ pub fn save(ext: &str, doc: &Document, opts: &crate::io::ExportOptions) -> Optio
                 include_markup: opts.markup,
                 comments: opts.markup && opts.comments,
                 numeral: opts.numeral,
+                // A book shows its own page numbers (i, ii… then 1, 2…) in PDF viewers; a cover
+                // carries its trim box inside the bleed.
+                page_labels: crate::book::is_book(doc),
+                trim_inset: doc.custom_prop(crate::book::COVER_PROP).and_then(|v| v.parse::<f32>().ok()).unwrap_or(0.0),
                 ..Default::default()
             };
             Some(wordcraft_pdf::export(doc, &pdf).map_err(|e| e.to_string()))

@@ -94,7 +94,7 @@ pub(crate) fn onedrive_dirs() -> Vec<(String, PathBuf)> {
     let mut found: Vec<(String, PathBuf)> = Vec::new();
     let candidates = ["OneDriveConsumer", "OneDriveCommercial", "OneDrive"]
         .iter()
-        .filter_map(|v| std::env::var_os(v))
+        .filter_map(std::env::var_os)
         .filter(|p| !p.is_empty())
         .map(PathBuf::from)
         .chain(home().map(|h| h.join("OneDrive")));

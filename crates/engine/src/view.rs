@@ -21,6 +21,13 @@ pub struct ViewState {
     #[serde(default = "on")]
     pub table_gridlines: bool,
     pub nav_pane: bool,
+    /// Mode Livre (Lusk Texte): the book pane beside the document.
+    #[serde(default)]
+    pub book_pane: bool,
+    /// Mode Livre: pages shown as an open book, in double pages, the first page alone on the
+    /// right.
+    #[serde(default)]
+    pub book_spreads: bool,
     pub styles_pane: bool,
     /// Where the Styles pane sits: docked right (the default) or left, or floating (#1756).
     /// Kept in the user's preferences, not the document.
@@ -174,6 +181,8 @@ impl Default for ViewState {
             gridlines: false,
             table_gridlines: true,
             nav_pane: false,
+            book_pane: false,
+            book_spreads: false,
             styles_pane: false,
             styles_pane_dock: StylesPaneDock::Right,
             style_inspector: false,

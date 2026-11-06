@@ -11,6 +11,7 @@ pub const OPEN_EXTS: &[&str] = &[
     "docm",
     "dotx",
     "dotm",
+    "lusklivre",
     "doc",
     "dot",
     "txt",
@@ -28,7 +29,8 @@ pub const OPEN_EXTS: &[&str] = &[
     "json",
 ];
 /// Formats WordCraft saves (Save As).
-pub const SAVE_EXTS: &[&str] = &["docx", "docm", "dotx", "dotm", "pdf", "txt", "md", "html", "rtf", "odt", "tex", "png", "json", "xml"];
+pub const SAVE_EXTS: &[&str] =
+    &["docx", "docm", "dotx", "dotm", "lusklivre", "epub", "pdf", "txt", "md", "html", "rtf", "odt", "tex", "png", "json", "xml"];
 
 /// Magic number for ZIP package signatures (used by .docx/.docm/.dotx/.dotm).
 const ZIP_SIG: &[u8] = b"PK\x03\x04";
@@ -750,6 +752,54 @@ pub fn write_file(path: &str, bytes: &[u8]) -> Result<(), String> {
     crate::file_access::check_write(path)?;
     // Like a document save: the old file is replaced only once the new bytes are fully written.
     safe_save::write(std::path::Path::new(path), bytes).map_err(|e| format!("{path}: {e}"))
+}
+
+/// Lusk Texte (historique des versions d'un livre) : un dossier et ses parents, créés dans la
+/// racine d'écriture de l'automatisation quand il y en a une.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn create_dir_all(path: &std::path::Path) -> Result<(), String> {
+    crate::file_access::check_write(&path.to_string_lossy())?;
+    std::fs::create_dir_all(path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn create_dir_all(path: &std::path::Path) -> Result<(), String> {
+    Err(format!("{}: no folders on the web", path.display()))
+}
+
+/// Lusk Texte : supprime un fichier (une version d'un livre que l'utilisateur a choisi de
+/// supprimer), dans la racine d'écriture de l'automatisation quand il y en a une.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn remove_file(path: &std::path::Path) -> Result<(), String> {
+    crate::file_access::check_write(&path.to_string_lossy())?;
+    std::fs::remove_file(path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn remove_file(path: &std::path::Path) -> Result<(), String> {
+    Err(format!("{}: no files on the web", path.display()))
+}
+
+/// Lusk Texte : les noms des fichiers ordinaires d'un dossier ([`list_dir`]), vide s'il n'existe pas.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn file_names(path: &std::path::Path, max: usize) -> Vec<String> {
+    list_dir(path, max).map(|(v, _)| v.into_iter().filter(|e| !e.dir).map(|e| e.name).collect()).unwrap_or_default()
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn file_names(_path: &std::path::Path, _max: usize) -> Vec<String> {
+    Vec::new()
+}
+
+/// Lusk Texte : [`read_file_capped`] partout (sur le web, aucun fichier).
+#[cfg(not(target_arch = "wasm32"))]
+pub fn read_capped(path: &std::path::Path, max: u64) -> Result<Vec<u8>, String> {
+    read_file_capped(&path.to_string_lossy(), max, "file")
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn read_capped(path: &std::path::Path, _max: u64) -> Result<Vec<u8>, String> {
+    Err(format!("{}: no files on the web", path.display()))
 }
 
 #[cfg(target_arch = "wasm32")]

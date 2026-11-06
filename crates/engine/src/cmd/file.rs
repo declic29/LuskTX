@@ -234,6 +234,15 @@ fn new(s: &mut Session, v: &Value) -> CmdResult {
         "employerCertificate" => crate::sample::employer_certificate_fr(),
         "quote" => crate::sample::quote_fr(),
         "certificate" => crate::sample::certificate_fr(),
+        // Mode Livre: a new book from the creation assistant's settings.
+        "book" => {
+            let settings =
+                super::book::settings_from(&json!({"settings": v.get("book").cloned().unwrap_or(json!({}))}), crate::book::BookSettings::default())?;
+            let doc = crate::book::new_document(normal_document(s), &settings);
+            s.add_document(doc);
+            s.view.book_pane = true;
+            return sel_result(s);
+        }
         _ => normal_document(s),
     };
     s.add_document(doc);
@@ -297,6 +306,10 @@ fn open(s: &mut Session, v: &Value) -> CmdResult {
     }
     if let Some(z) = s.doc.settings.zoom {
         super::view::restore_zoom(s, z);
+    }
+    // A book opens in Mode Livre.
+    if crate::book::is_book(&s.doc) {
+        s.view.book_pane = true;
     }
     s.path = Some(path.into());
     // Like Word, a document opened with a password is saved with it again.

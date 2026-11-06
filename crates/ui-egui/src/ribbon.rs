@@ -35,6 +35,7 @@ use charts::{chart_design, smart_art_design};
 pub(crate) use common::mi;
 #[cfg(test)]
 pub(crate) use common::size_menu;
+pub(crate) use common::stack;
 use common::{custom_groups, edge_cue};
 use design::design;
 #[cfg(test)]
@@ -364,6 +365,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         "Shape Format" => shape_format(app, ui),
                         "SmartArt Design" => smart_art_design(app, ui),
                         "Outlining" => outlining(app, ui),
+                        "Livre" => crate::book_ui::ribbon(app, ui),
                         "Chart Design" => chart_design(app, ui),
                         _ => home(app, ui),
                     }

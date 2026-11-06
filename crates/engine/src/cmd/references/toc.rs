@@ -169,7 +169,7 @@ fn toc_entries(s: &Session, f: &FieldCode) -> Vec<TocEntry> {
 
 /// The TOC block range in the body: the paragraph holding the TOC field and the TOC entries after
 /// it. A TOC with `\c` is a table of figures, kept by the generated lists.
-pub(super) fn toc_range(s: &Session) -> Option<(usize, usize)> {
+pub(crate) fn toc_range(s: &Session) -> Option<(usize, usize)> {
     let start = s.doc.body.iter().position(|b| b.as_para().is_some_and(|p| toc_field(p).is_some()))?;
     let mut end = start;
     while let Some(Block::Para(p)) = s.doc.body.get(end + 1).map(|b| &**b) {

@@ -230,6 +230,7 @@ fn save_filters(name: &str) -> Vec<(String, Vec<String>)> {
 fn format_name(ext: &str) -> String {
     match ext {
         "docx" => "Word Document".into(),
+        "lusklivre" => "Projet de livre Lusk Texte".into(),
         "docm" => "Word Macro-Enabled Document".into(),
         "dotx" => "Word Template".into(),
         "dotm" => "Word Macro-Enabled Template".into(),

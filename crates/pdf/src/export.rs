@@ -87,9 +87,33 @@ fn write_attempt(doc: &Document, lay: &DocLayout, opts: &PdfOptions, pages: &[us
     }
     for &pi in pages {
         let Some(page) = lay.pages.get(pi) else { return Err(PdfError::BadPage(pi.saturating_add(1))) };
-        let fit = Fit::of(page, opts.paper);
+        let mut fit = Fit::of(page, opts.paper);
+        let bleed = if opts.paper.is_none() && ok(opts.bleed) { opts.bleed.clamp(0.0, 72.0) } else { 0.0 };
+        if bleed > 0.0 {
+            fit = fit.with_bleed(bleed);
+        }
         let size = Size::from_wh(clamp_side(fit.paper_w), clamp_side(fit.paper_h)).ok_or(PdfError::NoPages)?;
-        let mut kp = pdf.start_page_with(PageSettings::new(size));
+        let mut settings = PageSettings::new(size);
+        // Print production: the finished page (trim box) inside the sheet with its bleed.
+        let inset = if bleed > 0.0 {
+            bleed
+        } else if ok(opts.trim_inset) {
+            opts.trim_inset.clamp(0.0, 72.0)
+        } else {
+            0.0
+        };
+        if inset > 0.0
+            && let (Some(trim), Some(full)) = (
+                krilla::geom::Rect::from_xywh(inset, inset, (size.width() - 2.0 * inset).max(1.0), (size.height() - 2.0 * inset).max(1.0)),
+                krilla::geom::Rect::from_xywh(0.0, 0.0, size.width(), size.height()),
+            )
+        {
+            settings = settings.with_trim_box(Some(trim)).with_bleed_box(Some(full));
+        }
+        if opts.page_labels {
+            settings = settings.with_page_label(page_label(doc, page));
+        }
+        let mut kp = pdf.start_page_with(settings);
         let mut s = kp.surface();
         ex.links.clear();
         // A page with a markup area is scaled down to fit its paper with the area beside it; a
@@ -147,7 +171,27 @@ pub(crate) struct Fit {
     dy: f32,
 }
 
+/// The label a PDF viewer shows for `page`: its number in its section's numbering format.
+fn page_label(doc: &Document, page: &Page) -> krilla::page::PageLabel {
+    use krilla::page::{NumberingStyle, PageLabel};
+    use wordcraft_doc::section::NumFormat;
+    let format = doc.sections().get(page.section).map(|(_, sp)| sp.page_num_format).unwrap_or(NumFormat::Decimal);
+    let style = match format {
+        NumFormat::LowerRoman => NumberingStyle::LowerRoman,
+        NumFormat::UpperRoman => NumberingStyle::UpperRoman,
+        NumFormat::LowerLetter => NumberingStyle::LowerAlpha,
+        NumFormat::UpperLetter => NumberingStyle::UpperAlpha,
+        _ => NumberingStyle::Arabic,
+    };
+    PageLabel::new(Some(style), None, std::num::NonZeroU32::new(page.number.max(1)))
+}
+
 impl Fit {
+    /// The same page on a sheet grown by `bleed` on every side.
+    pub(crate) fn with_bleed(self, bleed: f32) -> Fit {
+        Fit { paper_w: self.paper_w + 2.0 * bleed, paper_h: self.paper_h + 2.0 * bleed, dx: self.dx + bleed, dy: self.dy + bleed, ..self }
+    }
+
     pub(crate) fn of(page: &Page, paper: Option<(f32, f32)>) -> Fit {
         let paper_w = page.w - page.markup;
         let own = if page.markup > 0.0 && ok(page.markup) && ok(page.w) && paper_w > 1.0 {

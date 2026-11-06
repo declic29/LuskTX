@@ -40,6 +40,7 @@ pub fn open(app: &WordApp) -> Vec<Pane> {
     let smart_art = v.smart_art_pane && wordcraft_engine::cmd::smart_art::selected_smart_art(&app.session).is_some();
     let mut open = [
         (Pane::SmartArtText, smart_art),
+        (Pane::Book, crate::book_ui::book_mode(app)),
         (Pane::Navigation, v.nav_pane),
         (Pane::Clipboard, v.clipboard_pane),
         (Pane::Styles, v.styles_pane),

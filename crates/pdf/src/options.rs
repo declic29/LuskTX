@@ -40,6 +40,16 @@ pub struct PdfOptions {
     /// How [`export`] shows digits (the Numeral setting; callers resolve `System`, see
     /// [`NumeralMode::resolve`]). [`export_layout`] keeps the layout it is given.
     pub numeral: NumeralMode,
+    /// Bleed added around every page, in points (Lusk Texte's print PDF for a printer): the PDF
+    /// page grows by this much on each side, the page's own size is written as its trim box and
+    /// the whole sheet as its bleed box. 0 = none. Ignored with [`Self::paper`].
+    pub bleed: f32,
+    /// The page already includes `trim_inset` points of bleed on each side (a book cover drawn to
+    /// its full size): the trim box is written that far inside the page. 0 = none.
+    pub trim_inset: f32,
+    /// Write page labels (i, ii… for pages numbered in roman numerals), so a PDF viewer shows
+    /// the book's own page numbers.
+    pub page_labels: bool,
 }
 
 impl Default for PdfOptions {
@@ -54,6 +64,9 @@ impl Default for PdfOptions {
             compress: true,
             paper: None,
             numeral: NumeralMode::Arabic,
+            bleed: 0.0,
+            trim_inset: 0.0,
+            page_labels: false,
         }
     }
 }

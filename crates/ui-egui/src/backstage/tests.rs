@@ -347,6 +347,7 @@ fn template_search_matches_labels_case_insensitively() {
         ids(""),
         [
             "blank",
+            "book",
             "letter",
             "coverLetter",
             "resume",
@@ -371,11 +372,24 @@ fn template_search_matches_labels_case_insensitively() {
     assert_eq!(ids("  LETTER "), ["letter"]);
     assert_eq!(
         ids("re"),
-        ["letter", "coverLetter", "resume", "resumeSerious", "resumeCreative", "minutes", "report", "invoice", "brochure", "birthAnnouncement"]
+        [
+            "book",
+            "letter",
+            "coverLetter",
+            "resume",
+            "resumeSerious",
+            "resumeCreative",
+            "minutes",
+            "report",
+            "invoice",
+            "brochure",
+            "birthAnnouncement"
+        ]
     );
     assert_eq!(ids("attestation"), ["attestation", "employerCertificate"]);
     assert_eq!(ids("cv"), ["resume", "resumeSerious", "resumeCreative"]);
     assert_eq!(ids("facture"), ["invoice"]);
+    assert_eq!(ids("livre"), ["book"]);
     assert!(ids("no such template").is_empty());
 }
 
@@ -396,7 +410,8 @@ fn new_page_harness(templates: Option<std::path::PathBuf>) -> egui_kittest::Harn
     let services = Services { templates_dir: templates, ..Default::default() };
     let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), services);
     a.run("ui.backstage", json!({"value": true, "page": "new"})).unwrap();
-    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 1100.0)).build_ui_state(
+    // Tall enough to show every built-in template row and the Personal section below them.
+    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 2600.0)).build_ui_state(
         |ui, app: &mut WordApp| {
             let ctx = ui.ctx().clone();
             app.logic(&ctx);
@@ -429,7 +444,7 @@ fn new_lists_personal_templates_and_opens_one() {
     h.ctx.data_mut(|d| d.insert_temp(search, "memo".to_string()));
     h.run_steps(3);
     assert!(h.query_by_label("Team memo").is_some(), "search finds a personal template");
-    assert!(h.query_by_label("Contract").is_none() && h.query_by_label("Report").is_none());
+    assert!(h.query_by_label("Contract").is_none() && h.query_by_label("Rapport").is_none());
     h.ctx.data_mut(|d| d.insert_temp(search, "zzz".to_string()));
     h.run_steps(3);
     assert!(h.query_by_label("No templates match your search.").is_some());
@@ -562,12 +577,12 @@ fn home_and_new_show_different_sections() {
     );
     h.run_steps(4);
     assert!(h.query_by_label("Recent").is_some(), "Home lists recent documents");
-    assert!(h.query_by_label("Letter").is_some(), "Home shows the first templates");
-    assert!(h.query_by_label("Report").is_none(), "Home shows only a short row of templates");
+    assert!(h.query_by_label("Lettre").is_some(), "Home shows the first templates");
+    assert!(h.query_by_label("Rapport").is_none(), "Home shows only a short row of templates");
     h.get_by_label("More templates →").click();
     h.run_steps(4);
     assert_eq!(h.state().ui.backstage_page, "new", "the link opens New");
-    assert!(h.query_by_label("Report").is_some(), "New shows every template");
+    assert!(h.query_by_label("Rapport").is_some(), "New shows every template");
     assert!(h.query_by_label("Recent").is_none(), "New has no Recent list");
 }
 
@@ -591,9 +606,9 @@ fn templates_and_recent_documents_are_named_buttons() {
         let label = format!("Report.docx, {p}");
         assert!(h.query_by_role_and_label(Role::Button, &label).is_some(), "a repeated file name is told apart by its path: {label}");
     }
-    h.get_by_role_and_label(Role::Button, "Letter").click();
+    h.get_by_role_and_label(Role::Button, "Lettre").click();
     h.run_steps(4);
-    assert!(!h.state().ui.backstage, "the Letter button opens the template");
+    assert!(!h.state().ui.backstage, "the Lettre button opens the template");
     assert!(!h.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body).is_empty(), "with the template's text");
 }
 

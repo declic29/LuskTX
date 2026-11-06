@@ -72,8 +72,8 @@ pub enum ProofLang {
     De,
     /// French (`fr`, `fr-FR`, `fr-BE`, `fr-CA`, `fr-CH`…): the Hunspell `fr_FR` dictionary of
     /// Dicollecte (looked up in the dictionaries folders), elision-aware spelling, suggestions
-    /// and generic checks with French messages ([`crate::fr`]). Hyphenation keeps the fallback
-    /// English patterns.
+    /// and generic checks with French messages ([`crate::fr`]). Hyphenation uses the bundled TeX
+    /// French patterns ([`crate::hyphen::Patterns::fr`]).
     Fr,
     /// A language without proofing tools here (`ja-JP`, `x-none`…). Like Word without
     /// the language's proofing tools: no spelling or grammar marks, so its words are never

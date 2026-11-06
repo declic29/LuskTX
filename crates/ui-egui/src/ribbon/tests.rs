@@ -502,7 +502,8 @@ fn language_menu_reaches_every_language() {
     let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Bonjour")), crate::Services::default());
     let mut h = egui_kittest::Harness::builder().with_size(vec2(400.0, 600.0)).build_ui_state(|ui, app: &mut WordApp| language_menu(ui, app), app);
     h.run();
-    assert!(h.query(item("French (France)")).is_none(), "the short list only, on an English document");
+    // Lusk Texte proofs French, so French is on the short list (with the other proofed languages).
+    assert!(h.query(item("French (France)")).is_some(), "French is on the short list");
     assert!(!h.get(item("Set Proofing Language…")).accesskit_node().is_disabled(), "never greyed out on a fresh document");
     assert!(!h.get(item("English (United States)")).accesskit_node().is_disabled());
     h.get(item("Set Proofing Language…")).click();

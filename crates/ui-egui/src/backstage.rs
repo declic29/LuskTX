@@ -124,6 +124,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 }
             }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
+                #[allow(clippy::single_element_loop)] // Lusk Texte: Options moved to the left list.
                 for (label, id) in [("About", "about")] {
                     let (r, resp) = ui.allocate_exact_size(vec2(200.0, 32.0), Sense::click());
                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), tl!(label)));
@@ -294,7 +295,10 @@ fn template_tile(ui: &mut Ui, app: &mut WordApp, label: &str, template: &str) {
             ui.painter().image(h.id(), r.shrink(1.0), Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
         }
         ui.painter().galley(pos2(r.min.x, r.max.y), galley, ui.visuals().text_color());
-        if resp.clicked() {
+        if resp.clicked() && template == "book" {
+            let ctx = ui.ctx().clone();
+            crate::book_ui::open_wizard(app, &ctx, crate::book_ui::WizardMode::New);
+        } else if resp.clicked() {
             let _ = app.run("file.new", json!({"template": template}));
             app.ui.backstage = false;
             app.canvas.want_focus = true;
@@ -303,8 +307,10 @@ fn template_tile(ui: &mut Ui, app: &mut WordApp, label: &str, template: &str) {
 }
 
 /// The built-in templates in gallery order: display label and the `file.new` template id.
-const TEMPLATES: [(&str, &str); 20] = [
+const TEMPLATES: [(&str, &str); 21] = [
     ("Blank document", "blank"),
+    // Mode Livre: opens the book creation assistant.
+    ("Livre", "book"),
     ("Lettre", "letter"),
     ("Lettre de motivation", "coverLetter"),
     ("CV simple", "resume"),

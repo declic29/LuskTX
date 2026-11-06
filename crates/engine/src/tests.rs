@@ -3120,7 +3120,7 @@ fn set_author_refuses_blank_names_and_clamps_long_ones() {
     let mut s = s();
     for bad in [json!(null), json!({}), json!({"name": 5}), json!({"name": ""}), json!({"name": " \t\n "}), json!({"name": "\u{0}\u{7}"})] {
         assert!(s.run("file.setAuthor", &bad).is_err(), "{bad} should be refused");
-        assert_eq!(s.author, "WordCraft User", "a refused name leaves the author alone");
+        assert_eq!(s.author, "Utilisateur", "a refused name leaves the author alone");
     }
     run(&mut s, "file.setAuthor", json!({"name": "Ada\u{0}\u{1b} Lovelace"}));
     assert_eq!(s.author, "Ada Lovelace", "control characters can't reach the saved XML");
@@ -3260,9 +3260,10 @@ fn toc_and_fields() {
     run(&mut s, "references.toc", json!({}));
     let t = text(&s);
     assert!(t.contains("Contents"), "{t}");
-    assert!(t.contains("Summary\t1"), "{t}");
+    // Lusk Texte: the report template is French.
+    assert!(t.contains("Résumé\t1"), "{t}");
     run(&mut s, "references.updateToc", json!({}));
-    assert_eq!(s.doc.plain_text(StoryRef::Body).matches("Summary\t").count(), 1, "one TOC entry after update");
+    assert_eq!(s.doc.plain_text(StoryRef::Body).matches("Résumé\t").count(), 1, "one TOC entry after update");
 }
 
 /// A comment or reply made here carries its UTC time as `date_utc` too, so it shows in local time
@@ -8598,7 +8599,7 @@ fn new_documents_follow_the_editing_language() {
     run(&mut s, "file.new", json!({}));
     assert_eq!(s.doc.styles.default_chr.lang.as_deref(), Some("pl"));
     run(&mut s, "file.new", json!({"template": "letter"}));
-    assert_eq!(s.doc.styles.default_chr.lang.as_deref(), Some("en-US"), "templates are English text");
+    assert_eq!(s.doc.styles.default_chr.lang.as_deref(), Some("fr-FR"), "Lusk Texte's templates are French text");
     let data = crate::cmd::insert::base64_encode("Płynie rzeka.".as_bytes());
     run(&mut s, "file.open", json!({"path": "notatka.txt", "data": data}));
     assert_eq!(s.doc.styles.default_chr.lang.as_deref(), Some("pl"));
@@ -8639,7 +8640,7 @@ fn default_proofing_language_survives_a_restart() {
     second.set_editing_language(Some("ru-RU"));
     assert_eq!(second.doc.styles.default_chr.lang.as_deref(), Some("en-GB"));
     run(&mut second, "file.new", json!({"template": "letter"}));
-    assert_eq!(second.doc.styles.default_chr.lang.as_deref(), Some("en-US"));
+    assert_eq!(second.doc.styles.default_chr.lang.as_deref(), Some("fr-FR"), "Lusk Texte's templates are French text");
 }
 
 /// Older or malformed settings retain the interface fallback and unrelated preferences.

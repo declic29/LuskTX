@@ -77,10 +77,10 @@ pub fn search_dirs(lo_exts: Option<&[String]>) -> Vec<PathBuf> {
         dirs.push(PathBuf::from(d));
     }
     // Dictionaries shipped with the program: a `dictionnaires` folder next to the executable.
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            dirs.push(dir.join("dictionnaires"));
-        }
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        dirs.push(dir.join("dictionnaires"));
     }
     // LibreOffice keeps each language under `…/share/extensions/<dict-xx>`.
     let lo_dirs =

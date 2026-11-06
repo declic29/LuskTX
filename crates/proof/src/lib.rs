@@ -42,7 +42,7 @@
 //! - **French** ([`ProofLang::Fr`], module [`fr`]): the Hunspell `fr_FR` dictionary of Dicollecte
 //!   (MPL 2.0; looked up in the dictionaries folders, including a `dictionnaires` folder next to
 //!   the program), elisions (`l'homme`) understood, accent-first suggestions and generic checks
-//!   with French messages. Hyphenation uses the existing English fallback.
+//!   with French messages. Hyphenation uses the bundled TeX French patterns.
 //! - **German** ([`ProofLang::De`]): hyphenation by `hyph-utf8`'s German patterns (reformed
 //!   spelling, MIT); no spelling or grammar marks yet.
 //! - **Other languages** ([`ProofLang::Other`]): no spelling or grammar marks, like Word without
@@ -1067,7 +1067,7 @@ mod tests {
         pl::test_dict::install();
         pt::test_dict::install();
         es::test_dict::install();
-        for tag in [Some("pl-PL"), Some("pt-BR"), Some("es-ES"), Some("es-MX"), Some("es-419"), Some("es-UY"), Some("en-US"), Some("fr-FR"), None] {
+        for tag in [Some("pl-PL"), Some("pt-BR"), Some("es-ES"), Some("es-MX"), Some("es-419"), Some("es-UY"), Some("en-US"), None] {
             assert_eq!(missing_dictionary(tag), None, "{tag:?}");
         }
     }
@@ -1114,7 +1114,7 @@ mod tests {
         let found = installed_dictionaries();
         assert_eq!(found.get(4).map(|(lang, _)| *lang), Some(ProofLang::Tr));
         assert_eq!(
-            found[7..11],
+            found[7..12],
             [
                 (ProofLang::Id, Some(dir.join("id_ID.dic"))),
                 (ProofLang::Es, Some(dir.join("es_ES.dic"))),
@@ -1697,7 +1697,7 @@ mod tests {
         for l in [None, Some(""), Some("  "), Some("en"), Some("en-US"), Some("en-GB"), Some("EN-us"), Some("en_US")] {
             assert!(has_dictionary(l), "{l:?}");
         }
-        for l in [Some("lt-LT"), Some("fr-FR"), Some("de"), Some("uk"), Some("-US"), Some("e")] {
+        for l in [Some("lt-LT"), Some("nl-NL"), Some("de"), Some("uk"), Some("-US"), Some("e")] {
             assert!(!has_dictionary(l), "{l:?}");
         }
         // The gate follows the dictionaries, not English: every proofed language is proofed.

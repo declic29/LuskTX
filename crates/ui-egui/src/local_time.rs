@@ -29,6 +29,12 @@ pub(crate) fn comment_time(c: &wordcraft_doc::Comment) -> String {
     stamp(&c.date, c.date_utc.as_deref(), offset_minutes)
 }
 
+/// A UTC time (`2026-11-06T08:30:00Z`) in local time, `YYYY-MM-DD HH:MM` (Lusk Texte : dates de
+/// l'historique des versions).
+pub(crate) fn utc_time(date_utc: &str) -> String {
+    stamp("", Some(date_utc), offset_minutes)
+}
+
 fn stamp(date: &str, date_utc: Option<&str>, offset: impl Fn(i64) -> i32) -> String {
     let utc = date_utc.and_then(parse).filter(|t| t.timed).map(|t| Time { zone: Some(t.zone.unwrap_or(0)), ..t });
     let local_date = || parse(date).map(|t| if date.trim_end().ends_with(['Z', 'z']) { Time { zone: None, ..t } } else { t });

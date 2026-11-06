@@ -26,7 +26,9 @@ fn main() {
     } else {
         wordcraft_engine::sample::sample_document()
     };
-    let mut app = WordApp::new(Session::new(doc), Services::default()).with_control(rx);
+    // Lusk Texte : `LUSK_VERSIONS_DIR` montre l'onglet Versions du panneau Livre.
+    let services = Services { versions_dir: std::env::var_os("LUSK_VERSIONS_DIR").map(std::path::PathBuf::from), ..Services::default() };
+    let mut app = WordApp::new(Session::new(doc), services).with_control(rx);
     app.integrated_titlebar = true;
     if lines.first().is_some_and(|l| l.get("startScreen").is_some()) {
         app.start_screen();

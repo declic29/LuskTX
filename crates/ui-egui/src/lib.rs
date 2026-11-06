@@ -18,6 +18,7 @@ pub mod a11y_pane;
 pub mod async_saves;
 pub mod autoscroll;
 pub mod backstage;
+pub mod book_ui;
 pub mod canvas;
 pub mod caret_glide;
 pub mod chrome;
