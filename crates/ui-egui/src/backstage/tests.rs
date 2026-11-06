@@ -1098,3 +1098,27 @@ fn backstage_save_as_sidebar_opens_save_as_page() {
     h.run_steps(4);
     assert_eq!(h.state().ui.backstage_page, "saveAs");
 }
+
+/// Lusk Texte : « Créer un livre », dans le menu latéral juste sous Nouveau, ouvre l'assistant du
+/// Mode Livre, avec ou sans document ouvert.
+#[test]
+fn the_side_menu_creates_a_book() {
+    let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
+    app.ui.backstage = true;
+    app.ui.backstage_page = "home".into();
+    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
+        |ui, app: &mut WordApp| {
+            let ctx = ui.ctx().clone();
+            app.logic(&ctx);
+            app.ui(ui);
+        },
+        app,
+    );
+    h.run_steps(3);
+    let labels: Vec<&str> = super::PAGES.iter().map(|p| p.1).collect();
+    assert_eq!(labels.get(1..3), Some(&["New", "Créer un livre"][..]), "right under New");
+    h.get_by_label("Créer un livre").click();
+    h.run_steps(4);
+    assert!(h.query_by_label("Nouveau livre").is_some(), "the book wizard is open");
+    assert_eq!(h.state().ui.backstage_page, "home", "not a page of its own");
+}

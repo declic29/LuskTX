@@ -7,9 +7,11 @@ use crate::theme::{Tokens, medium, regular, semibold};
 use crate::{WordApp, icons};
 
 /// The side menu: page id, label and icon (#1714).
-const PAGES: [(&str, &str, &str); 11] = [
+const PAGES: [(&str, &str, &str); 12] = [
     ("home", "Home", "homeFolder"),
     ("new", "New", "blankPage"),
+    // Lusk Texte : créer un livre (l'assistant du Mode Livre), juste sous Nouveau.
+    ("book", "Créer un livre", "coverPage"),
     ("open", "Open", "open"),
     ("info", "Info", "info"),
     ("recover", "Recover", "recover"),
@@ -119,6 +121,11 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         "close" => {
                             let _ = app.run("file.close", json!({}));
                         }
+                        // Not a page: the book wizard opens over the Backstage.
+                        "book" => {
+                            let ctx = ui.ctx().clone();
+                            crate::book_ui::open_wizard(app, &ctx, crate::book_ui::WizardMode::New);
+                        }
                         _ => app.ui.backstage_page = id.into(),
                     }
                 }
@@ -217,7 +224,7 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
 
 /// The Backstage pages that work while no document is open (#1129).
 fn works_without_document(page: &str) -> bool {
-    matches!(page, "home" | "new" | "open" | "options")
+    matches!(page, "home" | "new" | "book" | "open" | "options")
 }
 
 fn heading(ui: &mut Ui, s: &str) {
