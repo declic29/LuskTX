@@ -554,7 +554,9 @@ impl WordApp {
             // Aide › Aide : la fenêtre d'aide intégrée.
             "ui.help" => {
                 if let Some(ctx) = self.ctx.clone() {
-                    crate::help::open(&ctx);
+                    // Lusk Texte : `{"page": "livre"}` ouvre la rubrique du Mode Livre.
+                    let page = (s("page") == Some("livre")).then_some(crate::help::BOOK_START);
+                    crate::help::open_at(&ctx, page);
                 }
                 Value::Null
             }

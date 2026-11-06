@@ -118,7 +118,8 @@ fn english_words(text: &str) -> bool {
 /// source to translate. Recognized by French letters, French typography (a space before `:`),
 /// French function words, or the few short names that have none of those.
 fn lusk_french(plain: &str) -> bool {
-    const NAMES: [&str; 9] = ["Lusk Texte", "lusk.bzh", "Aide", "Chercher", "Document", "Livre", "GUIDE", "GUIDES", "Utilisateur"];
+    const NAMES: [&str; 11] =
+        ["Lusk Texte", "lusk.bzh", "Aide", "Chercher", "Document", "Livre", "GUIDE", "GUIDES", "Utilisateur", "Mode Livre", "MODE LIVRE"];
     const WORDS: [&str; 13] = ["et", "le", "la", "les", "des", "du", "en", "OU", "Le", "La", "Rechercher", "Raccourcis", "sur"];
     NAMES.contains(&plain)
         || plain.trim_start_matches(['—', ' ']).starts_with("Lusk Texte")

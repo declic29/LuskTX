@@ -1192,6 +1192,7 @@ pub fn ribbon(app: &mut WordApp, ui: &mut Ui) {
         let spreads = app.session.view.book_spreads;
         big_toggle(ui, app, "multiplePages", "Livre\nouvert", "view.bookSpreads", spreads);
         big(ui, app, "onePage", "Miniatures", "ui.bookPaneTab", json!({"tab": "pages"}), false);
+        big(ui, app, "help", "Aide du\nMode Livre", "ui.help", json!({"page": "livre"}), false);
     });
     group(ui, "Structure", None, app, |ui, app| {
         big(ui, app, "pageBreak", "Chapitre", "book.insert", json!({"kind": "chapter"}), false);

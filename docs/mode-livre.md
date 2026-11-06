@@ -152,7 +152,7 @@ ressources et la couverture s'y ajouteront en phase 4.
 | `crates/engine/src/io_ext.rs`, `io.rs` | Ouverture et enregistrement `.lusklivre` |
 | `crates/proof/src/hyphen.rs`, `assets/hyphenation/fr.pat` | Césure française (motifs TeX hyph-fr, MIT) |
 | `crates/ui-egui/src/book_ui.rs` | Bascule Document \| Livre, assistant, panneau Livre (glisser-déposer, renommage, menu contextuel), confirmation de suppression, onglet de ruban « Livre » |
-| `crates/ui-egui/aide/08-mode-livre.md` | Aide intégrée en français |
+| `crates/ui-egui/aide/livre/*.md` | Aide intégrée en français : rubrique « Mode Livre » de l'aide (six pages), ouverte aussi par Livre › Aide du Mode Livre (`ui.help {"page": "livre"}`) |
 
 Toutes les actions passent par des commandes : elles sont annulables, accessibles au ruban, aux
 raccourcis, à la recherche de commandes, à la ligne de commande et au pilotage MCP. Le test

@@ -14,7 +14,7 @@ use crate::{WordApp, icons};
 
 /// Les guides : titre et icône dans le sommaire, texte. Le texte accepte `# titre`,
 /// `## sous-titre`, les listes `- …` et `1. …`, et `**gras**`.
-const GUIDES: [(&str, &str, &str); 8] = [
+const GUIDES: [(&str, &str, &str); 7] = [
     ("Bien démarrer", "homeFolder", include_str!("../aide/01-bien-demarrer.md")),
     ("Créer, ouvrir et enregistrer", "open", include_str!("../aide/02-fichiers.md")),
     ("Mettre en forme le texte", "bold", include_str!("../aide/03-mise-en-forme.md")),
@@ -22,12 +22,33 @@ const GUIDES: [(&str, &str, &str); 8] = [
     ("Images, tableaux et objets", "picture", include_str!("../aide/05-images-tableaux.md")),
     ("Vérifier et réviser", "spelling", include_str!("../aide/06-verifier-reviser.md")),
     ("Imprimer, exporter et partager", "print", include_str!("../aide/07-imprimer-partager.md")),
-    ("Écrire un livre (Mode Livre)", "coverPage", include_str!("../aide/08-mode-livre.md")),
 ];
 
-/// Les deux pages générées, après les guides.
-const REFERENCE: usize = GUIDES.len();
-const SHORTCUTS: usize = GUIDES.len() + 1;
+/// La rubrique du Mode Livre (son onglet dans le sommaire), après les guides.
+const BOOK: [(&str, &str, &str); 6] = [
+    ("Découvrir le Mode Livre", "coverPage", include_str!("../aide/livre/01-decouvrir.md")),
+    ("Structurer le livre", "toc", include_str!("../aide/livre/02-structurer.md")),
+    ("Mise en page d'édition", "onePage", include_str!("../aide/livre/03-mise-en-page.md")),
+    ("Couverture et impression", "documentTemplate", include_str!("../aide/livre/04-couverture-impression.md")),
+    ("Livre numérique (EPUB)", "export", include_str!("../aide/livre/05-livre-numerique.md")),
+    ("Vérifier et conserver", "checkErrors", include_str!("../aide/livre/06-verifier-conserver.md")),
+];
+/// La première page de la rubrique Mode Livre.
+pub(crate) const BOOK_START: usize = GUIDES.len();
+
+/// Les deux pages générées, après les guides et la rubrique Mode Livre.
+const REFERENCE: usize = GUIDES.len() + BOOK.len();
+const SHORTCUTS: usize = REFERENCE + 1;
+
+/// Les pages écrites (guides puis Mode Livre) : numéro de page, rubrique, titre, icône et texte.
+fn written() -> impl Iterator<Item = (usize, &'static str, &'static str, &'static str, &'static str)> {
+    GUIDES
+        .iter()
+        .map(|g| ("Guide", g))
+        .chain(BOOK.iter().map(|g| ("Mode Livre", g)))
+        .enumerate()
+        .map(|(i, (kicker, (title, icon, text)))| (i, kicker, *title, *icon, *text))
+}
 const GENERATED: [(usize, &str, &str); 2] = [(REFERENCE, "Toutes les commandes", "search"), (SHORTCUTS, "Raccourcis clavier", "bullets")];
 
 /// L'ordre des onglets du ruban, pour classer la référence.
@@ -56,13 +77,18 @@ fn state_id() -> egui::Id {
 }
 
 /// Ouvre la fenêtre d'aide (commande `ui.help`).
-pub(crate) fn open(ctx: &egui::Context) {
+/// Sur la page `page` quand elle est donnée (`ui.help {"page": "livre"}`).
+pub(crate) fn open_at(ctx: &egui::Context, page: Option<usize>) {
     ctx.data_mut(|d| {
         let st = d.get_temp_mut_or_default::<State>(state_id());
         if !st.open {
             st.maximize = 3;
         }
         st.open = true;
+        if let Some(p) = page.filter(|p| *p <= SHORTCUTS) {
+            st.page = p;
+            st.query.clear();
+        }
     });
     ctx.request_repaint();
 }
@@ -157,21 +183,33 @@ fn nav(ui: &mut Ui, st: &mut State, embedded: bool, close: &mut bool) {
     });
     ui.add_space(20.0);
     let searching = !st.query.trim().is_empty();
-    section(ui, "GUIDES");
-    for (i, (title, icon, _)) in GUIDES.iter().enumerate() {
-        if nav_item(ui, icon, title, !searching && st.page == i) {
-            st.page = i;
-            st.query.clear();
+    // Le sommaire défile quand la fenêtre est trop basse pour tout montrer.
+    let room = ui.available_height() - if embedded { 44.0 } else { 0.0 };
+    ScrollArea::vertical().id_salt("help_nav_scroll").max_height(room.max(80.0)).auto_shrink([false, true]).show(ui, |ui| {
+        section(ui, "GUIDES");
+        for (i, _, title, icon, _) in written().take(GUIDES.len()) {
+            if nav_item(ui, icon, title, !searching && st.page == i) {
+                st.page = i;
+                st.query.clear();
+            }
         }
-    }
-    ui.add_space(14.0);
-    section(ui, "RÉFÉRENCE");
-    for (i, title, icon) in GENERATED {
-        if nav_item(ui, icon, title, !searching && st.page == i) {
-            st.page = i;
-            st.query.clear();
+        ui.add_space(14.0);
+        section(ui, "MODE LIVRE");
+        for (i, _, title, icon, _) in written().skip(GUIDES.len()) {
+            if nav_item(ui, icon, title, !searching && st.page == i) {
+                st.page = i;
+                st.query.clear();
+            }
         }
-    }
+        ui.add_space(14.0);
+        section(ui, "RÉFÉRENCE");
+        for (i, title, icon) in GENERATED {
+            if nav_item(ui, icon, title, !searching && st.page == i) {
+                st.page = i;
+                st.query.clear();
+            }
+        }
+    });
     if embedded {
         ui.with_layout(Layout::bottom_up(Align::Min), |ui| {
             if nav_item(ui, "close", tl!("Close"), false) {
@@ -213,7 +251,10 @@ fn page(app: &WordApp, ui: &mut Ui, page: usize) {
     match page {
         REFERENCE => reference(app, ui, false),
         SHORTCUTS => reference(app, ui, true),
-        i => markdown(ui, "Guide", GUIDES.get(i).map_or(GUIDES[0].2, |g| g.2)),
+        i => {
+            let (kicker, text) = written().find(|w| w.0 == i).map_or(("Guide", GUIDES[0].2), |w| (w.1, w.4));
+            markdown(ui, kicker, text);
+        }
     }
 }
 
@@ -250,6 +291,10 @@ fn markdown(ui: &mut Ui, kicker: &str, text: &str) {
             page_title(ui, kicker, h);
         } else if let Some(h) = l.strip_prefix("## ") {
             subheading(ui, h);
+        } else if let Some(h) = l.strip_prefix("### ") {
+            ui.add_space(10.0);
+            ui.label(RichText::new(h).font(semibold(15.5)).color(t.text));
+            ui.add_space(4.0);
         } else if l.trim().is_empty() {
             ui.add_space(6.0);
         } else if let Some(item) = l.strip_prefix("- ") {
@@ -412,7 +457,7 @@ fn results(app: &WordApp, ui: &mut Ui, st: &mut State) {
     let q = fold(st.query.trim());
     page_title(ui, "Recherche", &format!("« {} »", st.query.trim()));
     let mut found = false;
-    for (i, (title, icon, text)) in GUIDES.iter().enumerate() {
+    for (i, _, title, icon, text) in written() {
         let hits: Vec<&str> = text.lines().filter(|l| !l.starts_with('#') && fold(l).contains(&q)).take(3).collect();
         if hits.is_empty() && !fold(title).contains(&q) {
             continue;
@@ -430,7 +475,7 @@ fn results(app: &WordApp, ui: &mut Ui, st: &mut State) {
                     let (r, _) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::hover());
                     icons::paint(ui.painter(), r, icon, t.accent_text, t.accent);
                     ui.add_space(4.0);
-                    ui.label(RichText::new(*title).font(semibold(15.5)).color(t.accent_text));
+                    ui.label(RichText::new(title).font(semibold(15.5)).color(t.accent_text));
                 });
                 for h in &hits {
                     ui.add_space(2.0);
@@ -492,7 +537,7 @@ fn fold(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{GUIDES, fold, numbered};
+    use super::{BOOK, BOOK_START, GUIDES, REFERENCE, fold, numbered, written};
 
     #[test]
     fn search_ignores_case_and_accents() {
@@ -508,8 +553,18 @@ mod tests {
 
     #[test]
     fn every_guide_has_a_title() {
-        for (title, _, text) in GUIDES {
+        for (_, _, title, _, text) in written() {
             assert!(text.starts_with("# "), "{title}");
         }
+    }
+
+    /// La rubrique Mode Livre suit les guides, et la référence suit la rubrique.
+    #[test]
+    fn the_book_pages_have_their_own_section() {
+        assert_eq!(BOOK_START, GUIDES.len());
+        assert_eq!(REFERENCE, GUIDES.len() + BOOK.len());
+        let book: Vec<_> = written().filter(|w| w.1 == "Mode Livre").map(|w| w.0).collect();
+        assert_eq!(book, (BOOK_START..REFERENCE).collect::<Vec<_>>());
+        assert!(written().any(|w| w.4.contains("EPUBCheck") && w.4.contains("texte de remplacement")));
     }
 }
