@@ -89,7 +89,7 @@ Dans l'onglet **Livre**, groupe **Publier** :
 
 - **PDF pour l'imprimeur** : les dimensions exactes du livre, les polices incorporées, le fond perdu ajouté autour de chaque page et la zone de coupe indiquée (boîtes TrimBox et BleedBox).
 - **PDF pour la lecture** : pour lire à l'écran ou partager, avec les signets des chapitres et les numéros de page du livre (i, ii… puis 1, 2…).
-- **EPUB** : le livre numérique pour liseuses (EPUB 3), un fichier par chapitre, une table des matières, et les notes de bas de page en notes cliquables. L'image de première de couverture choisie dans le Studio Couverture devient la couverture de l'EPUB, affichée dans la bibliothèque des liseuses. Il est validé par EPUBCheck, l'outil officiel.
+- **EPUB** : le livre numérique pour liseuses (EPUB 3), un fichier par chapitre, une table des matières, et les notes de bas de page en notes cliquables. L'image de première de couverture choisie dans le Studio Couverture devient la couverture de l'EPUB, affichée dans la bibliothèque des liseuses. Il est validé par EPUBCheck, l'outil officiel, et rendu **accessible** automatiquement (lecteurs d'écran, informations d'accessibilité affichées par les librairies) : pensez seulement à donner une description à vos images, le contrôle qualité vous signale celles qui n'en ont pas.
 
 Le livre reste modifiable dans tous les cas : enregistrez aussi en **.docx** ou en **.odt** (Fichier › Enregistrer sous) si votre éditeur vous le demande.
 

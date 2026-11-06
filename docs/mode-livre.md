@@ -63,11 +63,19 @@ Document reste inchangé.
   (`coverImage`) ouvre le livre : `cover.xhtml` en tête du `spine`, image `cover-image`
   (convertie en PNG si besoin) et `<meta name="cover">` pour les anciennes liseuses ; si
   l'image est introuvable, l'export le signale et l'EPUB part sans couverture.
+- **Accessibilité EPUB** (automatique) : métadonnées schema.org (`accessMode`,
+  `accessModeSufficient`, `accessibilityFeature`, `accessibilityHazard`,
+  `accessibilitySummary` en français) déduites du contenu (images décrites ou non) ; rôles
+  DPUB-ARIA (`doc-noteref`, `doc-footnote`, `doc-toc`, `doc-cover`) ; une cellule d'en-tête de
+  tableau vide devient une cellule ordinaire. Aucune déclaration de conformité n'est écrite à la
+  place de l'auteur.
 - **Validation EPUBCheck** : le test `book::epub::tests::epubcheck_finds_nothing_wrong` exporte un
   livre complet (pages liminaires, partie, chapitres, sous-chapitre, notes, liste, tableau, image,
   lien) et un document vide, et exige zéro erreur et zéro avertissement d'EPUBCheck (W3C, BSD)
-  quand `EPUBCHECK_JAR` est défini. `outils/test-epub.ps1` télécharge EPUBCheck 5.2.1 dans
-  `outils/epubcheck` (ignoré par git) et lance ce test, ou valide les `.epub` d'un dossier.
+  quand `EPUBCHECK_JAR` est défini, et aucun problème d'accessibilité pour DAISY Ace (MIT) quand
+  `ACE_BIN` est défini. `outils/test-epub.ps1` télécharge EPUBCheck 5.2.1 dans
+  `outils/epubcheck` et, si Node.js est présent, installe Ace dans `outils/ace` (tous deux
+  ignorés par git), puis lance ce test, ou valide les `.epub` d'un dossier.
 - **Studio Couverture** (`book.cover`, `book::cover`) : un document d'une page (quatrième + dos +
   première + fond perdu) fait d'un tableau à trois cellules colorées ; texte du dos tourné de bas
   en haut ; image de première ; ISBN et emplacement du code-barres. Sa propriété `LuskCouverture`

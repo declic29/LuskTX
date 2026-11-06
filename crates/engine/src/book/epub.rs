@@ -127,14 +127,14 @@ fn with_notes(body: String, doc: &Document, notes: &[(usize, u32, String)], firs
         let mark = if custom.trim().is_empty() { k.to_string() } else { esc(custom.trim()) };
         body = body.replacen(
             &format!("<a id=\"{NOTE_MARK}{n}\"></a>"),
-            &format!("<sup><a epub:type=\"noteref\" class=\"noteref\" id=\"noteref-{k}\" href=\"#note-{k}\">{mark}</a></sup>"),
+            &format!("<sup><a epub:type=\"noteref\" role=\"doc-noteref\" class=\"noteref\" id=\"noteref-{k}\" href=\"#note-{k}\">{mark}</a></sup>"),
             1,
         );
         let text = doc.plain_text(wordcraft_doc::StoryRef::Part(*id)).replace(wordcraft_doc::para::OBJ, "");
         let paras: Vec<String> = text.split('\n').map(str::trim).filter(|t| !t.is_empty()).map(esc).collect();
         let paras = if paras.is_empty() { vec![String::new()] } else { paras };
         asides.push_str(&format!(
-            "<aside epub:type=\"footnote\" class=\"note\" id=\"note-{k}\">\n<p><a href=\"#noteref-{k}\">{mark}</a>. {}</p>\n",
+            "<aside epub:type=\"footnote\" role=\"doc-footnote\" class=\"note\" id=\"note-{k}\">\n<p><a href=\"#noteref-{k}\">{mark}</a>. {}</p>\n",
             paras.first().map_or("", String::as_str)
         ));
         for p in paras.iter().skip(1) {
@@ -142,7 +142,76 @@ fn with_notes(body: String, doc: &Document, notes: &[(usize, u32, String)], firs
         }
         asides.push_str("</aside>\n");
     }
-    format!("{body}\n<section class=\"notes\" epub:type=\"footnotes\">\n{asides}</section>")
+    format!("{body}\n<section class=\"notes\" aria-label=\"Notes\">\n{asides}</section>")
+}
+
+/// An empty header cell (`<th …></th>`) is an ordinary cell: a header with no text names nothing
+/// for a screen reader.
+fn empty_headers_to_cells(xhtml: &str) -> String {
+    let mut out = String::with_capacity(xhtml.len());
+    let mut rest = xhtml;
+    while let Some(i) = rest.find("<th") {
+        let (before, from) = rest.split_at(i);
+        out.push_str(before);
+        let is_th = from.as_bytes().get(3).is_some_and(|c| *c == b'>' || *c == b' ');
+        let end = from.find('>');
+        match end {
+            Some(e) if is_th && from.get(e + 1..).is_some_and(|t| t.starts_with("</th>")) => {
+                out.push_str("<td");
+                out.push_str(from.get(3..=e).unwrap_or(">"));
+                out.push_str("</td>");
+                rest = from.get(e + 1 + "</th>".len()..).unwrap_or("");
+            }
+            _ => {
+                out.push_str("<th");
+                rest = from.get(3..).unwrap_or("");
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// The EPUB Accessibility metadata (schema.org), from what the content documents hold: text
+/// always, pictures when there are some, and whether every picture is described (`alt`).
+fn accessibility_meta<'a>(pages: impl Iterator<Item = &'a str>) -> String {
+    let (mut images, mut undescribed) = (0usize, 0usize);
+    for page in pages {
+        for img in page.split("<img").skip(1) {
+            images += 1;
+            let tag = img.split('>').next().unwrap_or_default();
+            if !tag.contains("alt=\"") || tag.contains("alt=\"\"") {
+                undescribed += 1;
+            }
+        }
+    }
+    let mut m = String::from("<meta property=\"schema:accessMode\">textual</meta>\n");
+    if images > 0 {
+        m.push_str("<meta property=\"schema:accessMode\">visual</meta>\n");
+    }
+    if images == 0 || undescribed == 0 {
+        m.push_str("<meta property=\"schema:accessModeSufficient\">textual</meta>\n");
+    }
+    if images > 0 {
+        m.push_str("<meta property=\"schema:accessModeSufficient\">textual,visual</meta>\n");
+    }
+    for f in ["structuralNavigation", "tableOfContents", "readingOrder", "displayTransformability"] {
+        m.push_str(&format!("<meta property=\"schema:accessibilityFeature\">{f}</meta>\n"));
+    }
+    if images > 0 && undescribed == 0 {
+        m.push_str("<meta property=\"schema:accessibilityFeature\">alternativeText</meta>\n");
+    }
+    m.push_str("<meta property=\"schema:accessibilityHazard\">none</meta>\n");
+    let mut summary = String::from(
+        "Livre numérique au texte redimensionnable, structuré par titres, avec une table des matières, un ordre de lecture logique et des notes reliées à leur appel.",
+    );
+    if images > 0 && undescribed == 0 {
+        summary.push_str(" Chaque image a une description textuelle.");
+    } else if undescribed > 0 {
+        summary.push_str(" Certaines images n'ont pas de description textuelle.");
+    }
+    m.push_str(&format!("<meta property=\"schema:accessibilitySummary\">{}</meta>\n", esc(&summary)));
+    m
 }
 
 /// One XHTML content document.
@@ -261,7 +330,7 @@ pub fn write_with_cover(doc: &Document, cover: Option<(Vec<u8>, &'static str, &'
         notes_to_marks(&mut part.body, &mut notes, 0);
         let html = wordcraft_formats::html::export_fragment(&part);
         let html = html.strip_prefix("<meta charset=\"utf-8\">").unwrap_or(&html);
-        let body = with_notes(xhtmlify(html, &mut pictures), doc, &notes, note_count);
+        let body = with_notes(empty_headers_to_cells(&xhtmlify(html, &mut pictures)), doc, &notes, note_count);
         note_count += notes.len();
         let chunk_title = entries
             .iter()
@@ -279,7 +348,7 @@ pub fn write_with_cover(doc: &Document, cover: Option<(Vec<u8>, &'static str, &'
         let idx = starts.iter().rposition(|&st| st <= block)?;
         files.get(idx.min(files.len().saturating_sub(1))).map(|f| f.0.as_str())
     };
-    let mut nav = String::from("<nav epub:type=\"toc\" id=\"toc\">\n<h1>Table des matières</h1>\n<ol>\n");
+    let mut nav = String::from("<nav epub:type=\"toc\" role=\"doc-toc\" id=\"toc\">\n<h1>Table des matières</h1>\n<ol>\n");
     let mut open_sub = false;
     for e in entries.iter().filter(|e| !matches!(e.kind, ElementKind::TitlePage | ElementKind::Dedication | ElementKind::Epigraph)) {
         let Some(file) = file_of(e.block) else { continue };
@@ -324,7 +393,10 @@ pub fn write_with_cover(doc: &Document, cover: Option<(Vec<u8>, &'static str, &'
         manifest.push_str(&format!("<item id=\"cover-image\" href=\"{href}\" media-type=\"{mime}\" properties=\"cover-image\"/>\n"));
         manifest.push_str("<item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n");
         spine.push_str("<itemref idref=\"cover\" linear=\"yes\"/>\n");
-        let body = format!("<section epub:type=\"cover\" class=\"cover\">\n<img src=\"{href}\" alt=\"Couverture : {}\"/>\n</section>", esc(&title));
+        let body = format!(
+            "<section class=\"cover\">\n<img epub:type=\"cover\" role=\"doc-cover\" src=\"{href}\" alt=\"Couverture : {}\"/>\n</section>",
+            esc(&title)
+        );
         (href, page(&title, &lang, &body))
     });
     for (i, (file, _, _)) in files.iter().enumerate() {
@@ -337,8 +409,9 @@ pub fn write_with_cover(doc: &Document, cover: Option<(Vec<u8>, &'static str, &'
     let creator = if author.is_empty() { String::new() } else { format!("<dc:creator>{}</dc:creator>\n", esc(&author)) };
     let isbn = if s.isbn.is_empty() { String::new() } else { format!("<dc:source>urn:isbn:{}</dc:source>\n", esc(&s.isbn.replace([' ', '-'], ""))) };
     let cover_meta = if cover.is_some() { "<meta name=\"cover\" content=\"cover-image\"/>\n" } else { "" };
+    let a11y = accessibility_meta(files.iter().map(|f| f.2.as_str()).chain(cover_page.iter().map(|c| c.1.as_str())));
     let opf = format!(
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{id}</dc:identifier>\n<dc:title>{}</dc:title>\n{creator}{isbn}<dc:language>{lang}</dc:language>\n<meta property=\"dcterms:modified\">{modified}</meta>\n{cover_meta}</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{id}</dc:identifier>\n<dc:title>{}</dc:title>\n{creator}{isbn}<dc:language>{lang}</dc:language>\n<meta property=\"dcterms:modified\">{modified}</meta>\n{cover_meta}{a11y}</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
         esc(&title)
     );
     let container = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">\n<rootfiles>\n<rootfile full-path=\"OEBPS/content.opf\" media-type=\"application/oebps-package+xml\"/>\n</rootfiles>\n</container>\n";
@@ -502,7 +575,8 @@ mod tests {
 
     /// The official validator, EPUBCheck (W3C, BSD licence), finds no error and no warning in a
     /// book's EPUB. It runs when `EPUBCHECK_JAR` names `epubcheck.jar` (and `java` is on the
-    /// path): `outils/test-epub.ps1` downloads it and sets it. Without it the test only says so.
+    /// path); DAISY Ace (accessibility) runs too when `ACE_BIN` names its command line.
+    /// `outils/test-epub.ps1` installs both and sets them. Without them the test only says so.
     #[test]
     fn epubcheck_finds_nothing_wrong() {
         let Some(jar) = std::env::var_os("EPUBCHECK_JAR") else {
@@ -519,6 +593,27 @@ mod tests {
             let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
             let bad: Vec<&str> = text.lines().filter(|l| l.starts_with("ERROR") || l.starts_with("FATAL") || l.starts_with("WARNING")).collect();
             assert!(out.status.success() && bad.is_empty(), "EPUBCheck on {name}:\n{text}");
+        }
+        // DAISY Ace (accessibility, MIT licence) when `ACE_BIN` names its command line.
+        if let Some(ace) = std::env::var_os("ACE_BIN") {
+            for name in ["livre", "vide"] {
+                let report = dir.join(format!("ace-{name}"));
+                let out = std::process::Command::new(&ace)
+                    .args(["-f", "-s", "-o"])
+                    .arg(&report)
+                    .arg(dir.join(format!("{name}.epub")))
+                    .output()
+                    .expect("Ace runs");
+                let json = std::fs::read_to_string(report.join("report.json")).unwrap_or_default();
+                let v: serde_json::Value = serde_json::from_str(&json).unwrap_or_default();
+                assert_eq!(
+                    v["earl:result"]["earl:outcome"],
+                    "pass",
+                    "Ace on {name}.epub:\n{}{}\n{json}",
+                    String::from_utf8_lossy(&out.stdout),
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
         }
         if std::env::var_os("LUSK_EPUB_KEEP").is_none() {
             let _ = std::fs::remove_dir_all(&dir);
@@ -557,6 +652,24 @@ mod tests {
         assert!(!entry(&mut zip, "OEBPS/content.opf").contains("cover"));
     }
 
+    /// The accessibility metadata says what the book holds: text, pictures, whether every picture
+    /// is described; an empty table header becomes a plain cell.
+    #[test]
+    fn accessibility_metadata_follows_the_content() {
+        let text_only = accessibility_meta(["<p>Texte</p>"].into_iter());
+        assert!(text_only.contains("accessModeSufficient\">textual<") && !text_only.contains("visual"));
+        assert!(text_only.contains("accessibilityHazard\">none<") && text_only.contains("tableOfContents"));
+        let described = accessibility_meta(["<img src=\"a.png\" alt=\"Un phare\"/>"].into_iter());
+        assert!(described.contains("alternativeText") && described.contains("accessModeSufficient\">textual<"));
+        let bare = accessibility_meta(["<img src=\"a.png\" alt=\"\"/>"].into_iter());
+        assert!(!bare.contains("alternativeText") && !bare.contains("accessModeSufficient\">textual<"));
+        assert!(bare.contains("Certaines images n&#39;ont pas") || bare.contains("Certaines images n'ont pas"), "{bare}");
+        assert_eq!(
+            empty_headers_to_cells("<tr><th style=\"x\">A</th><th style=\"x\"></th><thead></thead></tr>"),
+            "<tr><th style=\"x\">A</th><td style=\"x\"></td><thead></thead></tr>"
+        );
+    }
+
     /// Footnotes become EPUB 3 note references and asides; lists, tables, links and pictures
     /// come through; every file stays well-formed.
     #[test]
@@ -571,7 +684,7 @@ mod tests {
             all.push_str(&xml);
         }
         assert!(all.contains("epub:type=\"noteref\"") && all.contains("href=\"#note-1\""), "{all}");
-        assert!(all.contains("<aside epub:type=\"footnote\" class=\"note\" id=\"note-1\">"));
+        assert!(all.contains("<aside epub:type=\"footnote\" role=\"doc-footnote\" class=\"note\" id=\"note-1\">"));
         assert!(all.contains("Une note de bas de page."));
         assert!(!all.contains(NOTE_MARK), "no marker left");
         assert!(all.contains("<li>") && all.contains("<table") && all.contains("https://lusk.bzh/?a=1&amp;b=2"));
