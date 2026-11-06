@@ -1084,7 +1084,11 @@ fn about_dialog(ui: &mut Ui, d: &mut Dialog) -> bool {
     ui.add_space(6.0);
     ui.label(egui::RichText::new("Lusk Texte. MIT OU Apache-2.0. Copyright (c) 2026.").small().weak());
     ui.label(egui::RichText::new("Dictionnaire orthographique français : Dicollecte (Olivier R.), licence MPL 2.0.").small().weak());
-    ui.label(egui::RichText::new("Les licences et crédits complets sont fournis avec le logiciel (fichiers LICENSE, NOTICE et ATTRIBUTION).").small().weak());
+    ui.label(
+        egui::RichText::new("Les licences et crédits complets sont fournis avec le logiciel (fichiers LICENSE, NOTICE et ATTRIBUTION).")
+            .small()
+            .weak(),
+    );
     let (ok, cancel) = buttons(ui, tl!("Close"));
     ok || cancel
 }

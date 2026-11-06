@@ -36,7 +36,8 @@ pub fn show(state: &mut State, ui: &mut egui::Ui, discover: &Discover, translate
             let printer_label = crate::print_page::icon_label(ui, "print", &t("Printer"));
             let shown = craft_ui::printing::shown_names(&state.printers);
             let selected = state.printers.iter().zip(&shown).find(|(p, _)| p.name == state.settings.printer).map(|(_, text)| text.clone());
-            let current = if state.settings.printer.is_empty() { t("Select a printer") } else { selected.unwrap_or_else(|| state.settings.printer.clone()) };
+            let current =
+                if state.settings.printer.is_empty() { t("Select a printer") } else { selected.unwrap_or_else(|| state.settings.printer.clone()) };
             craft_ui::ComboBox::from_id_salt("printer")
                 .width(width)
                 .wrap_mode(egui::TextWrapMode::Truncate)
@@ -62,7 +63,8 @@ pub fn show(state: &mut State, ui: &mut egui::Ui, discover: &Discover, translate
                 (Some(Duplex::ShortEdge), t("Two-sided: short edge")),
             ];
             let duplex_label = crate::print_page::icon_label(ui, "duplex", &t("Two-sided printing"));
-            let current = choices.iter().find(|(value, _)| *value == state.settings.duplex).map_or_else(|| t("Printer default"), |(_, text)| text.clone());
+            let current =
+                choices.iter().find(|(value, _)| *value == state.settings.duplex).map_or_else(|| t("Printer default"), |(_, text)| text.clone());
             craft_ui::ComboBox::from_id_salt("duplex")
                 .width(width)
                 .wrap_mode(egui::TextWrapMode::Truncate)

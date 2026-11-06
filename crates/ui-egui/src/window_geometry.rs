@@ -509,7 +509,8 @@ mod tests {
     #[test]
     fn a_window_saved_off_screen_comes_back() {
         let screen = egui::vec2(1920.0, 1080.0);
-        let lost = WindowGeometry { position: Some([-1920.0, -1080.0]), width: 1440.0, height: 920.0, maximized: false, monitor: Some([1920.0, 1080.0]) };
+        let lost =
+            WindowGeometry { position: Some([-1920.0, -1080.0]), width: 1440.0, height: 920.0, maximized: false, monitor: Some([1920.0, 1080.0]) };
         let on = egui::Rect::from_min_size(egui::pos2(-1920.0, -1080.0), egui::vec2(1440.0, 920.0));
         assert_eq!(lost.rescue_position(&raw(on, screen)), Some(egui::pos2(240.0, 80.0)));
         // A second monitor to the left or above shares rows or columns with the main one: kept.

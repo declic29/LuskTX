@@ -1,7 +1,9 @@
 //! Built-in sample documents and templates (original text, generated in code).
 
 use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, CharProps, HeightRule, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor, VAlign};
+use wordcraft_doc::props::{
+    Align, Border, BorderStyle, Borders, CharProps, HeightRule, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor, VAlign,
+};
 use wordcraft_doc::{Block, Document, ListKind, Paragraph, PartKind, Table, para_block};
 
 fn para(text: &str) -> Paragraph {
@@ -109,7 +111,11 @@ pub fn sample_document() -> Document {
     );
     b.push(Block::Para(m));
     let mut h = para("Questions go to the front desk, or to the notice board by the sink. ");
-    add(&mut h, "Visit the community board", CharProps { style: Some("Hyperlink".into()), link: Some("https://www.lusk.bzh/".into()), ..Default::default() });
+    add(
+        &mut h,
+        "Visit the community board",
+        CharProps { style: Some("Hyperlink".into()), link: Some("https://www.lusk.bzh/".into()), ..Default::default() },
+    );
     add(&mut h, " for events.", CharProps::default());
     b.push(Block::Para(h));
     d.body = b.into_iter().map(std::sync::Arc::new).collect();
@@ -124,8 +130,10 @@ pub fn sample_document() -> Document {
     let fid = d.add_part(PartKind::Footer, vec![para_block(f)]);
     d.last_section.footers.default = Some(fid);
     let mut hd = styled("The Open Studio Handbook\t\tSpring edition", "Header");
-    hd.props.borders =
-        Some(Borders { bottom: Some(Border { style: BorderStyle::Single, width: 0.5, color: Some(Rgb(0xBF, 0xBF, 0xBF)), space: 4.0 }), ..Default::default() });
+    hd.props.borders = Some(Borders {
+        bottom: Some(Border { style: BorderStyle::Single, width: 0.5, color: Some(Rgb(0xBF, 0xBF, 0xBF)), space: 4.0 }),
+        ..Default::default()
+    });
     let hid = d.add_part(PartKind::Header, vec![para_block(hd)]);
     d.last_section.headers.default = Some(hid);
     d
@@ -284,7 +292,9 @@ pub fn cover_letter_fr() -> Document {
         Block::Para(para("")),
         Block::Para(para("Madame, Monsieur,")),
         Block::Para(aligned(
-            para("Présentez-vous en une ou deux phrases et dites pourquoi vous écrivez : le poste visé, et comment vous avez connu l’offre ou l’entreprise."),
+            para(
+                "Présentez-vous en une ou deux phrases et dites pourquoi vous écrivez : le poste visé, et comment vous avez connu l’offre ou l’entreprise.",
+            ),
             Align::Justify,
         )),
         Block::Para(aligned(
@@ -411,13 +421,19 @@ pub fn memo_fr() -> Document {
     let mut d = document_fr("Note de service");
     let b = vec![
         Block::Para(styled("Note de service", "Title")),
-        table(&[&["De", "Prénom Nom, fonction"], &["À", "Destinataires (service, équipe…)"], &["Date", "jj/mm/aaaa"], &["Objet", "Objet de la note"]], false),
+        table(
+            &[&["De", "Prénom Nom, fonction"], &["À", "Destinataires (service, équipe…)"], &["Date", "jj/mm/aaaa"], &["Objet", "Objet de la note"]],
+            false,
+        ),
         Block::Para(para("")),
         Block::Para(aligned(
             para("Exposez en quelques lignes l’information ou la consigne : ce qui change, à partir de quand, et qui est concerné."),
             Align::Justify,
         )),
-        Block::Para(aligned(para("Précisez ce que chacun doit faire et, le cas échéant, la personne à contacter pour toute question."), Align::Justify)),
+        Block::Para(aligned(
+            para("Précisez ce que chacun doit faire et, le cas échéant, la personne à contacter pour toute question."),
+            Align::Justify,
+        )),
         Block::Para(para("")),
         Block::Para(aligned(para("Prénom Nom"), Align::Right)),
         Block::Para(aligned(para("Fonction"), Align::Right)),
@@ -467,7 +483,8 @@ fn ruled_heading(text: &str, rgb: Rgb) -> Paragraph {
     let mut p = run_para(&text.to_uppercase(), CharProps { spacing: Some(1.0), ..colored(rgb, 11.0, true) });
     p.props.space_before = Some(14.0);
     p.props.space_after = Some(6.0);
-    p.props.borders = Some(Borders { bottom: Some(Border { style: BorderStyle::Single, width: 0.75, color: Some(rgb), space: 2.0 }), ..Default::default() });
+    p.props.borders =
+        Some(Borders { bottom: Some(Border { style: BorderStyle::Single, width: 0.75, color: Some(rgb), space: 2.0 }), ..Default::default() });
     p
 }
 
@@ -504,9 +521,11 @@ pub fn resume_serious_fr() -> Document {
     b.push(Block::Para(cv_line("Diplôme — École ou université, Ville", "2017", A4_TEXT)));
     b.push(Block::Para(cv_line("Baccalauréat — Lycée, Ville", "2012", A4_TEXT)));
     b.push(Block::Para(ruled_heading("Compétences", navy)));
-    for (k, v) in
-        [("Métier : ", "compétence, compétence, compétence"), ("Logiciels : ", "logiciel, logiciel"), ("Langues : ", "anglais (courant), espagnol (notions)")]
-    {
+    for (k, v) in [
+        ("Métier : ", "compétence, compétence, compétence"),
+        ("Logiciels : ", "logiciel, logiciel"),
+        ("Langues : ", "anglais (courant), espagnol (notions)"),
+    ] {
         let mut p = Paragraph::new();
         add(&mut p, k, bold());
         add(&mut p, v, CharProps::default());
@@ -585,7 +604,9 @@ pub fn resume_creative_fr() -> Document {
     let mut right = vec![
         rhead("Profil"),
         aligned(
-            para("Présentez-vous en quelques lignes, avec votre style : ce que vous aimez créer, pour qui, et ce qui rend votre travail reconnaissable."),
+            para(
+                "Présentez-vous en quelques lignes, avec votre style : ce que vous aimez créer, pour qui, et ce qui rend votre travail reconnaissable.",
+            ),
             Align::Justify,
         ),
         rhead("Expérience"),
@@ -647,8 +668,14 @@ pub fn business_cards_fr() -> Document {
                 p.props.space_after = Some(0.0);
                 p
             };
-            let paras =
-                vec![name, role, small("06 00 00 00 00"), small("prenom.nom@exemple.fr"), small("www.exemple.fr"), small("Adresse · Code postal Ville")];
+            let paras = vec![
+                name,
+                role,
+                small("06 00 00 00 00"),
+                small("prenom.nom@exemple.fr"),
+                small("www.exemple.fr"),
+                small("Adresse · Code postal Ville"),
+            ];
             if let Some(cell) = t.rows.get_mut(r).and_then(|x| x.cells.get_mut(c)) {
                 cell.blocks = paras.into_iter().map(para_block).collect();
                 cell.props.valign = Some(VAlign::Center);
@@ -770,7 +797,12 @@ pub fn birth_announcement_fr() -> Document {
     let ink = Rgb(0x26, 0x26, 0x26);
     page_border(&mut d, blue, BorderStyle::Single, 1.5);
     let mut b = vec![
-        center_spaced("Nous avons la joie de vous annoncer la naissance de", CharProps { italic: Some(true), ..colored(grey, 15.0, false) }, 72.0, 20.0),
+        center_spaced(
+            "Nous avons la joie de vous annoncer la naissance de",
+            CharProps { italic: Some(true), ..colored(grey, 15.0, false) },
+            72.0,
+            20.0,
+        ),
         center_spaced("Prénom", colored(blue, 44.0, true), 0.0, 24.0),
     ];
     for (k, v) in [("Né(e) le", "jj mois aaaa à hh h mm"), ("à", "Ville"), ("Poids :", "3,2 kg"), ("Taille :", "50 cm")] {
@@ -813,7 +845,10 @@ pub fn menu_fr() -> Document {
         }
     }
     b.push(center_spaced("Menu complet (entrée, plat, dessert) : 29,00 €", colored(wine, 13.0, true), 26.0, 4.0));
-    b.push(center("Prix nets, service compris. Liste des allergènes disponible sur demande.", CharProps { italic: Some(true), ..colored(grey, 10.5, false) }));
+    b.push(center(
+        "Prix nets, service compris. Liste des allergènes disponible sur demande.",
+        CharProps { italic: Some(true), ..colored(grey, 10.5, false) },
+    ));
     blocks(&mut d, b);
     d
 }
