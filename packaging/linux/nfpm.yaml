@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: wordcraft
+name: lusk-texte
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -13,13 +13,14 @@ release: 1
 section: graphics
 priority: optional
 maintainer: ${WORDCRAFT_MAINTAINER}
-vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/wordcraft
+vendor: Lusk Texte (association loi 1901)
+homepage: https://www.lusk.bzh
 license: MIT OR Apache-2.0
 description: |-
-  Open-source, native word processor that works the way Word users expect.
-  The ribbon, styles, tables, track changes, references and mail merge; reads
-  and writes .docx, opens .odt, .rtf, .html, .md and .txt, and exports PDF.
+  Lusk Texte, a free word processor that keeps your writing on your computer.
+  Styles, tables, track changes and references; reads and writes .docx, opens
+  .odt, .rtf, .html, .md and .txt, exports PDF; a Book mode for print-ready
+  PDF and accessible EPUB.
   Includes wordcraft-cli, a headless converter and command runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the

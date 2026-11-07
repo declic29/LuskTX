@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and package WordCraft for FreeBSD:
+# Build and package Lusk Texte for FreeBSD:
 #
 #   $DIST/wordcraft-<version>-freebsd-<arch>.tar.gz   a /usr/local-style tree (<arch> is x86_64, or
 #       aarch64 when CARGO_BUILD_TARGET=aarch64-unknown-freebsd):
@@ -20,7 +20,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.wordcraft
+APP_ID=bzh.lusk.texte
 
 SKIP_BUILD=0
 DRY_RUN=0
@@ -60,7 +60,7 @@ if [ -n "${CARGO_BUILD_TARGET:-}" ] && [ "$(uname -s)" != FreeBSD ]; then
 fi
 BASENAME="wordcraft-$VERSION-freebsd-$ARCH"
 
-echo "==> WordCraft $VERSION for FreeBSD $ARCH"
+echo "==> Lusk Texte $VERSION for FreeBSD $ARCH"
 
 if [[ "$DRY_RUN" = 1 ]]; then
   echo "dry run: target=${CARGO_BUILD_TARGET:-native} arch=$ARCH"

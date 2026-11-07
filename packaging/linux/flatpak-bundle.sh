@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Repackage a WordCraft Linux tarball as a single-file Flatpak bundle:
+# Repackage a Lusk Texte Linux tarball as a single-file Flatpak bundle:
 #
 #   $DIST/wordcraft-<version>-linux-<arch>.flatpak
 #
@@ -11,12 +11,12 @@
 # `appstreamcli compose`; the freedesktop runtime and SDK named in the manifest are
 # installed per-user from Flathub. Unless --no-test, the bundle is then installed per-user and
 # `wordcraft-cli --version` is run inside the sandbox as a smoke test.
-# Manifest: packaging/linux/flatpak/ai.storyteller.wordcraft.bundle.yml.
+# Manifest: packaging/linux/flatpak/bzh.lusk.texte.bundle.yml.
 set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.wordcraft
+APP_ID=bzh.lusk.texte
 FLATHUB=https://dl.flathub.org/repo/flathub.flatpakrepo
 
 TEST=1
@@ -43,7 +43,7 @@ for tool in flatpak flatpak-builder; do
   command -v "$tool" >/dev/null || { echo "error: $tool not found (apt install flatpak flatpak-builder librsvg2-common)" >&2; exit 1; }
 done
 
-echo "==> WordCraft $VERSION Flatpak bundle for $ARCH from $(basename "$TARBALL")"
+echo "==> Lusk Texte $VERSION Flatpak bundle for $ARCH from $(basename "$TARBALL")"
 
 WORK="$CARGO_TARGET_DIR/flatpak-bundle"
 rm -rf "$WORK"
@@ -66,7 +66,7 @@ if [[ "$TEST" = 1 ]]; then
   flatpak install --user -y --noninteractive --reinstall "$OUT"
   flatpak info --user "$APP_ID"
   flatpak run --command=wordcraft-cli "$APP_ID" --version
-  flatpak run --command=sh "$APP_ID" -c 'ls /app/share/applications /app/share/metainfo /app/share/mime/packages /app/share/icons/hicolor/scalable/apps'
+  flatpak run --command=sh "$APP_ID" -c 'ls /app/share/applications /app/share/metainfo /app/share/mime/packages /app/share/icons/hicolor/256x256/apps'
 fi
 echo "==> done"
 ls -lh "$OUT"

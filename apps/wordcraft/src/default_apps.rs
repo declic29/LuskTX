@@ -1,12 +1,12 @@
-//! File › Options › General › Make WordCraft the default for Word documents (#295).
+//! File › Options › General › Make Lusk Texte the default for Word documents (#295).
 //!
-//! The installers register WordCraft for Word, RTF and ODT files without taking over the
+//! The installers register Lusk Texte for Word, RTF and ODT files without taking over the
 //! defaults (`packaging/windows/wordcraft.wxs`, the `.desktop` file's `MimeType=`, `Info.plist`).
 //! This is the button that makes it the default when the user asks:
-//! - **Windows** doesn't let apps set defaults: it opens Settings › Default apps on WordCraft's
+//! - **Windows** doesn't let apps set defaults: it opens Settings › Default apps on Lusk Texte's
 //!   page (`ms-settings:defaultapps?registeredAppMachine=LuskTexte`; Windows 10 ignores the query
-//!   and shows the Default apps list), where the user picks WordCraft per type.
-//! - **Linux and BSD**: `xdg-mime default ai.storyteller.wordcraft.desktop <types>` for
+//!   and shows the Default apps list), where the user picks Lusk Texte per type.
+//! - **Linux and BSD**: `xdg-mime default bzh.lusk.texte.desktop <types>` for
 //!   [`WORD_MIME_TYPES`], which writes the user's `mimeapps.list`. Only when the desktop entry is
 //!   installed (deb, rpm, Flatpak; a bare AppImage has none), and not from inside the Flatpak
 //!   sandbox, which can't change the host's defaults.
@@ -32,11 +32,11 @@ pub fn hook() -> Option<Hook> {
 
 /// The desktop entry the Linux packages install, and the Flatpak's app id.
 #[cfg(any(all(unix, not(target_os = "macos")), test))]
-const DESKTOP_ID: &str = "ai.storyteller.wordcraft.desktop";
+const DESKTOP_ID: &str = "bzh.lusk.texte.desktop";
 
-/// The types the button makes WordCraft the default for on Linux and BSD: Word documents and
+/// The types the button makes Lusk Texte the default for on Linux and BSD: Word documents and
 /// templates (also macro-enabled and legacy), RTF and ODT. The same set the Windows installer
-/// lists under WordCraft's Capabilities; Markdown is only offered under Open With, and plain
+/// lists under Lusk Texte's Capabilities; Markdown is only offered under Open With, and plain
 /// text only on Windows and macOS (the `.desktop` file leaves it out, #4137).
 /// Every one is in the `.desktop` file's `MimeType=` (a test checks).
 #[cfg(any(all(unix, not(target_os = "macos")), test))]
@@ -83,7 +83,7 @@ fn application_dirs(data_home: Option<&str>, data_dirs: Option<&str>, home: Opti
 mod windows {
     use wordcraft_ui_egui::DefaultApp;
 
-    /// Settings › Default apps, on the page of the app registered as `WordCraft` under
+    /// Settings › Default apps, on the page of the app registered as `Lusk Texte` under
     /// `HKLM\Software\RegisteredApplications` (the MSI writes it).
     const SETTINGS_URI: &str = "ms-settings:defaultapps?registeredAppMachine=LuskTexte";
 
@@ -140,7 +140,7 @@ mod tests {
     fn xdg_mime_sets_every_word_type_in_one_call() {
         let args = xdg_mime_args(DESKTOP_ID);
         assert_eq!(args.first().map(String::as_str), Some("default"));
-        assert_eq!(args.get(1).map(String::as_str), Some("ai.storyteller.wordcraft.desktop"));
+        assert_eq!(args.get(1).map(String::as_str), Some("bzh.lusk.texte.desktop"));
         assert_eq!(&args[2..], WORD_MIME_TYPES);
         for t in [
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -156,7 +156,7 @@ mod tests {
     /// Every type the button claims is one the desktop entry declares, or desktops ignore it.
     #[test]
     fn the_desktop_entry_declares_every_claimed_type() {
-        let entry = include_str!("../../../packaging/linux/ai.storyteller.wordcraft.desktop");
+        let entry = include_str!("../../../packaging/linux/bzh.lusk.texte.desktop");
         let declared: Vec<&str> =
             entry.lines().find_map(|l| l.strip_prefix("MimeType=")).map(|v| v.split(';').filter(|s| !s.is_empty()).collect()).unwrap_or_default();
         for t in WORD_MIME_TYPES {
@@ -165,10 +165,10 @@ mod tests {
         assert!(entry.lines().any(|l| l == "Exec=wordcraft %F"), "files are passed on the command line");
     }
 
-    /// Declaring `text/plain` makes WordCraft a handler for every config, script and log on systems with no default set.
+    /// Declaring `text/plain` makes Lusk Texte a handler for every config, script and log on systems with no default set.
     #[test]
     fn the_desktop_entry_does_not_declare_plain_text() {
-        let entry = include_str!("../../../packaging/linux/ai.storyteller.wordcraft.desktop");
+        let entry = include_str!("../../../packaging/linux/bzh.lusk.texte.desktop");
         let declared: Vec<&str> =
             entry.lines().find_map(|l| l.strip_prefix("MimeType=")).map(|v| v.split(';').filter(|s| !s.is_empty()).collect()).unwrap_or_default();
         assert!(!declared.is_empty(), "MimeType= line not found");

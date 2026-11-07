@@ -1,14 +1,17 @@
 [Desktop Entry]
 Type=Application
-Name=WordCraft
+Name=Lusk Texte
 GenericName=Word Processor
-Comment=Write and design documents; open and save Word files
+GenericName[fr]=Traitement de texte
+Comment=Write books and documents; open and save Word files
+Comment[fr]=Écrire des livres et des documents ; ouvrir et enregistrer des fichiers Word
 Exec=wordcraft %F
 TryExec=wordcraft
-Icon=ai.storyteller.wordcraft
+Icon=bzh.lusk.texte
 Terminal=false
 StartupNotify=true
-StartupWMClass=ai.storyteller.wordcraft
+StartupWMClass=bzh.lusk.texte
 Categories=Office;WordProcessor;
-Keywords=word;processor;document;docx;writer;text;letter;report;
+Keywords=word;processor;document;docx;writer;text;book;epub;
+Keywords[fr]=traitement de texte;document;docx;livre;epub;écrire;roman;
 MimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.ms-word.document.macroEnabled.12;application/vnd.openxmlformats-officedocument.wordprocessingml.template;application/vnd.ms-word.template.macroEnabled.12;application/msword;application/msword-template;application/vnd.oasis.opendocument.text;application/rtf;text/rtf;text/markdown;text/x-tex;text/html;

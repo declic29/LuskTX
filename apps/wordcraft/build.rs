@@ -16,7 +16,7 @@ fn main() {
     res.set_icon("../../assets/app-icon/wordcraft.ico")
         .set("ProductName", "Lusk Texte")
         .set("FileDescription", "Lusk Texte, Traitement de texte")
-        .set("CompanyName", "Learning Machines LLC")
+        .set("CompanyName", "Lusk Texte (association loi 1901)")
         .set("LegalCopyright", "Lusk Texte. Logiciel libre sous licence MIT OR Apache-2.0.")
         .set("OriginalFilename", "wordcraft.exe")
         .set("InternalName", "wordcraft");
