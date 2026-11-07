@@ -274,6 +274,9 @@ pub struct UiState {
     pub update_fields_before_print: bool,
     /// The custom dictionary (File › Options › Proofing, Add to Dictionary), kept between runs.
     pub dictionary: Vec<String>,
+    /// Lusk Texte : Fichier › Mises à jour, chercher une nouvelle version au démarrage (activé par
+    /// défaut). La recherche est silencieuse : elle ne se montre que si une version est disponible.
+    pub check_updates_at_start: bool,
 }
 
 /// The ribbon tab the app opens on, and the one it falls back to when the tab that was showing
@@ -296,6 +299,7 @@ impl Default for UiState {
     fn default() -> Self {
         UiState {
             tab: DEFAULT_TAB.into(),
+            check_updates_at_start: true,
             backstage: false,
             backstage_page: "home".into(),
             print: print_page::PrintSettings::default(),

@@ -7,7 +7,7 @@ use crate::theme::{Tokens, medium, regular, semibold};
 use crate::{WordApp, icons};
 
 /// The side menu: page id, label and icon (#1714).
-const PAGES: [(&str, &str, &str); 12] = [
+const PAGES: [(&str, &str, &str); 13] = [
     ("home", "Home", "homeFolder"),
     ("new", "New", "blankPage"),
     // Lusk Texte : créer un livre (l'assistant du Mode Livre), juste sous Nouveau.
@@ -21,6 +21,8 @@ const PAGES: [(&str, &str, &str); 12] = [
     ("export", "Export", "export"),
     ("close", "Close", "close"),
     ("options", "Options", "options"),
+    // Lusk Texte : les nouvelles versions publiées sur GitHub, juste sous Options.
+    ("updates", "Mises à jour", "softwareUpdate"),
 ];
 
 /// The Backstage back chevron's centre on macOS (#1873): beside the traffic lights in a
@@ -164,6 +166,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             "recover" => recovery_page(app, ui),
             "print" | "export" => export_page(app, ui),
             "options" => crate::options::page(app, ui),
+            "updates" => crate::updates_ui::page(app, ui),
             _ => home_page(app, ui),
         });
     });
@@ -224,7 +227,7 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
 
 /// The Backstage pages that work while no document is open (#1129).
 fn works_without_document(page: &str) -> bool {
-    matches!(page, "home" | "new" | "book" | "open" | "options")
+    matches!(page, "home" | "new" | "book" | "open" | "options" | "updates")
 }
 
 fn heading(ui: &mut Ui, s: &str) {

@@ -1437,6 +1437,23 @@ fn paint_file_and_tools(pen: &Pen, name: &str) -> bool {
             pen.line_c(&[(15.0, 7.0), (18.0, 10.0), (15.0, 13.0)], a);
         }
         // Options: a gear.
+        // Lusk Texte : Fichier › Mises à jour, une flèche qui descend dans un cercle qui tourne.
+        "softwareUpdate" => {
+            let at = |deg: f32| {
+                let t = deg.to_radians();
+                (10.0 + 7.0 * t.cos(), 10.0 + 7.0 * t.sin())
+            };
+            let arc: Vec<(f32, f32)> = (0..=14).map(|k| at(-60.0 + k as f32 * 20.0)).collect();
+            pen.line_c(&arc, c);
+            // The arrowhead at the end of the arc, pointing along it.
+            let t = 220f32.to_radians();
+            let (ex, ey) = at(220.0);
+            let (tx, ty) = (-t.sin(), t.cos());
+            let (nx, ny) = (t.cos(), t.sin());
+            pen.fill(&[(ex + 2.8 * tx, ey + 2.8 * ty), (ex + 2.6 * nx, ey + 2.6 * ny), (ex - 2.6 * nx, ey - 2.6 * ny)], c);
+            pen.line_c(&[(10.0, 5.5), (10.0, 13.5)], a);
+            pen.line_c(&[(7.0, 10.8), (10.0, 13.8), (13.0, 10.8)], a);
+        }
         "options" => {
             for k in 0..8 {
                 let t = k as f32 * std::f32::consts::FRAC_PI_4;

@@ -541,8 +541,10 @@ fn main() -> eframe::Result {
             let mut session = Session::new(doc);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
-            app.set_startup_update_check(false);
             load_prefs(&mut app);
+            // Lusk Texte : Fichier › Mises à jour › Rechercher au démarrage (activé par défaut).
+            let at_start = app.ui.check_updates_at_start;
+            app.set_startup_update_check(at_start);
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).

@@ -1122,3 +1122,36 @@ fn the_side_menu_creates_a_book() {
     assert!(h.query_by_label("Nouveau livre").is_some(), "the book wizard is open");
     assert_eq!(h.state().ui.backstage_page, "home", "not a page of its own");
 }
+
+/// Lusk Texte : File › Mises à jour sits right under Options, works without a document, shows
+/// the installed version, and its check-at-start box changes the saved preference (on by
+/// default, kept through `ui.json`).
+#[test]
+fn updates_page_sits_under_options_and_keeps_the_start_check_preference() {
+    let ids: Vec<&str> = super::PAGES.iter().map(|(id, _, _)| *id).collect();
+    let at = |id: &str| ids.iter().position(|i| *i == id).unwrap();
+    assert_eq!(at("updates"), at("options") + 1);
+    assert!(super::works_without_document("updates"));
+
+    let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
+    assert!(a.ui.check_updates_at_start, "on by default");
+    a.run("ui.backstage", json!({"value": true, "page": "updates"})).unwrap();
+    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
+        |ui, app: &mut WordApp| {
+            let ctx = ui.ctx().clone();
+            app.logic(&ctx);
+            app.ui(ui);
+        },
+        a,
+    );
+    h.run_steps(4);
+    assert!(h.query_by_label(&format!("Lusk Texte {}", env!("CARGO_PKG_VERSION"))).is_some(), "the installed version");
+    assert!(h.query_by_label("Rechercher des mises à jour").is_some());
+    h.get_by_label("Rechercher automatiquement les mises à jour au démarrage").click();
+    h.run_steps(2);
+    assert!(!h.state().ui.check_updates_at_start, "the box turns the check at start off");
+    let saved = serde_json::to_vec(&h.state().prefs()).unwrap();
+    assert!(!crate::UiState::from_json(&saved).unwrap().check_updates_at_start, "kept in ui.json");
+    // An older ui.json without the key keeps the check on.
+    assert!(crate::UiState::from_json(b"{}").unwrap().check_updates_at_start);
+}

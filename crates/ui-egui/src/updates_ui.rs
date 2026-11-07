@@ -24,6 +24,9 @@ pub(crate) struct Runtime {
     repaint: Option<egui::Context>,
     pub(crate) manual_window_open: bool,
     pub(crate) status_message: Option<String>,
+    /// Lusk Texte : the outcome showed on File › Mises à jour last frame (instead of the window).
+    #[cfg(not(target_arch = "wasm32"))]
+    inline: bool,
 }
 
 impl Default for Runtime {
@@ -39,6 +42,8 @@ impl Default for Runtime {
             repaint: None,
             manual_window_open: false,
             status_message: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            inline: false,
         }
     }
 }
@@ -93,6 +98,8 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
             Action::None => {}
         }
         // The window answers Help ▸ Check for Updates, so it follows the updater's status.
+        // Lusk Texte : File › Mises à jour shows the outcome on the page instead of the window.
+        let inline = on_updates_page(app);
         let rt = &mut app.updates_rt;
         (rt.manual_window_open, rt.status_message) = match rt.updater.status() {
             Status::Idle => (false, None),
@@ -102,6 +109,14 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
             }
             Status::Failed(e) => (true, Some(tl!("Could not check for updates:\n{error}").replace("{error}", e))),
         };
+        if inline {
+            rt.manual_window_open = false;
+            rt.inline = true;
+        } else if std::mem::take(&mut rt.inline) {
+            // Leaving the page dismisses the outcome it showed, as closing the window does.
+            rt.updater.dismiss_status();
+            (rt.manual_window_open, rt.status_message) = (false, None);
+        }
     }
 
     if app.updates_rt.manual_window_open {
@@ -133,7 +148,69 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
 
     // Closing the window dismisses the outcome it showed.
     #[cfg(not(target_arch = "wasm32"))]
-    if !app.updates_rt.manual_window_open {
+    if !app.updates_rt.manual_window_open && !app.updates_rt.inline {
         app.updates_rt.updater.dismiss_status();
+    }
+}
+
+/// Lusk Texte : whether File › Mises à jour is showing.
+#[cfg(not(target_arch = "wasm32"))]
+fn on_updates_page(app: &WordApp) -> bool {
+    app.ui.backstage && app.ui.backstage_page == "updates"
+}
+
+/// Lusk Texte : File › Mises à jour. The version installed, a button that looks for a newer one
+/// on the association's GitHub releases, and the check at start. A newer version opens the
+/// updater's own window, which downloads it, checks its fingerprint and installs it once every
+/// document is saved.
+pub(crate) fn page(app: &mut WordApp, ui: &mut egui::Ui) {
+    ui.label(egui::RichText::new("Mises à jour").font(crate::theme::semibold(26.0)));
+    ui.add_space(16.0);
+    ui.label(egui::RichText::new(format!("Lusk Texte {}", env!("CARGO_PKG_VERSION"))).font(crate::theme::semibold(16.0)));
+    ui.label("Version installée sur cet ordinateur.");
+    ui.add_space(20.0);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let checking = matches!(app.updates_rt.updater.status(), Status::Checking);
+        ui.horizontal(|ui| {
+            if ui.add_enabled(!checking, egui::Button::new("Rechercher des mises à jour").min_size(egui::vec2(0.0, 30.0))).clicked() {
+                check(app);
+            }
+            if checking {
+                ui.add(egui::Spinner::new());
+                ui.label("Recherche en cours…");
+            }
+        });
+        // The outcome, in the page's words rather than the window's.
+        let outcome = match app.updates_rt.updater.status() {
+            Status::UpToDate => Some(format!("Vous avez la dernière version de Lusk Texte ({}).", env!("CARGO_PKG_VERSION"))),
+            Status::Failed(e) if e == "no releases yet" => Some("Aucune version n’a encore été publiée sur GitHub.".to_string()),
+            Status::Failed(e) => Some(format!("La recherche n’a pas abouti. Vérifiez la connexion à Internet, puis réessayez.\n(Détail : {e})")),
+            Status::Idle | Status::Checking => None,
+        };
+        if let Some(outcome) = outcome {
+            ui.add_space(8.0);
+            ui.label(outcome);
+        }
+        ui.add_space(20.0);
+        let mut at_start = app.ui.check_updates_at_start;
+        if ui.checkbox(&mut at_start, "Rechercher automatiquement les mises à jour au démarrage").changed() {
+            // Saved with the other preferences when the app closes; it applies at the next start.
+            app.ui.check_updates_at_start = at_start;
+        }
+        ui.add_space(20.0);
+        ui.label(
+            "Les nouvelles versions sont publiées par l’association Lusk. Quand une version plus récente \
+             existe, Lusk Texte propose de la télécharger et vérifie son empreinte avant de l’installer. \
+             L’installation attend que tous vos documents soient enregistrés.",
+        );
+        ui.add_space(8.0);
+        ui.label("Seul le numéro de la dernière version est demandé : aucun document ni aucune donnée personnelle n’est envoyé.");
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = app;
+        ui.label("Dans le navigateur, Lusk Texte est toujours à jour : la page charge la dernière version.");
     }
 }
