@@ -107,6 +107,18 @@ pub fn dx12_compiler(env: Option<&str>) -> Dx12Compiler {
     })
 }
 
+/// Lusk Texte : DirectX 12 presents through DirectComposition, the only way its swapchain can
+/// show a transparent window (the start-up screen's fades and rounded corners). wgpu's own
+/// `WGPU_DX12_PRESENTATION_SYSTEM` (`Hwnd`) still wins, as a way back if a driver misbehaves.
+pub fn configure_transparency(options: &mut NativeOptions) {
+    if std::env::var_os("WGPU_DX12_PRESENTATION_SYSTEM").is_some() {
+        return;
+    }
+    if let WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
+        create.instance_descriptor.backend_options.dx12.presentation_system = eframe::wgpu::Dx12SwapchainKind::DxgiFromVisual;
+    }
+}
+
 /// Makes the wgpu instance eframe creates compile DirectX 12 shaders with `compiler`.
 pub fn configure_dx12_compiler(options: &mut NativeOptions, compiler: Dx12Compiler) {
     if let WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
@@ -255,6 +267,21 @@ mod tests {
             panic!("default native options must create a wgpu instance");
         };
         assert!(matches!(create.instance_descriptor.backend_options.dx12.shader_compiler, Dx12Compiler::Fxc));
+    }
+
+    /// Lusk Texte : the start-up screen's transparent window presents through DirectComposition
+    /// on DirectX 12, unless wgpu's own variable chooses otherwise.
+    #[test]
+    fn transparency_presents_through_directcomposition() {
+        let mut options = NativeOptions::default();
+        configure_transparency(&mut options);
+        let WgpuSetup::CreateNew(create) = options.wgpu_options.wgpu_setup else {
+            panic!("default native options must create a wgpu instance");
+        };
+        let kind = create.instance_descriptor.backend_options.dx12.presentation_system;
+        if std::env::var_os("WGPU_DX12_PRESENTATION_SYSTEM").is_none() {
+            assert_eq!(kind, eframe::wgpu::Dx12SwapchainKind::DxgiFromVisual);
+        }
     }
 
     #[test]

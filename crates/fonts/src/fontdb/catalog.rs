@@ -174,6 +174,15 @@ impl FontDb {
         }
     }
 
+    /// Whether the installed fonts are cataloged (always on wasm, which has none to scan). Lusk
+    /// Texte's start-up screen waits for it while it shows its progress bar.
+    pub fn catalog_ready(&self) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        return self.cataloged.get().is_some();
+        #[cfg(target_arch = "wasm32")]
+        true
+    }
+
     /// Scan the font folders again (fonts installed or removed since), cataloging the faces
     /// found (native only). Font data is loaded when a cataloged family is first resolved.
     /// Returns the number of faces cataloged.

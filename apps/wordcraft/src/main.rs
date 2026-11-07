@@ -43,6 +43,8 @@ struct App(
     // The host's answer for this frame. `InputState` still describes the last painted frame on
     // a hidden logic tick.
     RawWindowState,
+    // Lusk Texte : l'écran d'accueil, tant qu'il est affiché (la fenêtre est alors la sienne).
+    Option<wordcraft_ui_egui::splash::Splash>,
     #[cfg(target_os = "macos")] fmv_macos_events::Inbox,
 );
 
@@ -52,9 +54,14 @@ impl eframe::App for App {
     /// on unsaved changes and active printing.
     fn logic(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         #[cfg(target_os = "macos")]
-        apple_events::poll(&self.5, &mut self.0, ctx);
+        apple_events::poll(&self.6, &mut self.0, ctx);
         self.0.logic(ctx);
         self.3.show(frame);
+        // L'écran d'accueil occupe la fenêtre : sa taille et sa place ne sont pas celles de
+        // l'application, rien n'est suivi ni corrigé avant qu'il ait fini.
+        if self.5.is_some() {
+            return;
+        }
         let window = self.4;
         // A window that doesn't fit on its screen (the default size on a laptop) shrinks to fit
         // there, so all of the scroll bar can be dragged (#1215). Checked on the frame that first
@@ -119,8 +126,21 @@ impl eframe::App for App {
         self.0.raw_input_hook(ctx, raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        if let Some(splash) = &mut self.5 {
+            if splash.ui(&mut self.0, ui) {
+                self.5 = None;
+                become_main_window(ui.ctx(), self.1);
+            }
+            self.3.show(frame);
+            return;
+        }
         self.0.ui(ui);
         self.3.show(frame);
+    }
+    /// Lusk Texte : transparent pendant l'écran d'accueil (ses fondus et ses coins arrondis), puis
+    /// opaque, de la couleur des panneaux.
+    fn clear_color(&self, visuals: &egui::Visuals) -> [f32; 4] {
+        if self.5.is_some() { [0.0; 4] } else { visuals.panel_fill.to_opaque().to_normalized_gamma_f32() }
     }
     fn on_exit(&mut self) {
         print::finish_pending_jobs();
@@ -130,6 +150,32 @@ impl eframe::App for App {
             key_file.remove();
         }
     }
+}
+
+/// Lusk Texte : après l'écran d'accueil, la fenêtre reprend ses bordures et la taille et la place
+/// de la dernière fois (ou la taille par défaut, centrée) ; le reste (rester sur un écran
+/// présent, s'agrandir) suit au fil des images suivantes, comme à une ouverture ordinaire.
+fn become_main_window(ctx: &egui::Context, restored: Option<WindowGeometry>) {
+    use egui::ViewportCommand as C;
+    let monitor = ctx.input(|i| i.viewport().monitor_size);
+    let g = restored.unwrap_or_default();
+    let (w, h) = if g.width >= 200.0 && g.height >= 150.0 { (g.width, g.height) } else { (1440.0, 920.0) };
+    let (w, h) = monitor.map_or((w, h), |m| (w.min(m.x), h.min(m.y)));
+    ctx.send_viewport_cmd(C::WindowLevel(egui::WindowLevel::Normal));
+    ctx.send_viewport_cmd(C::Decorations(true));
+    ctx.send_viewport_cmd(C::Resizable(true));
+    ctx.send_viewport_cmd(C::MinInnerSize(egui::vec2(760.0, 480.0)));
+    ctx.send_viewport_cmd(C::InnerSize(egui::vec2(w, h)));
+    let pos =
+        g.position.map(|p| egui::pos2(p[0], p[1])).or_else(|| monitor.map(|m| egui::pos2(((m.x - w) / 2.0).max(0.0), ((m.y - h) / 2.0).max(0.0))));
+    if let Some(p) = pos {
+        ctx.send_viewport_cmd(C::OuterPosition(p));
+    }
+    if g.maximized {
+        ctx.send_viewport_cmd(C::Maximized(true));
+    }
+    ctx.send_viewport_cmd(C::Focus);
+    ctx.request_repaint();
 }
 
 /// Quit the way Command-Q does, on the next turn of the main queue.
@@ -309,6 +355,7 @@ USAGE:
 
 OPTIONS:
   --sample            open the sample document
+  --no-splash         start without the start-up screen (or set WORDCRAFT_NO_SPLASH)
   --control PORT      start the localhost control server on PORT, for agents and scripts
                       (or set WORDCRAFT_CONTROL_PORT); see docs/control-protocol.md
   --version           print the version
@@ -371,6 +418,7 @@ fn main() -> eframe::Result {
     let mut control_port: Option<u16> = std::env::var("WORDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
     let mut files = Vec::new();
     let mut sample = false;
+    let mut no_splash = std::env::var_os("WORDCRAFT_NO_SPLASH").is_some();
     let (args, other_files) = text_args();
     let mut bad_control: Option<Option<String>> = None;
     let mut args = args.into_iter().peekable();
@@ -385,6 +433,7 @@ fn main() -> eframe::Result {
                 }
             }
             "--sample" => sample = true,
+            "--no-splash" => no_splash = true,
             "--version" => {
                 println!("wordcraft {} ({})", env!("CARGO_PKG_VERSION"), build_sha());
                 return Ok(());
@@ -444,7 +493,24 @@ fn main() -> eframe::Result {
     // Windows opened for further documents start like the first one, before its saved place.
     let window_builder = options.viewport.clone();
     let restored = saved_window();
-    if let Some(window) = restored {
+    // Lusk Texte : l'écran d'accueil, sauf pour les agents et les scripts (canal de contrôle,
+    // document d'exemple, sans préférences) et sur macOS, où la barre de titre intégrée se
+    // prépare à la création de la fenêtre.
+    let splash = cfg!(not(target_os = "macos")) && !no_splash && control_port.is_none() && !sample && prefs_enabled();
+    if splash {
+        options.viewport = options
+            .viewport
+            .with_decorations(false)
+            .with_transparent(true)
+            .with_resizable(false)
+            .with_inner_size(wordcraft_ui_egui::splash::SIZE)
+            .with_min_inner_size(wordcraft_ui_egui::splash::SIZE)
+            .with_window_level(egui::WindowLevel::AlwaysOnTop);
+        options.centered = true;
+        // DirectX 12 ne fait les fenêtres transparentes qu'à travers DirectComposition.
+        #[cfg(target_os = "windows")]
+        graphics::configure_transparency(&mut options);
+    } else if let Some(window) = restored {
         options.viewport = window.apply(options.viewport);
     }
     #[cfg(all(unix, not(target_os = "macos")))]
@@ -522,6 +588,7 @@ fn main() -> eframe::Result {
             for f in other_files {
                 open_non_unicode(&mut app, &f);
             }
+            let app_animations = app.animations_on();
             Ok(Box::new(App(
                 app,
                 // With nothing restored, the window the system placed is checked all the same.
@@ -529,6 +596,7 @@ fn main() -> eframe::Result {
                 key_file,
                 dialogs,
                 RawWindowState::default(),
+                splash.then(|| wordcraft_ui_egui::splash::Splash::new(app_animations)),
                 #[cfg(target_os = "macos")]
                 apple_events.connect(&cc.egui_ctx),
             )))
