@@ -43,7 +43,7 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>© 2026 Lusk Texte, association loi 1901. Logiciel libre, MIT OR Apache-2.0.</string>
+  <string>© 2026 Lusk, association loi 1901. Logiciel libre, MIT OR Apache-2.0.</string>
 
   <!-- Documents Lusk Texte opens (system type declarations). -->
   <key>CFBundleDocumentTypes</key>

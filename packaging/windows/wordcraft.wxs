@@ -3,8 +3,8 @@
   <?ifndef HasCraftFontLicences ?>
   <?define HasCraftFontLicences=0 ?>
   <?endif?>
-  <Package Name="Lusk Texte" Manufacturer="Lusk Texte (association loi 1901)" Version="$(var.Version)" UpgradeCode="228346A7-5217-406B-B3D5-E4B3BDE7B77F" Scope="perUserOrMachine" Compressed="yes" Language="1033">
-    <SummaryInformation Description="Lusk Texte, traitement de texte" Manufacturer="Lusk Texte (association loi 1901)" />
+  <Package Name="Lusk Texte" Manufacturer="Lusk" Version="$(var.Version)" UpgradeCode="228346A7-5217-406B-B3D5-E4B3BDE7B77F" Scope="perUserOrMachine" Compressed="yes" Language="1033">
+    <SummaryInformation Description="Lusk Texte, traitement de texte" Manufacturer="Lusk" />
     <?include $(sys.SOURCEFILEDIR)install-policy.wxi?>
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->

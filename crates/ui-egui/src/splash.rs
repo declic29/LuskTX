@@ -40,7 +40,7 @@ pub const SLOGAN: &str = "« Ce que vous écrivez vous appartient. »";
 /// Mentions légales, première ligne, à gauche.
 pub const LEGAL_LEFT: &str = "Version {version}  ·  Portée par une association loi 1901";
 /// Mentions légales, première ligne, à droite.
-pub const LEGAL_RIGHT: &str = "© 2026 Lusk Texte";
+pub const LEGAL_RIGHT: &str = "© 2026 Lusk";
 /// Mentions légales, seconde ligne, à gauche (laisser vide pour n'avoir qu'une ligne).
 pub const LEGAL_SECOND: &str = "Logiciel libre sous licence MIT ou Apache 2.0";
 
