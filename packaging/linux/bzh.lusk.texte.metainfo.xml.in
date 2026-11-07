@@ -6,7 +6,6 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT OR Apache-2.0</project_license>
   <name>Lusk Texte</name>
-  <name xml:lang="fr">Lusk Texte</name>
   <summary>Write books and documents; open and save Word files</summary>
   <summary xml:lang="fr">Écrire des livres et des documents ; ouvrir et enregistrer des fichiers Word</summary>
   <developer id="bzh.lusk">

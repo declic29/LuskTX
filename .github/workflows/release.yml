@@ -67,9 +67,11 @@ jobs:
             echo "::error::l'étiquette $GITHUB_REF_NAME ne correspond pas à la version du Cargo.toml ($version) : l'étiquette doit être v$version"
             exit 1
           fi
-          echo "version=$version" >>"$GITHUB_OUTPUT"
-          echo "date=$(date -u +%Y-%m-%d)" >>"$GITHUB_OUTPUT"
-          echo "i18n=$(tr -d '[:space:]' < craft-i18n.rev)" >>"$GITHUB_OUTPUT"
+          {
+            echo "version=$version"
+            echo "date=$(date -u +%Y-%m-%d)"
+            echo "i18n=$(tr -d '[:space:]' < craft-i18n.rev)"
+          } >>"$GITHUB_OUTPUT"
           echo "Lusk Texte $version"
 
   windows:
@@ -238,8 +240,10 @@ jobs:
       - name: Vérifier les paquets
         run: |
           dpkg-deb --info dist/release/*.deb
-          chmod +x dist/release/*.AppImage
-          APPIMAGE_EXTRACT_AND_RUN=1 dist/release/*.AppImage --version || true
+          for appimage in dist/release/*.AppImage; do
+            chmod +x "$appimage"
+            APPIMAGE_EXTRACT_AND_RUN=1 "$appimage" --version || true
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: publication-linux-x86_64
@@ -272,18 +276,20 @@ jobs:
       - name: Créer ou compléter la Release en brouillon
         run: |
           tag="v$VERSION"
-          notes="Lusk Texte $VERSION, publiée par l'association Lusk.
-
-          Téléchargez le fichier de votre système :
-          - Windows : wordcraft-$VERSION-windows-x64.msi
-          - macOS : wordcraft-$VERSION-macos-universal.dmg
-          - Linux : wordcraft-$VERSION-linux-x86_64.AppImage (ou le .deb / .rpm de votre distribution)
-
-          Les personnes qui ont déjà Lusk Texte reçoivent cette version par Fichier › Mises à jour."
+          {
+            echo "Lusk Texte $VERSION, publiée par l'association Lusk."
+            echo
+            echo "Téléchargez le fichier de votre système :"
+            echo "- Windows : wordcraft-$VERSION-windows-x64.msi"
+            echo "- macOS : wordcraft-$VERSION-macos-universal.dmg"
+            echo "- Linux : wordcraft-$VERSION-linux-x86_64.AppImage (ou le .deb / .rpm de votre distribution)"
+            echo
+            echo "Les personnes qui ont déjà Lusk Texte reçoivent cette version par Fichier › Mises à jour."
+          } >"$RUNNER_TEMP/notes.md"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" dist/* --clobber
           else
             gh release create "$tag" dist/* --draft --target "$GITHUB_SHA" \
-              --title "Lusk Texte $VERSION" --notes "$notes"
+              --title "Lusk Texte $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           fi
           echo "Brouillon prêt : https://github.com/$GH_REPO/releases"
