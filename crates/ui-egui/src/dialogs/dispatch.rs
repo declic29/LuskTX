@@ -1075,14 +1075,13 @@ fn about_dialog(ui: &mut Ui, d: &mut Dialog) -> bool {
     };
     ui.set_width(660.0);
     ui.label(egui::RichText::new("Lusk Texte").font(semibold(22.0)));
-    let build = option_env!("").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!(""));
+    let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or("dev");
     ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
-    ui.label("Un traitement de texte libre et gratuit, Ce que vous écrivez vous appartient.");
+    ui.label("Un traitement de texte libre et gratuit. Ce que vous écrivez vous appartient.");
     ui.add_space(6.0);
     ui.hyperlink_to("lusk.bzh", "https://www.lusk.bzh");
-    ui.hyperlink_to(tl!(""), "");
     ui.add_space(6.0);
-    ui.label(egui::RichText::new("Lusk Texte. MIT OU Apache-2.0. Copyright (c) 2026.").small().weak());
+    ui.label(egui::RichText::new("© 2026 Lusk, association loi 1901. Logiciel libre sous licence MIT ou Apache 2.0.").small().weak());
     ui.label(egui::RichText::new("Dictionnaire orthographique français : Dicollecte (Olivier R.), licence MPL 2.0.").small().weak());
     ui.label(
         egui::RichText::new("Les licences et crédits complets sont fournis avec le logiciel (fichiers LICENSE, NOTICE et ATTRIBUTION).")

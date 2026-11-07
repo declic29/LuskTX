@@ -1160,3 +1160,16 @@ fn the_flatpak_manifest_pins_the_craft_i18n_rev() {
     assert_eq!(commit.trim().trim_matches(['\'', '"']), rev);
     assert!(manifest.contains("CRAFT_I18N_DIR: /run/build/wordcraft/craft-i18n"), "the build embeds the catalogs");
 }
+
+/// Lusk Texte : the shared catalogs name the app WordCraft. A source string that says Lusk Texte
+/// still finds its translation, and no translation shows the old name.
+#[test]
+fn translations_use_the_lusk_texte_name() {
+    needs_catalogs!();
+    let fr = lang("fr");
+    assert_eq!(tr(fr, "Show the Start screen when Lusk Texte starts"), "Afficher l'écran d'accueil au démarrage de Lusk Texte");
+    let t = tr(fr, "this chart was made in another program: Lusk Texte shows it but can't edit it");
+    assert!(t.starts_with("ce graphique") && t.contains("Lusk Texte") && !t.contains("WordCraft"), "{t}");
+    // Strings with no translation come back unchanged.
+    assert_eq!(tr(fr, "Lusk Texte zzz"), "Lusk Texte zzz");
+}

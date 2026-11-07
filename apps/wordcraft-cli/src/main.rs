@@ -619,7 +619,7 @@ fn run<S: AsRef<OsStr>>(args: &[S]) -> Result<(), Failure> {
                     }
                     match wordcraft_mcp::Remote::connect(&addr) {
                         Ok(remote) => {
-                            eprintln!("wordcraft-cli mcp: connected to WordCraft at {addr}");
+                            eprintln!("wordcraft-cli mcp: connected to Lusk Texte at {addr}");
                             if let Some(w) = remote.key_warning() {
                                 eprintln!("wordcraft-cli: {w}");
                             }
@@ -629,7 +629,7 @@ fn run<S: AsRef<OsStr>>(args: &[S]) -> Result<(), Failure> {
                         // first call, or the client marks the server failed for its whole session
                         // (#4078).
                         Err(e) => {
-                            eprintln!("wordcraft-cli mcp: WordCraft is not reachable at {addr} yet ({e}); will retry on each call");
+                            eprintln!("wordcraft-cli mcp: Lusk Texte is not reachable at {addr} yet ({e}); will retry on each call");
                             Box::new(wordcraft_mcp::Remote::lazy(&addr))
                         }
                     }

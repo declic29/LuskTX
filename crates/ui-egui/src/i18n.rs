@@ -381,7 +381,41 @@ pub fn tr(lang: Lang, s: &str) -> &str {
     if pseudo::on() {
         return I18N.t(craft_i18n::Lang::PSEUDO, s);
     }
-    lang.i18n().t(lang.lang, s)
+    let out = lang.i18n().t(lang.lang, s);
+    // Lusk Texte : the shared catalogs still name the app WordCraft. A translation that does is
+    // shown with our name, and a source string that says Lusk Texte finds the translation of
+    // its WordCraft wording.
+    if out != s {
+        if out.contains("WordCraft") {
+            return branded(lang, s, || out.replace("WordCraft", "Lusk Texte"));
+        }
+        return out;
+    }
+    if s.contains("Lusk Texte") {
+        let key = s.replace("Lusk Texte", "WordCraft");
+        let found = lang.i18n().t(lang.lang, &key);
+        if found != key {
+            let text = found.replace("WordCraft", "Lusk Texte");
+            return branded(lang, s, || text);
+        }
+    }
+    out
+}
+
+/// Lusk Texte : the renamed translation of `s` in `lang`, made once and kept for the rest of the
+/// run (the catalogs hold a few dozen such strings).
+fn branded(lang: Lang, s: &str, make: impl FnOnce() -> String) -> &'static str {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock};
+    static CACHE: OnceLock<Mutex<HashMap<(String, String), &'static str>>> = OnceLock::new();
+    let mut cache = CACHE.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner());
+    let key = (lang.code().to_string(), s.to_string());
+    if let Some(found) = cache.get(&key) {
+        return found;
+    }
+    let text: &'static str = Box::leak(make().into_boxed_str());
+    cache.insert(key, text);
+    text
 }
 
 /// A style's name as the interface shows it: built-in styles (`Normal`, `Heading 2`, `TOC 3`) in
