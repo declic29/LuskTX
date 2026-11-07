@@ -22,4 +22,4 @@ L'onglet **Versions** du panneau Livre (ou **Livre › Versions**) garde des cop
 - **Ouvrir** ouvre une version dans un nouveau document : le livre en cours ne change pas, vous pouvez comparer ou recopier un passage ;
 - **Supprimer…** demande confirmation.
 
-Les versions sont rangées dans le dossier des réglages de Lusk Texte (sous Windows : `%APPDATA%\LuskTexte\Versions`).
+Les versions sont rangées dans le dossier des réglages de Lusk Texte (sous Windows : **%APPDATA%\LuskTexte\Versions**).

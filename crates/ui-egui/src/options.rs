@@ -226,6 +226,7 @@ fn general(app: &mut WordApp, ui: &mut Ui) {
         let _ = app.run("view.darkMode", json!({"value": dark_page}));
     }
     ui.checkbox(&mut app.ui.show_discord, tl!("Show the community button in the title bar"));
+    zotero_tab(app, ui);
     default_app_button(app, ui);
     ui.add_space(8.0);
     section(ui, "Start-up");
@@ -615,6 +616,21 @@ fn advanced(app: &mut WordApp, ui: &mut Ui) {
             let _ = app.run("tools.customizeRibbon", json!({}));
         }
     });
+}
+
+/// Lusk Texte : the Zotero tab is hidden until the user shows it here (or in Customize Ribbon,
+/// which this box follows). Kept with the ribbon layout in the preferences.
+fn zotero_tab(app: &mut WordApp, ui: &mut Ui) {
+    let shown = app.session.ribbon.tabs().iter().any(|t| !t.custom && t.name == "Zotero" && !t.hidden);
+    let mut on = shown;
+    if ui
+        .checkbox(&mut on, "Afficher l’onglet Zotero dans le ruban")
+        .on_hover_text("Zotero est un logiciel libre de gestion de bibliographie. L’onglet insère des citations et une bibliographie depuis Zotero installé sur cet ordinateur.")
+        .changed()
+    {
+        let key = if on { "show" } else { "hide" };
+        let _ = app.run("tools.customizeRibbon", json!({ key: "Zotero" }));
+    }
 }
 
 /// The user templates folder (#2852): where File › New finds personal templates and Save as Word

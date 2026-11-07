@@ -14,7 +14,7 @@ use crate::{WordApp, icons};
 
 /// Les guides : titre et icône dans le sommaire, texte. Le texte accepte `# titre`,
 /// `## sous-titre`, les listes `- …` et `1. …`, et `**gras**`.
-const GUIDES: [(&str, &str, &str); 7] = [
+const GUIDES: [(&str, &str, &str); 8] = [
     ("Bien démarrer", "homeFolder", include_str!("../aide/01-bien-demarrer.md")),
     ("Créer, ouvrir et enregistrer", "open", include_str!("../aide/02-fichiers.md")),
     ("Mettre en forme le texte", "bold", include_str!("../aide/03-mise-en-forme.md")),
@@ -22,6 +22,8 @@ const GUIDES: [(&str, &str, &str); 7] = [
     ("Images, tableaux et objets", "picture", include_str!("../aide/05-images-tableaux.md")),
     ("Vérifier et réviser", "spelling", include_str!("../aide/06-verifier-reviser.md")),
     ("Imprimer, exporter et partager", "print", include_str!("../aide/07-imprimer-partager.md")),
+    // Lusk Texte : tout ce qui reste sur l'ordinateur, et les seuls moments où Internet sert.
+    ("Confidentialité", "protect", include_str!("../aide/08-confidentialite.md")),
 ];
 
 /// La rubrique du Mode Livre (son onglet dans le sommaire), après les guides.
@@ -35,6 +37,8 @@ const BOOK: [(&str, &str, &str); 6] = [
 ];
 /// La première page de la rubrique Mode Livre.
 pub(crate) const BOOK_START: usize = GUIDES.len();
+/// Lusk Texte : la page « Vos données et votre vie privée » (`ui.help {"page": "confidentialite"}`).
+pub(crate) const PRIVACY: usize = 7;
 
 /// Les deux pages générées, après les guides et la rubrique Mode Livre.
 const REFERENCE: usize = GUIDES.len() + BOOK.len();
@@ -332,7 +336,8 @@ fn item_line(ui: &mut Ui, number: Option<&str>, text: &str, t: &Tokens) {
             }
         }
         let w = ui.available_width();
-        ui.label(inline(text, t.text, w));
+        // In a horizontal row a label doesn't wrap unless asked: long items ran off the page.
+        ui.add(egui::Label::new(inline(text, t.text, w)).wrap());
     });
     ui.add_space(3.0);
 }
@@ -537,7 +542,7 @@ fn fold(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{BOOK, BOOK_START, GUIDES, REFERENCE, fold, numbered, written};
+    use super::{BOOK, BOOK_START, GUIDES, PRIVACY, REFERENCE, fold, numbered, written};
 
     #[test]
     fn search_ignores_case_and_accents() {
@@ -566,5 +571,16 @@ mod tests {
         let book: Vec<_> = written().filter(|w| w.1 == "Mode Livre").map(|w| w.0).collect();
         assert_eq!(book, (BOOK_START..REFERENCE).collect::<Vec<_>>());
         assert!(written().any(|w| w.4.contains("EPUBCheck") && w.4.contains("texte de remplacement")));
+    }
+
+    /// Lusk Texte : la page Confidentialité dit tout ce qui peut passer par Internet, et elle
+    /// précède la rubrique Mode Livre.
+    #[test]
+    fn the_privacy_page_lists_every_use_of_the_internet() {
+        let (index, _, _, _, text) = written().find(|w| w.2 == "Confidentialité").expect("privacy page");
+        assert_eq!(index, PRIVACY);
+        for what in ["Mises à jour", "Rechercher sur Lusk", "Liens", "Dictée", "Zotero", "--control"] {
+            assert!(text.contains(what), "{what}");
+        }
     }
 }

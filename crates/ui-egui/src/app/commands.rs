@@ -554,8 +554,13 @@ impl WordApp {
             // Aide › Aide : la fenêtre d'aide intégrée.
             "ui.help" => {
                 if let Some(ctx) = self.ctx.clone() {
-                    // Lusk Texte : `{"page": "livre"}` ouvre la rubrique du Mode Livre.
-                    let page = (s("page") == Some("livre")).then_some(crate::help::BOOK_START);
+                    // Lusk Texte : `{"page": "livre"}` ouvre la rubrique du Mode Livre,
+                    // `{"page": "confidentialite"}` la page sur les données personnelles.
+                    let page = match s("page") {
+                        Some("livre") => Some(crate::help::BOOK_START),
+                        Some("confidentialite") => Some(crate::help::PRIVACY),
+                        _ => None,
+                    };
                     crate::help::open_at(&ctx, page);
                 }
                 Value::Null

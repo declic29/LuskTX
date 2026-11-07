@@ -20,6 +20,9 @@ pub const TABS: [&str; 13] =
 /// Tabs that come up with the selection; custom tabs can't take their names.
 pub const CONTEXTUAL_TABS: [&str; 7] =
     ["Table Design", "Table Layout", "Picture Format", "Shape Format", "Equation", "Chart Design", "SmartArt Design"];
+/// Lusk Texte : built-in tabs hidden until the user shows them (File › Options › General, or
+/// Customize Ribbon). Zotero only serves people who use that reference manager.
+pub const HIDDEN_BY_DEFAULT: [&str; 1] = ["Zotero"];
 /// The Quick Access Toolbar's commands until the user changes them.
 pub const DEFAULT_QAT: [&str; 3] = ["file.save", "edit.undo", "edit.redo"];
 
@@ -86,8 +89,13 @@ fn reserved(name: &str) -> bool {
     TABS.iter().chain(CONTEXTUAL_TABS.iter()).any(|t| same(t, name))
 }
 
+/// A built-in tab as it first comes: shown, unless it is one of [`HIDDEN_BY_DEFAULT`].
+fn default_entry(name: &str) -> TabEntry {
+    TabEntry { name: name.to_string(), custom: false, hidden: HIDDEN_BY_DEFAULT.contains(&name), groups: Vec::new() }
+}
+
 fn default_tabs() -> Vec<TabEntry> {
-    TABS.iter().skip(1).map(|t| TabEntry { name: (*t).to_string(), custom: false, hidden: false, groups: Vec::new() }).collect()
+    TABS.iter().skip(1).map(|t| default_entry(t)).collect()
 }
 
 /// `base`, or `base 2`, `base 3`… whichever `taken` doesn't have yet.
@@ -168,8 +176,7 @@ impl RibbonLayout {
                 continue;
             }
             let at = TABS.get(1..i).and_then(|before| before.iter().rev().find_map(|b| tabs.iter().position(|t| !t.custom && t.name == *b)));
-            let entry = TabEntry { name: (*name).to_string(), custom: false, hidden: false, groups: Vec::new() };
-            tabs.insert(at.map_or(0, |p| p + 1), entry);
+            tabs.insert(at.map_or(0, |p| p + 1), default_entry(name));
         }
         self.tabs = if tabs == default_tabs() { Vec::new() } else { tabs };
     }
@@ -437,6 +444,26 @@ mod tests {
     use serde_json::json;
 
     use super::*;
+
+    /// Lusk Texte : the Zotero tab starts hidden; showing it customizes the ribbon (so it is
+    /// saved), and a reset or an older saved layout without the tab hides it again.
+    #[test]
+    fn zotero_starts_hidden_until_shown() {
+        let zotero = |l: &RibbonLayout| l.tabs().iter().find(|t| t.name == "Zotero").map(|t| t.hidden);
+        let mut l = RibbonLayout::default();
+        assert_eq!(zotero(&l), Some(true));
+        assert!(l.ribbon_is_default());
+        l.set_hidden("Zotero", false).unwrap();
+        assert_eq!(zotero(&l), Some(false));
+        assert!(!l.ribbon_is_default(), "shown Zotero is a customization, kept in the preferences");
+        let saved = RibbonLayout::from_value(&serde_json::to_value(&l).unwrap());
+        assert_eq!(zotero(&saved), Some(false));
+        l.set_hidden("Zotero", true).unwrap();
+        assert!(l.ribbon_is_default());
+        // A layout saved by a version without the tab gets it hidden.
+        let old = RibbonLayout::from_value(&json!({"tabs": [{"name": "Home"}, {"name": "Help", "hidden": true}]}));
+        assert_eq!(zotero(&old), Some(true));
+    }
 
     /// #379: custom tabs and groups, hidden and moved tabs, and the Quick Access Toolbar, changed
     /// through the command (as agents do) without opening the dialog.
