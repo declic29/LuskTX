@@ -1,44 +1,289 @@
-name: Release
+# Lusk Texte : la chaîne de publication de l'association Lusk.
+#
+# Pour publier une version :
+#   1. Augmenter `version` dans [workspace.package] du Cargo.toml racine (par exemple 0.13.0),
+#      committer et pousser.
+#   2. Créer et pousser l'étiquette correspondante :
+#        git tag v0.13.0
+#        git push origin v0.13.0
+#   3. Ce workflow fabrique les installeurs Windows, macOS et Linux, calcule SHA256SUMS.txt et
+#      prépare une Release en brouillon sur GitHub.
+#   4. Tester les installeurs du brouillon, puis cliquer sur « Publish release » : à partir de là,
+#      le menu Fichier › Mises à jour de Lusk Texte la propose aux utilisateurs.
+#
+# « Run workflow » (onglet Actions) fait la même chose sans étiquette, pour un essai : le brouillon
+# n'est visible que des membres du dépôt tant qu'il n'est pas publié.
+#
+# Les noms des fichiers (wordcraft-<version>-windows-x64.msi, -macos-universal.dmg,
+# -linux-x86_64.AppImage…) sont ceux que le module de mise à jour cherche : ne pas les changer
+# sans changer aussi crates/ui-egui/src/updates_ui.rs.
+#
+# Signature : sans les secrets ci-dessous, les installeurs sont fabriqués sans signature (Windows
+# affiche « éditeur inconnu », macOS demande un clic droit › Ouvrir). Avec eux, ils sont signés :
+#   Windows : WINDOWS_CERTIFICATE (PFX en base64) et WINDOWS_CERTIFICATE_PASSWORD
+#   macOS   : APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, KEYCHAIN_PASSWORD (signature) et
+#             APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID (notarisation)
+name: Publication
 
 on:
   push:
-    branches: [release]
+    tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version override for a test run, e.g. 0.2.0-rc.1 (empty: Cargo.toml)"
-        type: string
-        default: ""
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: publication-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+  # Les polices libres intégrées à l'application (storytold/craft-fonts), à ce commit précis.
+  CRAFT_FONTS_REF: b076417b5880bd4154bd22f00695b1d28c6bea83
+
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      date: ${{ steps.v.outputs.date }}
+      i18n: ${{ steps.v.outputs.i18n }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: v
+        name: Lire la version du Cargo.toml
+        shell: bash
+        run: |
+          version=$(awk '/^\[/ { p = ($0 == "[workspace.package]"); next } p && $1 == "version" { gsub(/[" ]/, "", $3); print $3; exit }' Cargo.toml)
+          if [ -z "$version" ]; then echo "::error::version introuvable dans [workspace.package] du Cargo.toml"; exit 1; fi
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::l'étiquette $GITHUB_REF_NAME ne correspond pas à la version du Cargo.toml ($version) : l'étiquette doit être v$version"
+            exit 1
+          fi
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%d)" >>"$GITHUB_OUTPUT"
+          echo "i18n=$(tr -d '[:space:]' < craft-i18n.rev)" >>"$GITHUB_OUTPUT"
+          echo "Lusk Texte $version"
+
+  windows:
+    name: Windows x64
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      WORDCRAFT_VERSION: ${{ needs.version.outputs.version }}
+      WORDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
+      WORDCRAFT_BUILD_SHA: ${{ github.sha }}
+      CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+      CRAFT_FONTS_REQUIRED: "1"
+      CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
+      CRAFT_I18N_REQUIRED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          ref: ${{ env.CRAFT_FONTS_REF }}
+          path: craft-fonts
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-i18n
+          ref: ${{ needs.version.outputs.i18n }}
+          path: craft-i18n
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: publication-windows-x64
+      - name: Installer WiX 5
+        shell: pwsh
+        run: |
+          $tools = Join-Path $env:RUNNER_TEMP 'wix'
+          dotnet tool install --tool-path $tools wix --version 5.0.2
+          if ($LASTEXITCODE -ne 0) { throw 'WiX installation failed.' }
+          foreach ($ext in 'UI', 'Util') {
+            & (Join-Path $tools 'wix.exe') extension add -g "WixToolset.$ext.wixext/5.0.2"
+            if ($LASTEXITCODE -ne 0) { throw "WiX extension $ext installation failed." }
+          }
+          $tools >> $env:GITHUB_PATH
+      - name: Compiler, signer et empaqueter (MSI et zip portable)
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: ./packaging/windows/package.ps1 -Arch x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publication-windows-x64
+          path: dist/release/*
+          if-no-files-found: error
+
+  macos:
+    name: macOS universel
+    needs: version
+    runs-on: macos-14
+    timeout-minutes: 90
+    env:
+      WORDCRAFT_VERSION: ${{ needs.version.outputs.version }}
+      WORDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
+      WORDCRAFT_BUILD_SHA: ${{ github.sha }}
+      CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+      CRAFT_FONTS_REQUIRED: "1"
+      CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
+      CRAFT_I18N_REQUIRED: "1"
+      HAS_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          ref: ${{ env.CRAFT_FONTS_REF }}
+          path: craft-fonts
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-i18n
+          ref: ${{ needs.version.outputs.i18n }}
+          path: craft-i18n
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: publication-macos-universal
+      - name: Importer le certificat de signature
+        if: env.HAS_APPLE_CERTIFICATE == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: packaging/macos/import-cert.sh
+      - name: Compiler, signer et empaqueter (DMG)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: packaging/macos/package.sh --arch universal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publication-macos
+          path: dist/release/*
+          if-no-files-found: error
+      - name: Supprimer le trousseau temporaire
+        if: always()
+        run: |
+          if [ -n "${MACOS_KEYCHAIN:-}" ]; then security delete-keychain "$MACOS_KEYCHAIN" || true; fi
+
+  linux:
+    name: Linux x86_64
+    needs: version
+    # Ubuntu 22.04 : les binaires fonctionnent aussi sur les distributions plus récentes.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    env:
+      WORDCRAFT_VERSION: ${{ needs.version.outputs.version }}
+      WORDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
+      WORDCRAFT_BUILD_SHA: ${{ github.sha }}
+      CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+      CRAFT_FONTS_REQUIRED: "1"
+      CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
+      CRAFT_I18N_REQUIRED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          ref: ${{ env.CRAFT_FONTS_REF }}
+          path: craft-fonts
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-i18n
+          ref: ${{ needs.version.outputs.i18n }}
+          path: craft-i18n
+          persist-credentials: false
+      - name: Installer les outils de compilation et d'empaquetage
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev \
+            libasound2-dev pkg-config desktop-file-utils appstream python3-yaml zsync libfuse2
+          curl --proto '=https' -fsSL -o "$RUNNER_TEMP/nfpm.deb" \
+            https://github.com/goreleaser/nfpm/releases/download/v2.48.0/nfpm_2.48.0_amd64.deb
+          echo "787af76e172dd5fc7cedf4d7c5a090a2f62be9001557a4db1103e270f90ddefd  $RUNNER_TEMP/nfpm.deb" | sha256sum -c -
+          sudo dpkg -i "$RUNNER_TEMP/nfpm.deb"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: publication-linux-x86_64
+      - name: Compiler et empaqueter (AppImage, deb, rpm, tar.gz)
+        run: packaging/linux/package.sh
+      - name: Vérifier les paquets
+        run: |
+          dpkg-deb --info dist/release/*.deb
+          chmod +x dist/release/*.AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 dist/release/*.AppImage --version || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publication-linux-x86_64
+          path: dist/release/*
+          if-no-files-found: error
+
   release:
-    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/release.yml@main
-    with:
-      app-name: wordcraft
-      app-title: WordCraft
-      craft-fonts-ref: b076417b5880bd4154bd22f00695b1d28c6bea83
-      web-craft-fonts: true
-      version: ${{ inputs.version }}
-    secrets:
-      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
-      AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
-      AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
+    name: Release en brouillon
+    needs: [version, windows, macos, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: publication-*
+          path: dist
+          merge-multiple: true
+      - name: Calculer les empreintes (SHA256SUMS.txt)
+        working-directory: dist
+        run: |
+          rm -f SHA256SUMS.txt
+          sha256sum -- * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Créer ou compléter la Release en brouillon
+        run: |
+          tag="v$VERSION"
+          notes="Lusk Texte $VERSION, publiée par l'association Lusk.
+
+          Téléchargez le fichier de votre système :
+          - Windows : wordcraft-$VERSION-windows-x64.msi
+          - macOS : wordcraft-$VERSION-macos-universal.dmg
+          - Linux : wordcraft-$VERSION-linux-x86_64.AppImage (ou le .deb / .rpm de votre distribution)
+
+          Les personnes qui ont déjà Lusk Texte reçoivent cette version par Fichier › Mises à jour."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --draft --target "$GITHUB_SHA" \
+              --title "Lusk Texte $VERSION" --notes "$notes"
+          fi
+          echo "Brouillon prêt : https://github.com/$GH_REPO/releases"
