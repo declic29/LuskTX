@@ -35,15 +35,18 @@ exactement quand Lusk Texte utilise Internet (pour les mises à jour, et quand v
 
 ## Télécharger et installer
 
-Les versions sont publiées sur la page
-[Releases](https://github.com/declic29/LuskTX/releases/latest). Prenez le fichier de votre
-système (`<ver>` est le numéro de version) :
+Téléchargez la dernière version pour votre système :
 
-| Système | Fichier |
+| Système | Téléchargement |
 |---|---|
-| Windows (64 bits) | `wordcraft-<ver>-windows-x64.msi` (installeur) ou `wordcraft-<ver>-windows-x64-portable.zip` (sans installation) |
-| macOS (Apple et Intel) | `wordcraft-<ver>-macos-universal.dmg` |
-| Linux | `wordcraft-<ver>-linux-x86_64.AppImage` (toutes distributions), `.deb` (Debian, Ubuntu, Mint), `.rpm` (Fedora, openSUSE) ou `.tar.gz` |
+| Windows (64 bits) | [**Lusk-Texte-Windows.msi**](https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Windows.msi) |
+| macOS (Apple et Intel) | [**Lusk-Texte-Mac.dmg**](https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Mac.dmg) |
+| Linux (toutes distributions) | [**Lusk-Texte-Linux.AppImage**](https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Linux.AppImage) |
+| Linux (Debian, Ubuntu, Mint) | [**Lusk-Texte-Linux.deb**](https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Linux.deb) |
+
+Les autres formats (version portable pour Windows sans installation, `.rpm` pour Fedora et
+openSUSE, `.tar.gz`) et les versions précédentes sont sur la page
+[Releases](https://github.com/declic29/LuskTX/releases/latest).
 
 `SHA256SUMS.txt` donne l'empreinte de chaque fichier, pour vérifier un téléchargement.
 
