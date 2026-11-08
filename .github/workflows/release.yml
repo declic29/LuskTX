@@ -54,7 +54,7 @@ jobs:
       date: ${{ steps.v.outputs.date }}
       i18n: ${{ steps.v.outputs.i18n }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - id: v
@@ -88,16 +88,16 @@ jobs:
       CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
       CRAFT_I18N_REQUIRED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-fonts
           ref: ${{ env.CRAFT_FONTS_REF }}
           path: craft-fonts
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-i18n
           ref: ${{ needs.version.outputs.i18n }}
@@ -126,7 +126,7 @@ jobs:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: ./packaging/windows/package.ps1 -Arch x64
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: publication-windows-x64
           path: dist/release/*
@@ -147,16 +147,16 @@ jobs:
       CRAFT_I18N_REQUIRED: "1"
       HAS_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-fonts
           ref: ${{ env.CRAFT_FONTS_REF }}
           path: craft-fonts
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-i18n
           ref: ${{ needs.version.outputs.i18n }}
@@ -181,7 +181,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: packaging/macos/package.sh --arch universal
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: publication-macos
           path: dist/release/*
@@ -206,16 +206,16 @@ jobs:
       CRAFT_I18N_DIR: ${{ github.workspace }}/craft-i18n
       CRAFT_I18N_REQUIRED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-fonts
           ref: ${{ env.CRAFT_FONTS_REF }}
           path: craft-fonts
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-i18n
           ref: ${{ needs.version.outputs.i18n }}
@@ -244,7 +244,7 @@ jobs:
             chmod +x "$appimage"
             APPIMAGE_EXTRACT_AND_RUN=1 "$appimage" --version || true
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: publication-linux-x86_64
           path: dist/release/*
@@ -262,7 +262,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: publication-*
           path: dist
