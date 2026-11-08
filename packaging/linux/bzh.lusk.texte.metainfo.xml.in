@@ -41,8 +41,9 @@
   </keywords>
   <screenshots>
     <screenshot type="default">
-      <caption>The Open Studio Handbook sample with the Navigation pane</caption>
-      <image>https://raw.githubusercontent.com/declic29/lusktx/main/docs/images/hero.png</image>
+      <caption>A brochure being edited in Lusk Texte</caption>
+      <caption xml:lang="fr">Une brochure en cours d'écriture dans Lusk Texte</caption>
+      <image>https://raw.githubusercontent.com/declic29/LuskTX/main/docs/images/hero.png</image>
     </screenshot>
   </screenshots>
   <branding>
