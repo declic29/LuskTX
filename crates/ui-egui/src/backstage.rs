@@ -361,16 +361,21 @@ fn matching_templates(query: &str) -> Vec<(&'static str, &'static str)> {
 fn home_page(app: &mut WordApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let hour = wordcraft_engine::cmd::now_iso().get(11..13).and_then(|h| h.parse::<u32>().ok()).unwrap_or(9);
-    heading(
-        ui,
-        if hour < 12 {
-            "Good morning"
-        } else if hour < 18 {
-            "Good afternoon"
-        } else {
-            "Good evening"
-        },
-    );
+    let greeting = if hour < 12 {
+        "Good morning"
+    } else if hour < 18 {
+        "Good afternoon"
+    } else {
+        "Good evening"
+    };
+    // Lusk Texte : l'avatar de lusk.bzh, le renard, à gauche du message de bienvenue.
+    ui.horizontal(|ui| {
+        ui.spacing_mut().item_spacing = vec2(12.0, 0.0);
+        let avatar = lusk_avatar(ui.ctx());
+        ui.add(egui::Image::new(&avatar).fit_to_exact_size(vec2(44.0, 44.0)).alt_text("Lusk"));
+        ui.label(egui::RichText::new(tl!(greeting)).font(semibold(26.0)));
+    });
+    ui.add_space(16.0);
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing = vec2(18.0, 0.0);
         for (label, template) in TEMPLATES.into_iter().take(HOME_TEMPLATES) {
@@ -384,6 +389,25 @@ fn home_page(app: &mut WordApp, ui: &mut Ui) {
     }
     ui.add_space(24.0);
     open_list(app, ui);
+}
+
+/// Lusk Texte : la texture de l'avatar de lusk.bzh (le renard), chargée une fois. Une image
+/// illisible (impossible avec le fichier intégré) donne un carré transparent, jamais un plantage.
+fn lusk_avatar(ctx: &egui::Context) -> egui::TextureHandle {
+    let id = egui::Id::unique("lusk_avatar");
+    if let Some(h) = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)) {
+        return h;
+    }
+    let img = image::load_from_memory(include_bytes!("../../../assets/avatar/lusk-renard.png"))
+        .map(|i| i.to_rgba8())
+        .unwrap_or_else(|_| image::RgbaImage::from_pixel(1, 1, image::Rgba([0, 0, 0, 0])));
+    let h = ctx.load_texture(
+        "lusk_avatar",
+        egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw()),
+        egui::TextureOptions::LINEAR,
+    );
+    ctx.data_mut(|d| d.insert_temp(id, h.clone()));
+    h
 }
 
 /// New: the whole template gallery with a search box, then the personal templates (#2852); no

@@ -265,7 +265,9 @@ fn options_panes_open_and_change_settings() {
     h.run_steps(2);
     // #1063: the dictionaries folder and the dictionary each language found.
     assert!(h.query_by_label("Dictionaries folder:").is_some());
-    assert!(h.query_by_label_contains("Polish: ").is_some(), "the Polish dictionary's line");
+    // Lusk Texte : the built-in dictionaries are named; languages without one aren't listed.
+    assert!(h.query_by_label_contains("Dictionnaires intégrés à Lusk Texte").is_some());
+    assert!(h.query_by_label_contains("aucun dictionnaire").is_none() && h.query_by_label_contains("no dictionary found").is_none());
     h.get_by_label("Advanced").click();
     h.run_steps(4);
     h.get_by_label("Typing replaces selected text").click();

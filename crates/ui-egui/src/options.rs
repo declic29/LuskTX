@@ -377,16 +377,24 @@ fn dictionaries(app: &mut WordApp, ui: &mut Ui) {
         }
     };
     ui.label(RichText::new("Dictionnaires intégrés à Lusk Texte : français, breton et anglais.").small());
-    ui.label(RichText::new("Autres langues, avec un dictionnaire installé sur l’ordinateur (par LibreOffice, par exemple) :").small());
+    // Lusk Texte : only the languages that found a dictionary on the computer, by name (the file
+    // on hover); a language without one isn't listed, an unreadable one says why.
+    let mut usable = Vec::new();
     for (language, file, error) in found {
-        let line = match (file, error) {
+        match (file, error) {
+            (Some(f), None) => usable.push((language, f)),
             (Some(f), Some(e)) => {
-                crate::i18n::fmt(tl!("{language}: {file} (unreadable: {reason})"), &[("language", &language), ("file", &f), ("reason", &e)])
+                let line = format!("{language} : le dictionnaire de l’ordinateur est illisible ({e})");
+                ui.add(egui::Label::new(RichText::new(line).small()).truncate()).on_hover_text(f);
             }
-            (Some(f), None) => crate::i18n::fmt(tl!("{language}: {file}"), &[("language", &language), ("file", &f)]),
-            (None, _) => crate::i18n::fmt(tl!("{language}: no dictionary found"), &[("language", &language)]),
-        };
-        ui.add(egui::Label::new(RichText::new(line).small()).truncate());
+            (None, _) => {}
+        }
+    }
+    if !usable.is_empty() {
+        let names: Vec<&str> = usable.iter().map(|(l, _)| l.as_str()).collect();
+        let files: Vec<&str> = usable.iter().map(|(_, f)| f.as_str()).collect();
+        let line = format!("Également vérifiés, avec les dictionnaires de l’ordinateur : {}.", names.join(", "));
+        ui.add(egui::Label::new(RichText::new(line).small()).wrap()).on_hover_text(files.join("\n"));
     }
 }
 
