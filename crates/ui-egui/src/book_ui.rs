@@ -164,9 +164,10 @@ pub fn book_mode(app: &WordApp) -> bool {
     app.session.view.book_pane && book::is_book(&app.session.doc)
 }
 
-/// The Document | Livre switch, drawn right to left in the title bar.
+/// The Document | Livre switch, drawn right to left in the title bar. Shown only for a book: an
+/// ordinary document has no switch (a book is started from File › Créer un livre).
 pub fn mode_switch(app: &mut WordApp, ui: &mut Ui, h: f32) {
-    if !app.has_document() {
+    if !app.has_document() || !book::is_book(&app.session.doc) {
         return;
     }
     let t = Tokens::get(ui.ctx());
@@ -1363,6 +1364,29 @@ mod tests {
         assert_eq!(next_sibling(&e, 1), Some(6));
         assert_eq!(previous_sibling(&e, 7), None);
         assert_eq!(next_sibling(&e, 99), None);
+    }
+
+    /// The Document | Livre switch is in the title bar for a book only: an ordinary document
+    /// has none (a book starts from File › Créer un livre).
+    #[test]
+    fn the_mode_switch_shows_for_books_only() {
+        use egui_kittest::kittest::Queryable;
+        let switch_shown = |doc: wordcraft_doc::Document| {
+            let app = WordApp::new(wordcraft_engine::Session::new(doc), crate::Services::default());
+            let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
+                |ui, app: &mut WordApp| {
+                    let ctx = ui.ctx().clone();
+                    app.logic(&ctx);
+                    app.ui(ui);
+                },
+                app,
+            );
+            h.run_steps(4);
+            h.query_by_label("Livre").is_some()
+        };
+        assert!(!switch_shown(wordcraft_doc::Document::new()), "no switch for an ordinary document");
+        let book = book::new_document(wordcraft_doc::Document::new(), &book::BookSettings::default());
+        assert!(switch_shown(book), "the switch for a book");
     }
 
     #[test]

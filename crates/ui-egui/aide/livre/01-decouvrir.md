@@ -4,7 +4,7 @@ Le Mode Livre organise un roman, un récit, une biographie, un essai ou un recue
 
 ## Créer un livre
 
-1. Cliquez sur **Livre** à droite de la barre de titre, sur **Créer un livre** dans la barre de gauche de l'onglet **Fichier**, ou sur la vignette **Livre** dans **Fichier › Nouveau**.
+1. Cliquez sur **Créer un livre** dans la barre de gauche de l'onglet **Fichier**, ou sur la vignette **Livre** dans **Fichier › Nouveau**.
 2. Choisissez un **modèle éditorial** (roman classique, roman contemporain, roman de poche, essai, biographie, poésie) : il règle d'un coup le format, la police, l'interligne, les marges, les titres courants, le numéro de page et les lettrines.
 3. Indiquez le **titre**, le **sous-titre** éventuel, l'**auteur**, le **type d'ouvrage** et la **langue du livre** (français par défaut ; elle règle l'orthographe, la césure, le contrôle de la typographie et la langue du livre numérique).
 4. Ajustez si besoin le **format** (A5, poche, 6 × 9 pouces, A4, A6 ou personnalisé), le **papier** (blanc ou crème), la **police**, la **taille**, l'**interlignage**, l'**alignement** et les **marges**. L'aperçu de la double page se met à jour à chaque réglage.
@@ -16,7 +16,7 @@ Tous les réglages restent modifiables : **onglet Livre › Réglages du livre**
 
 ## L'interface du Mode Livre
 
-- **La bascule Document | Livre**, à droite de la barre de titre, passe d'un mode à l'autre. Revenir au Mode Document masque le panneau et l'onglet Livre ; le livre ne change pas.
+- **La bascule Document | Livre**, à droite de la barre de titre, n'apparaît que dans un livre : elle passe d'un mode à l'autre. Revenir au Mode Document masque le panneau et l'onglet Livre ; le livre ne change pas. Un document ordinaire n'a pas de bascule.
 - **Le panneau Livre**, à gauche, a quatre onglets : **Plan** (les parties et chapitres), **Pages** (les miniatures), **Qualité** (le contrôle avant publication) et **Versions** (l'historique).
 - **L'onglet Livre du ruban** réunit tout le reste, par groupes :
 
