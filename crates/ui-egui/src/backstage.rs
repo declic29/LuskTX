@@ -693,27 +693,81 @@ fn open_page(app: &mut WordApp, ui: &mut Ui) {
     open_list(app, ui);
 }
 
-/// Un bouton par dossier OneDrive synchronisé sur cet ordinateur : il ouvre le navigateur intégré
-/// directement dans ce dossier, pour ouvrir (`purpose` "open") ou enregistrer ("save") un
-/// document. Windows se charge ensuite d'envoyer le fichier sur OneDrive. Rien quand OneDrive
-/// n'est pas installé.
+/// Lusk Texte : les espaces en ligne, OneDrive puis Google Drive. Chacun a un bouton par dossier
+/// synchronisé sur cet ordinateur, qui ouvre le navigateur intégré dans ce dossier pour ouvrir
+/// (`purpose` "open") ou enregistrer ("save") un document : l'application du service envoie
+/// ensuite le fichier en ligne, sans que Lusk Texte se connecte au compte. Quand l'application
+/// n'est pas installée, le bouton est grisé. Une icône d'aide à côté dit ce qu'il faut installer.
 #[cfg(not(target_arch = "wasm32"))]
 fn onedrive_buttons(app: &mut WordApp, ui: &mut Ui, purpose: &str) {
-    let dirs = crate::file_browser::onedrive_dirs();
-    if dirs.is_empty() {
-        return;
-    }
+    let (onedrive, google) = cloud_dirs(ui.ctx());
     ui.add_space(8.0);
-    for (label, dir) in dirs {
-        let tip = if purpose == "save" {
-            format!("Enregistrer dans votre espace OneDrive ({})", dir.display())
-        } else {
-            format!("Ouvrir un document de votre espace OneDrive ({})", dir.display())
-        };
-        if crate::widgets::icon_text_button(ui, "cloud", &label, medium(14.0)).on_hover_text(tip).clicked() {
-            app.browse_folder(purpose, dir);
+    let services = [
+        (
+            "OneDrive",
+            onedrive,
+            "Pour utiliser OneDrive, l’application OneDrive doit être installée sur cet ordinateur et connectée à votre compte Microsoft (elle est fournie avec Windows). Lusk Texte enregistre alors dans votre dossier OneDrive, et OneDrive envoie le document en ligne.",
+        ),
+        (
+            "Google Drive",
+            google,
+            "Pour utiliser Google Drive, l’application gratuite « Google Drive pour ordinateur » doit être installée sur cet ordinateur et connectée à votre compte Google. Lusk Texte enregistre alors dans « Mon Drive », et Google Drive envoie le document en ligne : vous le retrouvez dans votre espace Google Drive.",
+        ),
+    ];
+    for (service, dirs, help) in services {
+        if dirs.is_empty() {
+            ui.horizontal(|ui| {
+                ui.add_enabled_ui(false, |ui| crate::widgets::icon_text_button(ui, "cloud", service, medium(14.0)))
+                    .response
+                    .on_disabled_hover_text(format!("{service} n’est pas installé sur cet ordinateur."));
+                help_hint(ui, help);
+            });
+            continue;
+        }
+        for (label, dir) in dirs {
+            let tip = if purpose == "save" {
+                format!("Enregistrer dans votre espace {service} ({})", dir.display())
+            } else {
+                format!("Ouvrir un document de votre espace {service} ({})", dir.display())
+            };
+            ui.horizontal(|ui| {
+                if crate::widgets::icon_text_button(ui, "cloud", &label, medium(14.0)).on_hover_text(tip).clicked() {
+                    app.browse_folder(purpose, dir.clone());
+                }
+                help_hint(ui, help);
+            });
         }
     }
+}
+
+/// Lusk Texte : les dossiers OneDrive et Google Drive de cet ordinateur (nom affiché, dossier).
+#[cfg(not(target_arch = "wasm32"))]
+type CloudDirs = (Vec<(String, std::path::PathBuf)>, Vec<(String, std::path::PathBuf)>);
+
+/// [`CloudDirs`], cherchés au plus une fois toutes les 10 secondes (la recherche de Google
+/// Drive essaie chaque lettre de lecteur).
+#[cfg(not(target_arch = "wasm32"))]
+fn cloud_dirs(ctx: &egui::Context) -> CloudDirs {
+    let id = egui::Id::unique("lusk_cloud_dirs");
+    let now = ctx.input(|i| i.time);
+    if let Some((at, dirs)) = ctx.data(|d| d.get_temp::<(f64, CloudDirs)>(id))
+        && now - at < 10.0
+    {
+        return dirs;
+    }
+    let dirs = (crate::file_browser::onedrive_dirs(), crate::file_browser::google_drive_dirs());
+    ctx.data_mut(|d| d.insert_temp(id, (now, dirs.clone())));
+    dirs
+}
+
+/// Lusk Texte : une petite icône d'aide (?) dont l'info-bulle explique `text`.
+#[cfg(not(target_arch = "wasm32"))]
+fn help_hint(ui: &mut Ui, text: &str) {
+    let (r, resp) = ui.allocate_exact_size(vec2(18.0, 18.0), egui::Sense::hover());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, true, "Aide"));
+    let t = crate::theme::Tokens::get(ui.ctx());
+    crate::icons::paint(ui.painter(), r, "help", t.text_dim, t.text_dim);
+    resp.on_hover_text(text);
 }
 
 /// Save As: Browse… asks where to save. It has no recent-documents list: clicking one of those

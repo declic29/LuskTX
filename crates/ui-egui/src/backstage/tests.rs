@@ -1155,3 +1155,23 @@ fn updates_page_sits_under_options_and_keeps_the_start_check_preference() {
     // An older ui.json without the key keeps the check on.
     assert!(crate::UiState::from_json(b"{}").unwrap().check_updates_at_start);
 }
+
+/// Lusk Texte : Save As offers OneDrive and Google Drive, each with a help icon (?) that says
+/// what to install; without the app the button is greyed out.
+#[test]
+fn save_as_offers_onedrive_and_google_drive_with_help() {
+    let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
+    a.run("ui.backstage", json!({"value": true, "page": "saveAs"})).unwrap();
+    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
+        |ui, app: &mut WordApp| {
+            let ctx = ui.ctx().clone();
+            app.logic(&ctx);
+            app.ui(ui);
+        },
+        a,
+    );
+    h.run_steps(4);
+    assert!(h.query_by_label_contains("OneDrive").is_some());
+    assert!(h.query_by_label_contains("Google Drive").is_some());
+    assert!(h.query_all_by_label("Aide").count() >= 2, "a help icon per service");
+}

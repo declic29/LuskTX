@@ -112,6 +112,48 @@ pub(crate) fn onedrive_dirs() -> Vec<(String, PathBuf)> {
     found
 }
 
+/// Lusk Texte : les dossiers « Mon Drive » de l'application Google Drive pour ordinateur, avec
+/// leur nom affiché. Windows : le lecteur que l'application crée (G: par défaut, n'importe quelle
+/// lettre de D à Z) ou le dossier en miroir sous le dossier personnel ; macOS :
+/// ~/Library/CloudStorage/GoogleDrive-<compte> ; Linux (pas de client officiel) : ~/GoogleDrive
+/// ou ~/google-drive. Vide quand Google Drive n'est pas installé.
+pub(crate) fn google_drive_dirs() -> Vec<(String, PathBuf)> {
+    const MY_DRIVE: [&str; 2] = ["Mon Drive", "My Drive"];
+    let mut candidates: Vec<(String, PathBuf)> = Vec::new();
+    if cfg!(windows) {
+        for letter in 'D'..='Z' {
+            for name in MY_DRIVE {
+                candidates.push(("Google Drive".into(), PathBuf::from(format!("{letter}:\\{name}"))));
+            }
+        }
+    }
+    if let Some(h) = home() {
+        for name in MY_DRIVE {
+            candidates.push(("Google Drive".into(), h.join(name)));
+        }
+        if let Ok(entries) = std::fs::read_dir(h.join("Library").join("CloudStorage")) {
+            for e in entries.flatten() {
+                let n = e.file_name().to_string_lossy().into_owned();
+                if let Some(account) = n.strip_prefix("GoogleDrive-") {
+                    for name in MY_DRIVE {
+                        candidates.push((format!("Google Drive ({account})"), e.path().join(name)));
+                    }
+                }
+            }
+        }
+        for name in ["GoogleDrive", "google-drive", "Google Drive"] {
+            candidates.push(("Google Drive".into(), h.join(name)));
+        }
+    }
+    let mut found: Vec<(String, PathBuf)> = Vec::new();
+    for (label, dir) in candidates {
+        if dir.is_dir() && !found.iter().any(|(_, d)| d == &dir) {
+            found.push((label, dir));
+        }
+    }
+    found
+}
+
 /// The user's home folder.
 pub(crate) fn home() -> Option<PathBuf> {
     std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")).filter(|h| !h.is_empty()).map(PathBuf::from)

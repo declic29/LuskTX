@@ -18,15 +18,17 @@
 - Le format conseillé est **Word (.docx)** : il est lu par la plupart des traitements de texte, dont Microsoft Word et LibreOffice.
 - **Enregistrer comme modèle Word** crée un modèle (.dotx) que vous retrouverez dans Fichier › Nouveau › Personnel.
 
-## Enregistrer sur OneDrive
+## Enregistrer sur OneDrive ou Google Drive
 
-Si OneDrive est installé sur votre ordinateur, un bouton **OneDrive** apparaît dans **Fichier › Ouvrir** et **Fichier › Enregistrer sous**. Il affiche directement le contenu de votre espace OneDrive :
+**Fichier › Ouvrir** et **Fichier › Enregistrer sous** proposent un bouton **OneDrive** et un bouton **Google Drive**. Ils affichent directement le contenu de votre espace en ligne :
 
-1. Cliquez sur **OneDrive** dans la page Ouvrir ou Enregistrer sous.
+1. Cliquez sur **OneDrive** ou **Google Drive** dans la page Ouvrir ou Enregistrer sous.
 2. Choisissez un dossier puis un fichier (pour ouvrir) ou tapez un nom (pour enregistrer).
-3. Validez : Windows se charge d'envoyer le fichier sur votre espace en ligne.
+3. Validez : l'application OneDrive ou Google Drive envoie ensuite le fichier sur votre espace en ligne.
 
-Si vous avez un compte OneDrive personnel et un compte professionnel, un bouton s'affiche pour chacun.
+Pour cela, l'application du service doit être installée sur l'ordinateur et connectée à votre compte : OneDrive est fourni avec Windows ; pour Google Drive, installez l'application gratuite **Google Drive pour ordinateur**. Tant qu'elle n'est pas installée, le bouton est grisé ; l'icône **?** à côté explique quoi faire. Lusk Texte ne se connecte jamais lui-même à votre compte.
+
+Si vous avez plusieurs comptes (un compte OneDrive personnel et un professionnel, par exemple), un bouton s'affiche pour chacun.
 
 ## L'enregistrement automatique
 
