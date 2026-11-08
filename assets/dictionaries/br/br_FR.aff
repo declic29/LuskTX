@@ -1,0 +1,584 @@
+# Converti pour Lusk Texte par outils/convertir-dictionnaire-breton.py : drapeaux d'un caractère.
+# Copyright (c) 2001-2020 Korvigelloù An Drouizig
+#
+# Kit e darempred ganeomp : drouizig@drouizig.org - http://www.drouizig.org	
+#
+# PEP GWIR MIRET STRIZH - KORVIGELLOÙ AN DROUIZIG
+
+# po (part of speech) :
+# aa : adanv
+# b : anv benel
+# bev : bevezour
+# g : anv gourel
+# v : verb
+#
+# is (inflectional suffix(es)) :
+# pl : plural
+# comp : comparative
+# super : superlative
+# excl : exclamative
+#
+# ip (inflectional prefix(es)) :
+# dv : dre vlotaat
+# dg : dre galetaat
+# dc : dre c'hwezhañ
+# ke : kemmesket
+
+SET UTF-8
+TRY esiaùnñrtolcdugmphbyfvkwzESIAÙNÑRTOLCDUGMPHBYFVKWZ'
+
+WORDCHARS '
+
+
+REP 6
+REP én ñ
+REP an añ
+REP en eñ
+REP in iñ
+REP on oñ
+REP un uñ
+
+PFX A Y 10
+PFX A 0 m' [aehiou]
+PFX A 0 t' [aehiou]
+PFX A 0 n' [aehiou]
+PFX A 0 d' [aehiou]
+PFX A 0 p' [aehiou]
+PFX A 0 M' [aehiou]
+PFX A 0 T' [aehiou]
+PFX A 0 N' [aehiou]
+PFX A 0 D' [aehiou]
+PFX A 0 P' [aehiou]
+
+# Kemmadurioù
+PFX B Y 30
+PFX B k g k
+PFX B K G K
+PFX B k c'h k
+PFX B K C'h K
+PFX B t d t
+PFX B T D T
+PFX B t z t
+PFX B T Z T
+PFX B p b p
+PFX B P B P
+PFX B p f p
+PFX B P F P
+PFX B G C'h G[^w]
+PFX B g c'h g[^w]
+PFX B G K G[^W]
+PFX B g k g[^w]
+PFX B gw w gw
+PFX B Gw W Gw
+PFX B Gw Kw Gw
+PFX B gw kw gw
+PFX B b v b
+PFX B B V B
+PFX B b p b
+PFX B B P B
+PFX B m v m
+PFX B M V M
+PFX B d z d
+PFX B D Z D
+PFX B d t d
+PFX B D T D
+
+#Kemmadur ober (gra>ra)
+PFX C Y 1
+PFX C g 0 .
+
+# Adanv
+SFX D Y 12
+SFX D 0 añ [^hz] is:super
+SFX D 0 at [^hz] is:excl
+SFX D 0 oc'h [^hz] is:comp
+SFX D 0 añ [^z]h is:super
+SFX D 0 at [^z]h is:excl
+SFX D 0 oc'h [^z]h is:comp
+SFX D z sañ z is:super
+SFX D z sat z is:excl
+SFX D z soc'h z is:comp
+SFX D zh shañ zh is:super
+SFX D zh shat zh is:excl
+SFX D zh shoc'h zh is:comp
+
+# Liesterioù
+SFX E Y 1
+SFX E 0 ed . is:pl
+
+SFX F Y 1
+SFX F 0 i . is:pl
+
+SFX G Y 1
+SFX G 0 ion . is:pl
+
+SFX H Y 1
+SFX H 0 ioù . is:pl
+
+SFX I Y 1
+SFX I 0 où . is:pl
+
+SFX J Y 1
+SFX J 0 ien . is:pl
+
+SFX K Y 1
+SFX K où eier . is:pl
+
+SFX L Y 1
+SFX L ad iz . is:pl
+
+SFX M Y 1
+SFX M iad iz . is:pl
+
+SFX N Y 1
+SFX N ad idi . is:pl
+
+# Lostgerioù all
+SFX O Y 2
+SFX O 0 ig .
+SFX O 0 ioùigoù . is:pl
+
+SFX P Y 2
+SFX P 0 ig .
+SFX P 0 oùigoù . is:pl
+ 
+# Displegadurioù 
+SFX Q Y 42
+SFX Q 0 an .
+SFX Q 0 as .
+SFX Q 0 e .
+SFX Q 0 ec'h .
+SFX Q 0 ed .
+SFX Q 0 emp .
+SFX Q 0 en .
+SFX Q 0 ent .
+SFX Q 0 er .
+SFX Q 0 es .
+SFX Q 0 et .
+SFX Q 0 ez .
+SFX Q 0 fe .
+SFX Q 0 fec'h .
+SFX Q 0 fed .
+SFX Q 0 femp .
+SFX Q 0 fen .
+SFX Q 0 fent .
+SFX Q 0 fes .
+SFX Q 0 i .
+SFX Q 0 imp .
+SFX Q 0 in .
+SFX Q 0 int .
+SFX Q 0 is .
+SFX Q 0 it .
+SFX Q 0 je .
+SFX Q 0 jec'h .
+SFX Q 0 jed .
+SFX Q 0 jemp .
+SFX Q 0 jen .
+SFX Q 0 jent .
+SFX Q 0 jes .
+SFX Q 0 joc'h .
+SFX Q 0 jod .
+SFX Q 0 jomp .
+SFX Q 0 jont .
+SFX Q 0 jout .
+SFX Q 0 o .
+SFX Q 0 omp .
+SFX Q 0 ont .
+SFX Q 0 or .
+SFX Q 0 ot .
+ 
+# Displegadurioù : verboù reizh 
+SFX R Y 52
+SFX R 0 0 . is:imp_p2_sg
+SFX R 0 0 . is:pri_p3_sg
+SFX R 0 an . is:pri_p1_sg
+SFX R 0 as . is:past_p3_sg
+SFX R 0 e . is:pii_p3_sg
+SFX R 0 ec'h . is:pii_p2_pl
+SFX R 0 ed . is:pii_impers_sp
+SFX R 0 emp . is:pii_p1_pl
+SFX R 0 en . is:pii_p1_sg
+SFX R 0 ent . is:imp_p3_pl
+SFX R 0 ent . is:pii_p3_pl
+SFX R 0 er . is:pri_impers_sp
+SFX R 0 es . is:pii_p2_sg
+SFX R 0 et . is:imp_p3_sg
+SFX R 0 et . is:pp
+SFX R 0 etañ . is:sup
+SFX R 0 etoc'h . is:comp
+SFX R 0 ez . is:pri_p2_sg
+SFX R 0 fe . is:cni_p3_sg
+SFX R 0 fec'h . is:cni_p2_pl
+SFX R 0 fed . is:cni_impers_sp
+SFX R 0 femp . is:cni_p1_pl
+SFX R 0 fen . is:cni_p1_sg
+SFX R 0 fent . is:cni_p3_pl
+SFX R 0 fes . is:cni_p2_sg
+SFX R 0 i . is:fti_p2_sg
+SFX R 0 imp . is:fti_p1_pl
+SFX R 0 in . is:fti_p1_sg
+SFX R 0 int . is:fti_p3_pl
+SFX R 0 is . is:past_p1_sg
+SFX R 0 it . is:imp_p2_pl
+SFX R 0 it . is:pri_p2_pl
+SFX R 0 je . is:cip_p3_sg
+SFX R 0 jec'h . is:cip_p2_pl
+SFX R 0 jed . is:cip_impers_sp
+SFX R 0 jemp . is:cip_p1_pl
+SFX R 0 jen . is:cip_p1_sg
+SFX R 0 jent . is:cip_p3_pl
+SFX R 0 jes . is:cip_p2_sg
+SFX R 0 joc'h . is:past_p2_pl
+SFX R 0 jod . is:past_impers_sp
+SFX R 0 jomp . is:past_p1_pl
+SFX R 0 jon . is:past_p1_sg
+SFX R 0 jont . is:past_p3_pl
+SFX R 0 jout . is:past_p2_sg
+SFX R 0 o . is:fti_p3_sg
+SFX R 0 oc'h . is:fti_p2_pl
+SFX R 0 omp . is:imp_p1_pl
+SFX R 0 omp . is:pri_p1_pl
+SFX R 0 ont . is:pri_p3_pl
+SFX R 0 or . is:fti_impers_sp
+SFX R 0 ot . is:fti_p2_pl
+ 
+# Displegadurioù : verboù reizh gant ur bennrann dre -a, -o et -eu 
+# kuitaat : kuita- 
+# pesketa : pesketa- 
+SFX S Y 53
+SFX S 0 0 . is:pri_p3_sg
+SFX S 0 0 . is:imp_p2_sg
+SFX S 0 an . is:pri_p1_sg
+SFX S 0 as . is:past_p3_sg
+SFX S 0 e . is:pii_p3_sg
+SFX S 0 ec'h . is:pii_p2_pl
+SFX S 0 ed . is:pii_impers_sp
+SFX S 0 emp . is:pii_p1_pl
+SFX S 0 en . is:pii_p1_sg
+SFX S 0 ent . is:pii_p3_pl
+SFX S 0 ent . is:imp_p3_pl
+SFX S 0 er . is:pri_impers_sp
+SFX S 0 es . is:pii_p2_sg
+SFX S 0 et . is:pp
+SFX S 0 et . is:imp_p3_sg
+SFX S 0 etañ . is:sup
+SFX S 0 etoc'h . is:comp
+SFX S 0 ez . is:pri_p2_sg
+SFX S 0 fe . is:cni_p3_sg
+SFX S 0 fec'h . is:cni_p2_pl
+SFX S 0 fed . is:cni_impers_sp
+SFX S 0 femp . is:cni_p1_pl
+SFX S 0 fen . is:cni_p1_sg
+SFX S 0 fent . is:cni_p3_pl
+SFX S 0 fes . is:cni_p2_sg
+SFX S 0 i . is:fti_p2_sg
+SFX S 0 imp . is:fti_p1_pl
+SFX S 0 in . is:fti_p1_sg
+SFX S 0 int . is:fti_p3_pl
+SFX S 0 io . is:fti_p3_sg
+SFX S 0 is . is:past_p1_sg
+SFX S 0 it . is:pri_p2_pl
+SFX S 0 it . is:imp_p2_pl
+SFX S 0 je . is:cip_p3_sg
+SFX S 0 jec'h . is:cip_p2_pl
+SFX S 0 jed . is:cip_impers_sp
+SFX S 0 jemp . is:cip_p1_pl
+SFX S 0 jen . is:cip_p1_sg
+SFX S 0 jent . is:cip_p3_pl
+SFX S 0 jes . is:cip_p2_sg
+SFX S 0 joc'h . is:past_p2_pl
+SFX S 0 jod . is:past_impers_sp
+SFX S 0 jomp . is:past_p1_pl
+SFX S 0 jon . is:past_p1_sg
+SFX S 0 jont . is:past_p3_pl
+SFX S 0 jout . is:past_p2_sg
+SFX S 0 oc'h . is:fti_p2_pl
+SFX S 0 omp . is:pri_p1_pl
+SFX S 0 omp . is:imp_p1_pl
+SFX S 0 ont . is:pri_p3_pl
+SFX S 0 or . is:fti_impers_sp
+SFX S 0 ot . is:fti_p2_pl
+SFX S 0 y . is:fti_p3_sg
+ 
+# Displegadurioù : displegadur dazeilel ar verboù dre -a (pesketa, boueta, ...) 
+# pesketa : pesketa- 
+SFX T Y 53
+SFX T 0 0/S .
+SFX T 0 0 . is:imp_p2_sg
+SFX T 0 0 . is:pri_p3_sg
+SFX T 0 n . is:pri_p1_sg
+SFX T 0 s . is:past_p3_sg
+SFX T a e . is:pii_p3_sg
+SFX T a ec'h . is:pii_p2_pl
+SFX T a ed . is:pii_impers_sp
+SFX T a emp . is:pii_p1_pl
+SFX T a en . is:pii_p1_sg
+SFX T a ent . is:imp_p3_pl
+SFX T a ent . is:pii_p3_pl
+SFX T a er . is:pri_impers_sp
+SFX T a es . is:pii_p2_sg
+SFX T a et . is:imp_p3_sg
+SFX T a et . is:pp
+SFX T a etañ . is:sup
+SFX T a etoc'h . is:comp
+SFX T a ez . is:pri_p2_sg
+SFX T a fe . is:cni_p3_sg
+SFX T a fec'h . is:cni_p2_pl
+SFX T a fed . is:cni_impers_sp
+SFX T a femp . is:cni_p1_pl
+SFX T a fen . is:cni_p1_sg
+SFX T a fent . is:cni_p3_pl
+SFX T a fes . is:cni_p2_sg
+SFX T a i . is:fti_p2_sg
+SFX T a imp . is:fti_p1_pl
+SFX T a in . is:fti_p1_sg
+SFX T a int . is:fti_p3_pl
+SFX T a is . is:past_p1_sg
+SFX T a it . is:imp_p2_pl
+SFX T a it . is:pri_p2_pl
+SFX T a je . is:cip_p3_sg
+SFX T a jec'h . is:cip_p2_pl
+SFX T a jed . is:cip_impers_sp
+SFX T a jemp . is:cip_p1_pl
+SFX T a jen . is:cip_p1_sg
+SFX T a jent . is:cip_p3_pl
+SFX T a jes . is:cip_p2_sg
+SFX T a joc'h . is:past_p2_pl
+SFX T a jod . is:past_impers_sp
+SFX T a jomp . is:past_p1_pl
+SFX T a jon . is:past_p1_sg
+SFX T a jont . is:past_p3_pl
+SFX T a jout . is:past_p2_sg
+SFX T a o . is:fti_p3_sg
+SFX T a oc'h . is:fti_p2_pl
+SFX T a omp . is:imp_p1_pl
+SFX T a omp . is:pri_p1_pl
+SFX T a ont . is:pri_p3_pl
+SFX T a or . is:fti_impers_sp
+SFX T a ot . is:fti_p2_pl
+ 
+# Verboù dre -iañ 
+# glebiañ : gleb- 
+SFX U Y 52
+SFX U 0 0 . is:imp_p2_sg
+SFX U 0 0 . is:pri_p3_sg
+SFX U 0 fe . is:cni_p3_sg
+SFX U 0 fec'h . is:cni_p2_pl
+SFX U 0 fed . is:cni_impers_sp
+SFX U 0 femp . is:cni_p1_pl
+SFX U 0 fen . is:cni_p1_sg
+SFX U 0 fent . is:cni_p3_pl
+SFX U 0 fes . is:cni_p2_sg
+SFX U 0 i . is:fti_p2_sg
+SFX U 0 ian . is:pri_p1_sg
+SFX U 0 ias . is:past_p3_sg
+SFX U 0 ie . is:pii_p3_sg
+SFX U 0 iec'h . is:pii_p2_pl
+SFX U 0 ied . is:pii_impers_sp
+SFX U 0 iemp . is:pii_p1_pl
+SFX U 0 ien . is:pii_p1_sg
+SFX U 0 ient . is:imp_p3_pl
+SFX U 0 ient . is:pii_p3_pl
+SFX U 0 ier . is:pri_impers_sp
+SFX U 0 ies . is:pii_p2_sg
+SFX U 0 iet . is:imp_p3_sg
+SFX U 0 iet . is:pp
+SFX U 0 ietañ . is:sup
+SFX U 0 ietoc'h . is:comp
+SFX U 0 iez . is:pri_p2_sg
+SFX U 0 imp . is:fti_p1_pl
+SFX U 0 in . is:fti_p1_sg
+SFX U 0 int . is:fti_p3_pl
+SFX U 0 io . is:fti_p3_sg
+SFX U 0 ioc'h . is:fti_p2_pl
+SFX U 0 iomp . is:imp_p1_pl
+SFX U 0 iomp . is:pri_p1_pl
+SFX U 0 iont . is:pri_p3_pl
+SFX U 0 ior . is:fti_impers_sp
+SFX U 0 iot . is:fti_p2_pl
+SFX U 0 is . is:past_p1_sg
+SFX U 0 it . is:imp_p2_pl
+SFX U 0 it . is:pri_p2_pl
+SFX U 0 je . is:cip_p3_sg
+SFX U 0 jec'h . is:cip_p2_pl
+SFX U 0 jed . is:cip_impers_sp
+SFX U 0 jemp . is:cip_p1_pl
+SFX U 0 jen . is:cip_p1_sg
+SFX U 0 jent . is:cip_p3_pl
+SFX U 0 jes . is:cip_p2_sg
+SFX U 0 joc'h . is:past_p2_pl
+SFX U 0 jod . is:past_impers_sp
+SFX U 0 jomp . is:past_p1_pl
+SFX U 0 jon . is:past_p1_sg
+SFX U 0 jont . is:past_p3_pl
+SFX U 0 jout . is:past_p2_sg
+ 
+# Verboù dre -liañ 
+# kuzuliañ : kuzuilh- 
+SFX V Y 52
+SFX V 0 0 . is:pri_p3_sg
+SFX V 0 0 . is:imp_p2_sg
+SFX V 0 fe . is:cni_p3_sg
+SFX V 0 fec'h . is:cni_p2_pl
+SFX V 0 fed . is:cni_impers_sp
+SFX V 0 femp . is:cni_p1_pl
+SFX V 0 fen . is:cni_p1_sg
+SFX V 0 fent . is:cni_p3_pl
+SFX V 0 fes . is:cni_p2_sg
+SFX V 0 i . is:fti_p2_sg
+SFX V 0 imp . is:fti_p1_pl
+SFX V 0 in . is:fti_p1_sg
+SFX V 0 int . is:fti_p3_pl
+SFX V 0 is . is:past_p1_sg
+SFX V 0 it . is:pri_p2_pl
+SFX V 0 it . is:imp_p2_pl
+SFX V 0 je . is:cip_p3_sg
+SFX V 0 jec'h . is:cip_p2_pl
+SFX V 0 jed . is:cip_impers_sp
+SFX V 0 jemp . is:cip_p1_pl
+SFX V 0 jen . is:cip_p1_sg
+SFX V 0 jent . is:cip_p3_pl
+SFX V 0 jes . is:cip_p2_sg
+SFX V 0 joc'h . is:past_p2_pl
+SFX V 0 jod . is:past_impers_sp
+SFX V 0 jomp . is:past_p1_pl
+SFX V 0 jon . is:past_p1_sg
+SFX V 0 jont . is:past_p3_pl
+SFX V 0 jout . is:past_p2_sg
+SFX V ilh lian . is:pri_p1_sg
+SFX V ilh lias . is:past_p3_sg
+SFX V ilh lie . is:pii_p3_sg
+SFX V ilh liec'h . is:pii_p2_pl
+SFX V ilh lied . is:pii_impers_sp
+SFX V ilh liemp . is:pii_p1_pl
+SFX V ilh lien . is:pii_p1_sg
+SFX V ilh lient . is:pii_p3_pl
+SFX V ilh lient . is:imp_p3_pl
+SFX V ilh lier . is:pri_impers_sp
+SFX V ilh lies . is:pii_p2_sg
+SFX V ilh liet . is:pp
+SFX V ilh liet . is:imp_p3_sg
+SFX V ilh lietañ . is:sup
+SFX V ilh lietoc'h . is:comp
+SFX V ilh liez . is:pri_p2_sg
+SFX V ilh lio . is:fti_p3_sg
+SFX V ilh lioc'h . is:fti_p2_pl
+SFX V ilh liomp . is:pri_p1_pl
+SFX V ilh liomp . is:imp_p1_pl
+SFX V ilh liont . is:pri_p3_pl
+SFX V ilh lior . is:fti_impers_sp
+SFX V ilh liot . is:fti_p2_pl
+ 
+# Verboù dre -niañ 
+# koaniañ : koagn- 
+SFX W Y 52
+SFX W 0 0 . is:imp_p2_sg
+SFX W 0 0 . is:pri_p3_sg
+SFX W 0 fe . is:cni_p3_sg
+SFX W 0 fec'h . is:cni_p2_pl
+SFX W 0 fed . is:cni_impers_sp
+SFX W 0 femp . is:cni_p1_pl
+SFX W 0 fen . is:cni_p1_sg
+SFX W 0 fent . is:cni_p3_pl
+SFX W 0 fes . is:cni_p2_sg
+SFX W 0 i . is:fti_p2_sg
+SFX W 0 imp . is:fti_p1_pl
+SFX W 0 in . is:fti_p1_sg
+SFX W 0 int . is:fti_p3_pl
+SFX W 0 is . is:past_p1_sg
+SFX W 0 it . is:imp_p2_pl
+SFX W 0 it . is:pri_p2_pl
+SFX W 0 je . is:cip_p3_sg
+SFX W 0 jec'h . is:cip_p2_pl
+SFX W 0 jed . is:cip_impers_sp
+SFX W 0 jemp . is:cip_p1_pl
+SFX W 0 jen . is:cip_p1_sg
+SFX W 0 jent . is:cip_p3_pl
+SFX W 0 jes . is:cip_p2_sg
+SFX W 0 joc'h . is:past_p2_pl
+SFX W 0 jod . is:past_impers_sp
+SFX W 0 jomp . is:past_p1_pl
+SFX W 0 jon . is:past_p1_sg
+SFX W 0 jont . is:past_p3_pl
+SFX W 0 jout . is:past_p2_sg
+SFX W gn nian . is:pri_p1_sg
+SFX W gn nias . is:past_p3_sg
+SFX W gn nie . is:pii_p3_sg
+SFX W gn niec'h . is:pii_p2_pl
+SFX W gn nied . is:pii_impers_sp
+SFX W gn niemp . is:pii_p1_pl
+SFX W gn nien . is:pii_p1_sg
+SFX W gn nient . is:imp_p3_pl
+SFX W gn nient . is:pii_p3_pl
+SFX W gn nier . is:pri_impers_sp
+SFX W gn nies . is:pii_p2_sg
+SFX W gn niet . is:imp_p3_sg
+SFX W gn niet . is:pp
+SFX W gn nietañ . is:sup
+SFX W gn nietoc'h . is:comp
+SFX W gn niez . is:pri_p2_sg
+SFX W gn nio . is:fti_p3_sg
+SFX W gn nioc'h . is:fti_p2_pl
+SFX W gn niomp . is:imp_p1_pl
+SFX W gn niomp . is:pri_p1_pl
+SFX W gn niont . is:pri_p3_pl
+SFX W gn nior . is:fti_impers_sp
+SFX W gn niot . is:fti_p2_pl
+
+# Displegadurioù : ober  
+SFX X Y 54
+SFX X 0 0 . is:pri_p3_sg
+SFX X 0 0 . is:imp_p2_sg
+SFX X 0 e . is:pii_p3_sg
+SFX X 0 ec'h . is:pii_p2_pl
+SFX X 0 ed . is:pii_impers_sp
+SFX X 0 emp . is:pii_p1_pl
+SFX X 0 en . is:pii_p1_sg
+SFX X 0 ent . is:pii_p3_pl
+SFX X 0 ent . is:imp_p3_pl
+SFX X 0 es . is:pii_p2_sg
+SFX X 0 et . is:imp_p3_sg
+SFX X 0 et . is:pp
+SFX X 0 etañ . is:sup
+SFX X 0 etoc'h . is:comp
+SFX X 0 fe . is:cni_p3_sg
+SFX X 0 fec'h . is:cni_p2_pl
+SFX X 0 fed . is:cni_impers_sp
+SFX X 0 femp . is:cni_p1_pl
+SFX X 0 fen . is:cni_p1_sg
+SFX X 0 fent . is:cni_p3_pl
+SFX X 0 fes . is:cni_p2_sg
+SFX X 0 imp . is:fti_p1_pl
+SFX X 0 int . is:fti_p3_pl
+SFX X 0 io . is:fti_p3_sg
+SFX X 0 je . is:cip_p3_sg
+SFX X 0 jec'h . is:cip_p2_pl
+SFX X 0 jed . is:cip_impers_sp
+SFX X 0 jemp . is:cip_p1_pl
+SFX X 0 jen . is:cip_p1_sg
+SFX X 0 jent . is:cip_p3_pl
+SFX X 0 jes . is:cip_p2_sg
+SFX X 0 n . is:pri_p1_sg
+SFX X 0 y . is:fti_p3_sg
+SFX X a eas . is:past_p3_sg
+SFX X a eer . is:pri_impers_sp
+SFX X a ejoc'h . is:past_p2_pl
+SFX X a ejod . is:past_impers_sp
+SFX X a ejomp . is:past_p1_pl
+SFX X a ejon . is:past_p1_sg
+SFX X a ejont . is:past_p3_pl
+SFX X a ejout . is:past_p2_sg
+SFX X a eoc'h . is:fti_p2_pl
+SFX X a eomp . is:pri_p1_pl
+SFX X a eomp . is:imp_p1_pl
+SFX X a eont . is:pri_p3_pl
+SFX X a eor . is:fti_impers_sp
+SFX X a eot . is:fti_p2_pl
+SFX X a ez . is:pri_p2_sg
+SFX X a i . is:fti_p2_sg
+SFX X a imp . is:fti_p1_pl
+SFX X a in . is:fti_p1_sg
+SFX X a is . is:past_p1_sg
+SFX X a it . is:pri_p2_pl
+SFX X a it . is:imp_p2_pl
+

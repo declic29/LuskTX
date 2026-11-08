@@ -1,6 +1,6 @@
-//! French proofing using the Hunspell `fr_FR` dictionary of Dicollecte (MPL 2.0), read from the
-//! dictionaries folders (`hunspell::search_dirs`), for instance a `dictionnaires` folder next to
-//! the program. Elisions (`l'homme`, `qu'il`, `aujourd'hui`) are accepted whole or as an elided
+//! French proofing using the Hunspell `fr_FR` dictionary of Dicollecte (MPL 2.0), built into the
+//! program (`assets/dictionaries/fr`); an installed one (`hunspell::search_dirs`) serves only if
+//! the built-in one can't be read. Elisions (`l'homme`, `qu'il`, `aujourd'hui`) are accepted whole or as an elided
 //! prefix plus a known word. Suggestions are single edits (accents first) kept when the
 //! dictionary knows the result. Grammar is limited to generic repeated-word and spacing checks
 //! with French messages; hyphenation uses the bundled French patterns ([`crate::hyphen::Patterns::fr`]).
@@ -37,7 +37,23 @@ pub fn dictionary() -> Arc<AffixDict> {
     slot.get_or_insert(loaded).clone()
 }
 
+/// Lusk Texte : the Dicollecte dictionary (MPL 2.0) ships inside the program, adapted to this
+/// reader (`assets/dictionaries/fr/MODIFICATIONS.txt`), so French spelling works on every
+/// computer and on the web without installing anything.
+const EMBEDDED_AFF: &str = include_str!("../../../../assets/dictionaries/fr/fr_FR.aff");
+const EMBEDDED_DIC: &str = include_str!("../../../../assets/dictionaries/fr/fr_FR.dic");
+
+/// The dictionary shipped with the program.
+pub fn embedded() -> Result<AffixDict, String> {
+    parse_tolerant(EMBEDDED_AFF.to_string(), EMBEDDED_DIC)
+}
+
 fn load_installed() -> AffixDict {
+    match embedded() {
+        Ok(d) if !d.is_empty() => return d,
+        Ok(_) => log::warn!("French spelling: the built-in dictionary is empty"),
+        Err(e) => log::warn!("French spelling: the built-in dictionary could not be read: {e}"),
+    }
     let Some((aff, dic)) = crate::hunspell::find(NAMES) else {
         crate::hunspell::clear_load_error(NAMES[0]);
         log::info!("French spelling: no Hunspell fr_FR dictionary installed");
@@ -59,12 +75,17 @@ fn load_tolerant(aff: &std::path::Path, dic: &std::path::Path) -> Result<AffixDi
         Err(e) if !e.contains(" is not supported") => return Err(e),
         Err(_) => {}
     }
-    let mut aff_text = std::fs::read_to_string(aff).map_err(|e| format!("{}: {e}", aff.display()))?;
+    let aff_text = std::fs::read_to_string(aff).map_err(|e| format!("{}: {e}", aff.display()))?;
     let dic_text = std::fs::read_to_string(dic).map_err(|e| format!("{}: {e}", dic.display()))?;
+    parse_tolerant(aff_text, &dic_text)
+}
+
+/// [`load_tolerant`] on the files' text.
+fn parse_tolerant(mut aff_text: String, dic_text: &str) -> Result<AffixDict, String> {
     let mut dropped: Vec<String> = Vec::new();
     let mut last = String::new();
     for _ in 0..40 {
-        let e = match AffixDict::from_hunspell(&aff_text, &dic_text, &[]) {
+        let e = match AffixDict::from_hunspell(&aff_text, dic_text, &[]) {
             Ok(d) => return Ok(d),
             Err(e) => e,
         };
@@ -185,6 +206,20 @@ fn known(d: &AffixDict, w: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Lusk Texte : the built-in dictionary reads, knows everyday words in all their forms and
+    /// flags misspellings, with nothing installed.
+    #[test]
+    fn the_built_in_dictionary_checks_french() {
+        let d = embedded().unwrap();
+        assert!(!d.is_empty());
+        for w in ["maison", "maisons", "écrivez", "appartient", "Bretagne", "l'association", "aujourd'hui", "chevaux", "livres"] {
+            assert!(is_correct_with(&d, w), "{w}");
+        }
+        for w in ["maisonn", "écrivé", "apartient", "chevals"] {
+            assert!(!is_correct_with(&d, w), "{w}");
+        }
+    }
 
     const AFF: &str = "SET UTF-8\n";
     const DIC: &str = "6\nbonjour\nmonde\nhomme\naujourd'hui\npeut\nêtre\n";

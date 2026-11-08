@@ -9,7 +9,7 @@ Lusk Texte souligne les fautes pendant la frappe : en rouge pour l'orthographe, 
 - **Révision › Langue** choisit la langue de vérification du texte sélectionné. La langue en cours s'affiche aussi dans la barre d'état.
 - **Fichier › Options › Vérification** règle la correction automatique et indique pour quelles langues un dictionnaire est installé.
 
-Lusk Texte utilise un dictionnaire français fourni avec l'application. Si un message indique qu'un dictionnaire est introuvable ou illisible, c'est qu'il ne trouve pas son dossier de dictionnaires : la langue concernée n'est alors pas vérifiée.
+Les dictionnaires **français** (Dicollecte) et **breton** (An Drouizig) sont intégrés à Lusk Texte : ils fonctionnent tout de suite, sans rien installer. Pour écrire en breton, sélectionnez le texte puis choisissez **Breton** dans **Révision › Langue** ; un livre dont la langue est le breton (Mode Livre) est vérifié en breton automatiquement. Pour d'autres langues, Lusk Texte utilise un dictionnaire Hunspell installé sur l'ordinateur (par LibreOffice, par exemple) ; sans dictionnaire, la langue n'est pas vérifiée.
 
 ## Compter les mots et améliorer le style
 

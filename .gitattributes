@@ -1,3 +1,5 @@
 craft-i18n.rev text eol=lf
 
 dictionnaires/* -text
+# Lusk Texte : dictionnaires intégrés, gardés à l’octet près (fin de ligne LF)
+assets/dictionaries/** -text

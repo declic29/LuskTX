@@ -1,0 +1,13 @@
+Dictionnaire breton Hunspell br_FR de Korvigelloù An Drouizig (version 0.16 et corrections
+suivantes), https://github.com/Drouizig/hunspell-br, commit e16c0a0 du 28 septembre 2025.
+Le dictionnaire est proposé sous les licences GPL, LGPL et MPL, au choix : Lusk Texte l'utilise
+sous la licence MPL 1.1 (texte complet : MPL-1.1.txt). Copyright (c) 2001-2020 Korvigelloù An Drouizig.
+
+Modifications apportées pour Lusk Texte par outils/convertir-dictionnaire-breton.py (le lecteur de
+dictionnaires ne gère que des drapeaux d'un seul caractère) :
+ - suppression de la ligne « FLAG long » et remplacement de chacun des 24 drapeaux longs (a0, m0,
+   p10…) par une seule lettre, dans br_FR.aff et br_FR.dic ;
+ - suppression, dans br_FR.dic, des champs morphologiques (po:g, po:b…) et des commentaires des
+   entrées, que le lecteur n'utilise pas.
+Les mots, les règles d'affixes et leurs conditions sont inchangés. Le fichier d'origine
+README.txt est reproduit dans LISEZ-MOI-ORIGINAL.txt.

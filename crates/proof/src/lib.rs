@@ -43,6 +43,8 @@
 //!   (MPL 2.0; looked up in the dictionaries folders, including a `dictionnaires` folder next to
 //!   the program), elisions (`l'homme`) understood, accent-first suggestions and generic checks
 //!   with French messages. Hyphenation uses the bundled TeX French patterns.
+//! - **Breton** ([`ProofLang::Br`], module [`br`]): An Drouizig's Hunspell `br_FR` dictionary
+//!   (MPL 1.1), built in; dictionary-driven suggestions and generic checks with French messages.
 //! - **German** ([`ProofLang::De`]): hyphenation by `hyph-utf8`'s German patterns (reformed
 //!   spelling, MIT); no spelling or grammar marks yet.
 //! - **Other languages** ([`ProofLang::Other`]): no spelling or grammar marks, like Word without
@@ -55,6 +57,7 @@
 
 pub mod affix;
 pub mod bg;
+pub mod br;
 pub mod cs;
 pub mod dict;
 pub mod en_variants;
@@ -197,6 +200,7 @@ pub fn installed_dictionaries() -> Vec<(ProofLang, Option<std::path::PathBuf>)> 
         (ProofLang::Es419, es::installed_path(ProofLang::Es419)),
         (ProofLang::EsUy, es::installed_path(ProofLang::EsUy)),
         (ProofLang::Fr, fr::installed_path()),
+        (ProofLang::Br, br::installed_path()),
     ]
 }
 
@@ -212,6 +216,7 @@ pub fn dictionary_load_error(lang: ProofLang) -> Option<String> {
         ProofLang::Tr => "tr_TR",
         ProofLang::Id => "id_ID",
         ProofLang::Fr => "fr_FR",
+        ProofLang::Br => "br_FR",
         ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => es::dictionary_name(lang),
         _ => return None,
     };
@@ -456,6 +461,7 @@ fn dictionary_loaded(lang: ProofLang) -> Option<bool> {
         ProofLang::Cs => cs::has_dictionary(),
         ProofLang::Id => id::has_dictionary(),
         ProofLang::Fr => fr::has_dictionary(),
+        ProofLang::Br => br::has_dictionary(),
         l if l.is_spanish() => es::has_dictionary(l),
         _ => return None,
     })
@@ -475,6 +481,7 @@ fn dictionary_needed(lang: ProofLang, installed: bool) -> Option<&'static str> {
         ProofLang::Cs => Some("cs_CZ"),
         ProofLang::Id => Some("id_ID"),
         ProofLang::Fr => Some("fr_FR"),
+        ProofLang::Br => Some("br_FR"),
         l if l.is_spanish() => Some(es::dictionary_name(l)),
         _ => None,
     }
@@ -759,6 +766,7 @@ fn spelling_issue(text: &str, a: usize, b: usize, lang: ProofLang, opts: &Option
         ProofLang::Cs => "Možná pravopisná chyba",
         ProofLang::Id => "Kemungkinan salah eja",
         ProofLang::Fr => "Faute d’orthographe possible",
+        ProofLang::Br => "Faute d’orthographe possible (breton)",
         ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => "Posible error ortográfico",
         _ => "Possible spelling mistake",
     };
@@ -799,6 +807,7 @@ pub fn is_correct_in_with(word: &str, lang: ProofLang, opts: &Options) -> bool {
         ProofLang::Cs => accepted_by_options(word, opts) || cs::is_correct_with_options(word, opts),
         ProofLang::Id => accepted_by_options(word, opts) || id::is_correct_with_options(word, opts),
         ProofLang::Fr => accepted_by_options(word, opts) || fr::is_correct_with_options(word, opts),
+        ProofLang::Br => accepted_by_options(word, opts) || br::is_correct_with_options(word, opts),
         ProofLang::Bg | ProofLang::De | ProofLang::Other => true,
     }
 }
@@ -818,6 +827,7 @@ pub fn suggest_in(word: &str, max: usize, lang: ProofLang) -> Vec<String> {
         ProofLang::Cs => cs::suggest(word, max),
         ProofLang::Id => id::suggest(word, max),
         ProofLang::Fr => fr::suggest(word, max),
+        ProofLang::Br => br::suggest(word, max),
         ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => es::suggest(word, max, lang),
         ProofLang::Bg | ProofLang::De | ProofLang::Other => Vec::new(),
     }
@@ -847,6 +857,7 @@ fn grammar_in(text: &str, lang: ProofLang, capital_first: bool) -> Vec<Issue> {
         ProofLang::Cs => cs::grammar::check(text),
         ProofLang::Id => id::grammar::check(text),
         ProofLang::Fr => fr::grammar::check(text),
+        ProofLang::Br => br::grammar::check(text),
         // Spanish has no sentence-capital rule either.
         ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => es::grammar::check(text, lang),
         ProofLang::Bg | ProofLang::De | ProofLang::Other => Vec::new(),
@@ -1767,7 +1778,8 @@ mod tests {
     fn non_english_words_are_not_flagged() {
         for w in ["ąžuolas", "élève", "über", "labas", "bonjour"] {
             assert!(is_correct_for(w, Some("lt-LT")), "{w}");
-            assert!(is_correct_for(w, Some("fr-FR")), "{w}");
+            // Lusk Texte : French has its built-in dictionary now; German has none.
+            assert!(is_correct_for(w, Some("de-DE")), "{w}");
         }
         assert!(!is_correct_for("helo", Some("en-US")), "English typos still flagged");
         assert!(!is_correct_for("helo", None), "default language still proofed");

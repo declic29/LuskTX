@@ -75,6 +75,9 @@ pub enum ProofLang {
     /// and generic checks with French messages ([`crate::fr`]). Hyphenation uses the bundled TeX
     /// French patterns ([`crate::hyphen::Patterns::fr`]).
     Fr,
+    /// Lusk Texte : Breton (`br`, `br-FR`): the built-in Hunspell `br_FR` dictionary of An
+    /// Drouizig, dictionary-driven suggestions and generic checks ([`crate::br`]).
+    Br,
     /// A language without proofing tools here (`ja-JP`, `x-none`…). Like Word without
     /// the language's proofing tools: no spelling or grammar marks, so its words are never
     /// flagged as English misspellings. Hyphenation keeps using the English patterns, as before
@@ -84,7 +87,7 @@ pub enum ProofLang {
 
 impl ProofLang {
     /// Every language with a spelling dictionary, in display order.
-    pub const PROOFED: [ProofLang; 16] = [
+    pub const PROOFED: [ProofLang; 17] = [
         ProofLang::En,
         ProofLang::EnGb,
         ProofLang::EnCa,
@@ -101,6 +104,7 @@ impl ProofLang {
         ProofLang::Es419,
         ProofLang::EsUy,
         ProofLang::Fr,
+        ProofLang::Br,
     ];
 
     /// The proofing language of a BCP 47 tag (`pl-PL`, `en_GB`, `PL`…). The primary subtag
@@ -136,6 +140,8 @@ impl ProofLang {
             ProofLang::De
         } else if ["fr", "fra", "fre"].iter().any(|c| primary.eq_ignore_ascii_case(c)) {
             ProofLang::Fr
+        } else if ["br", "bre"].iter().any(|c| primary.eq_ignore_ascii_case(c)) {
+            ProofLang::Br
         } else {
             ProofLang::Other
         }
@@ -191,6 +197,7 @@ impl ProofLang {
             ProofLang::Es | ProofLang::EsMx | ProofLang::Es419 | ProofLang::EsUy => "es",
             ProofLang::De => "de",
             ProofLang::Fr => "fr",
+            ProofLang::Br => "br",
             ProofLang::Other => "",
         }
     }
