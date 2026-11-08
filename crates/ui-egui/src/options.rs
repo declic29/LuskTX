@@ -361,8 +361,12 @@ fn dictionaries(app: &mut WordApp, ui: &mut Ui) {
     let found = match cached {
         Some((_, f)) => f,
         None => {
+            // Lusk Texte : French and Breton use the dictionaries built into the program, listed
+            // apart; the list shows the other languages' dictionaries found on the computer.
+            let built_in = [wordcraft_engine::proof::ProofLang::Fr, wordcraft_engine::proof::ProofLang::Br];
             let f: Vec<(String, Option<String>, Option<String>)> = wordcraft_engine::proof::installed_dictionaries()
                 .into_iter()
+                .filter(|(lang, _)| !built_in.contains(lang))
                 .map(|(lang, dic)| {
                     let error = wordcraft_engine::proof::dictionary_load_error(lang);
                     (language_name(lang).to_string(), dic.map(|d| d.to_string_lossy().into_owned()), error)
@@ -372,6 +376,8 @@ fn dictionaries(app: &mut WordApp, ui: &mut Ui) {
             f
         }
     };
+    ui.label(RichText::new("Dictionnaires intégrés à Lusk Texte : français, breton et anglais.").small());
+    ui.label(RichText::new("Autres langues, avec un dictionnaire installé sur l’ordinateur (par LibreOffice, par exemple) :").small());
     for (language, file, error) in found {
         let line = match (file, error) {
             (Some(f), Some(e)) => {
@@ -400,8 +406,9 @@ fn language_name(lang: wordcraft_engine::proof::ProofLang) -> &'static str {
         ProofLang::Br => tl!("Breton"),
         ProofLang::Es => tl!("Spanish (Spain)"),
         ProofLang::EsMx => tl!("Spanish (Mexico)"),
-        ProofLang::Es419 => tl!("Spanish (Latin America)"),
-        ProofLang::EsUy => tl!("Spanish (Uruguay)"),
+        // Lusk Texte : the shared catalog has no French names for these two.
+        ProofLang::Es419 => "Espagnol (Amérique latine)",
+        ProofLang::EsUy => "Espagnol (Uruguay)",
         // English uses its bundled word list; Bulgarian and German have no dictionary yet.
         ProofLang::En | ProofLang::EnGb | ProofLang::EnCa | ProofLang::Bg | ProofLang::De | ProofLang::Other => "",
     }
