@@ -30,6 +30,7 @@ jobs:
     uses: storytold/craft-common-actions/.github/workflows/windows-arm64.yml@8bb4e5ab95443171104ad88113fe1ef9b0e5ce3f
     with:
       app-name: wordcraft
-      app-dir: WordCraft
-      install-relative-path: Programs/ArtCraft/WordCraft
+      # Lusk Texte : l'installeur installe dans Programs\Lusk\Lusk Texte.
+      app-dir: Lusk Texte
+      install-relative-path: Programs/Lusk/Lusk Texte
       install-scope: perUser
