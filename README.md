@@ -56,10 +56,10 @@ openSUSE, `.tar.gz`) et les versions précédentes sont sur la page
 Une fois Lusk Texte installé, **Fichier › Mises à jour** cherche et installe les nouvelles
 versions.
 
-**Windows.** L'installeur propose « Only for me » (pour votre compte, sans droits
-d'administrateur, dans `%LOCALAPPDATA%\Programs\Lusk\Lusk Texte`) ou « Everyone on this
-computer » (pour tous, dans `C:\Program Files\Lusk\Lusk Texte`, avec l'accord d'un
-administrateur).
+**Windows.** L'installeur propose « Pour moi seulement » (pour votre compte, sans droits
+d'administrateur, dans `%LOCALAPPDATA%\Programs\Lusk\Lusk Texte`) ou « Pour tous les
+utilisateurs de cet ordinateur » (dans `C:\Program Files\Lusk\Lusk Texte`, avec l'accord d'un
+administrateur), puis un raccourci sur le Bureau (case cochée au départ).
 
 **macOS.** Ouvrez le `.dmg` et glissez Lusk Texte dans Applications.
 

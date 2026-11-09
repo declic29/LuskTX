@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lusk Texte's welcome page: the license, its acceptance box and the desktop-shortcut box, then
+  Installer. It replaces WiX's WelcomeEulaDlg in the WixUI_Minimal sequence (wordcraft.wxs).
+
+  Adapted from WelcomeEulaDlg.wxs of the WiX Toolset 5.0.2 (src/ext/UI/wixlib), Copyright (c)
+  .NET Foundation and contributors, under the Microsoft Reciprocal License (MS-RL): see
+  LICENSE-WiX-MS-RL.txt next to this file. This file stays under the MS-RL. Changes by Lusk: French
+  texts, the desktop-shortcut checkbox, a short introduction, no Print button.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI Id="LuskWelcome">
+      <Dialog Id="LuskWelcomeDlg" Width="370" Height="270" Title="Installation de [ProductName]">
+        <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="234" TabSkip="no" Text="WixUI_Bmp_Dialog" />
+        <Control Id="Title" Type="Text" X="130" Y="6" Width="226" Height="24" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Bienvenue dans l'installation de [ProductName]" />
+        <Control Id="Intro" Type="Text" X="130" Y="31" Width="226" Height="20" Transparent="yes" NoPrefix="yes" Text="Le traitement de texte libre et gratuit de l'association Lusk." />
+        <Control Id="LicenseText" Type="ScrollableText" X="130" Y="52" Width="226" Height="134" Sunken="yes" TabSkip="no">
+          <Text SourceFile="!(wix.WixUILicenseRtf)" />
+        </Control>
+        <Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="130" Y="191" Width="226" Height="16" CheckBoxValue="1" Property="LicenseAccepted" Text="J'&amp;accepte les termes du contrat de licence" />
+        <Control Id="DesktopCheckBox" Type="CheckBox" X="130" Y="209" Width="226" Height="16" CheckBoxValue="1" Property="LUSKDESKTOP" Text="Créer un raccourci sur le &amp;Bureau" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="156" Y="243" Width="56" Height="17" Disabled="yes" Text="!(loc.WixUIBack)" />
+        <Control Id="Install" Type="PushButton" ElevationShield="yes" X="212" Y="243" Width="80" Height="17" Default="yes" Text="!(loc.WelcomeEulaDlgInstall)" Hidden="yes" DisableCondition="LicenseAccepted &lt;&gt; &quot;1&quot;" EnableCondition="LicenseAccepted = &quot;1&quot;" ShowCondition="ALLUSERS">
+          <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg" Condition="!(wix.WixUICostingPopupOptOut) OR CostingComplete = 1" />
+          <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace &lt;&gt; 1" />
+          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST=&quot;P&quot; OR NOT PROMPTROLLBACKCOST)" />
+          <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST=&quot;D&quot;" />
+          <Publish Event="EnableRollback" Value="False" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST=&quot;D&quot;" />
+          <Publish Event="SpawnDialog" Value="OutOfDiskDlg" Condition="(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST=&quot;F&quot;)" />
+        </Control>
+        <Control Id="InstallNoShield" Type="PushButton" ElevationShield="no" X="212" Y="243" Width="80" Height="17" Default="yes" Text="!(loc.WelcomeEulaDlgInstall)" Hidden="yes" DisableCondition="LicenseAccepted &lt;&gt; &quot;1&quot;" EnableCondition="LicenseAccepted = &quot;1&quot;" ShowCondition="NOT ALLUSERS">
+          <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg" Condition="!(wix.WixUICostingPopupOptOut) OR CostingComplete = 1" />
+          <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace &lt;&gt; 1" />
+          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST=&quot;P&quot; OR NOT PROMPTROLLBACKCOST)" />
+          <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST=&quot;D&quot;" />
+          <Publish Event="EnableRollback" Value="False" Condition="OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST=&quot;D&quot;" />
+          <Publish Event="SpawnDialog" Value="OutOfDiskDlg" Condition="(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST=&quot;F&quot;)" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+    </UI>
+
+    <InstallUISequence>
+      <!-- WiX's own welcome page never shows; this one takes its place. -->
+      <Show Dialog="override WelcomeEulaDlg" Before="ProgressDlg" Condition="0" />
+      <Show Dialog="LuskWelcomeDlg" Before="ProgressDlg" Condition="NOT Installed" />
+    </InstallUISequence>
+  </Fragment>
+</Wix>

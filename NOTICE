@@ -28,6 +28,10 @@ list (author, source, license) is in ATTRIBUTION.md.
   Drouizig, Copyright (c) 2001-2020, offered under the GPL, LGPL or MPL and used here under the
   Mozilla Public License 1.1 (assets/dictionaries/br/MPL-1.1.txt), adapted for Lusk Texte
   (assets/dictionaries/br/MODIFICATIONS.txt). Source: https://github.com/Drouizig/hunspell-br.
+- Windows installer welcome page (packaging/windows/lusk-welcome.wxs) — adapted from
+  WelcomeEulaDlg.wxs of the WiX Toolset 5.0.2, Copyright (c) .NET Foundation and contributors,
+  Microsoft Reciprocal License (packaging/windows/LICENSE-WiX-MS-RL.txt). The installer itself is
+  built with the WiX Toolset (https://wixtoolset.org), whose dialogs it uses.
 - English word list (assets/hyphenation/en-us.dic) — derived from the Moby Hyphenator II list by
   Grady Ward, public domain (Project Gutenberg eBook #3204). The hyphenation patterns
   (assets/hyphenation/en-us.pat) were trained from it and are released as CC0-1.0.

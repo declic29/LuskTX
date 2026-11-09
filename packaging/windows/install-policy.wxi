@@ -39,28 +39,28 @@
   <SetProperty Id="INSTALLFOLDER" Action="CraftDefaultUserFolder" Value="[LocalAppDataFolder]Programs\Lusk\Lusk Texte\" After="CraftDefaultMachineFolder" Sequence="ui" Condition="NOT INSTALLFOLDER AND ALLUSERS &lt;&gt; 1" />
   <?endif?>
   <SetProperty Id="INSTALLFOLDER" Action="CraftRestoreMachineFolder" Value="[CRAFT_MACHINE_DIR]" Before="CraftRestoreUserFolder" Sequence="both" Condition="NOT INSTALLFOLDER AND ALLUSERS = 1 AND CRAFT_MACHINE_DIR" />
-  <Launch Condition="Installed OR ALLUSERS &lt;&gt; 1 OR NOT CRAFT_USER_DIR" Message="This app is already installed for your account. Choose Only for me to update it, or uninstall that copy before changing who it is installed for." />
-  <Launch Condition="Installed OR ALLUSERS = 1 OR NOT CRAFT_MACHINE_DIR" Message="This app is already installed for everyone. Choose Everyone to update it, or pass ALLUSERS=1 to msiexec. Uninstall that copy before changing who it is installed for." />
+  <Launch Condition="Installed OR ALLUSERS &lt;&gt; 1 OR NOT CRAFT_USER_DIR" Message="Lusk Texte est déjà installé pour votre compte. Choisissez « Pour moi seulement » pour le mettre à jour, ou désinstallez cette copie avant de l'installer pour tous les utilisateurs." />
+  <Launch Condition="Installed OR ALLUSERS = 1 OR NOT CRAFT_MACHINE_DIR" Message="Lusk Texte est déjà installé pour tous les utilisateurs. Choisissez « Pour tous les utilisateurs de cet ordinateur » pour le mettre à jour (ou passez ALLUSERS=1 à msiexec), ou désinstallez cette copie avant de l'installer pour vous seul." />
   <UI>
     <TextStyle Id="CraftScopeText" FaceName="Segoe UI" Size="9" />
     <TextStyle Id="CraftScopeTitle" FaceName="Segoe UI" Size="12" Bold="yes" />
-    <Dialog Id="CraftScopeDlg" Width="370" Height="220" Title="[ProductName] Setup" NoMinimize="yes">
-      <Control Id="Title" Type="Text" X="20" Y="15" Width="330" Height="30" Text="{\CraftScopeTitle}Who should use [ProductName]?" />
-      <Control Id="Info" Type="Text" X="20" Y="50" Width="330" Height="30" Text="{\CraftScopeText}An update keeps the existing folder. New copies use the Lusk folder under Programs." />
+    <Dialog Id="CraftScopeDlg" Width="370" Height="220" Title="Installation de [ProductName]" NoMinimize="yes">
+      <Control Id="Title" Type="Text" X="20" Y="15" Width="330" Height="30" Text="{\CraftScopeTitle}Pour qui installer [ProductName] ?" />
+      <Control Id="Info" Type="Text" X="20" Y="50" Width="330" Height="30" Text="{\CraftScopeText}Une mise à jour garde le dossier existant. Une nouvelle installation se fait dans le dossier Lusk des programmes." />
       <Control Id="Scope" Type="RadioButtonGroup" X="20" Y="88" Width="330" Height="60" Property="CRAFT_SCOPE">
         <RadioButtonGroup Property="CRAFT_SCOPE">
-          <RadioButton Value="user" X="0" Y="0" Width="330" Height="20" Text="Only for me (no administrator permission needed)" />
-          <RadioButton Value="machine" X="0" Y="30" Width="330" Height="20" Text="Everyone on this computer (asks an administrator)" />
+          <RadioButton Value="user" X="0" Y="0" Width="330" Height="20" Text="Pour moi seulement (sans droits d'administrateur)" />
+          <RadioButton Value="machine" X="0" Y="30" Width="330" Height="20" Text="Pour tous les utilisateurs de cet ordinateur (demande un administrateur)" />
         </RadioButtonGroup>
       </Control>
-      <Control Id="Next" Type="PushButton" X="214" Y="182" Width="66" Height="20" Default="yes" Text="Next">
+      <Control Id="Next" Type="PushButton" X="214" Y="182" Width="66" Height="20" Default="yes" Text="&amp;Suivant">
         <Publish Property="ALLUSERS" Value="1" Order="1" Condition="CRAFT_SCOPE = &quot;machine&quot;" />
         <Publish Property="ALLUSERS" Value="{}" Order="2" Condition="CRAFT_SCOPE = &quot;user&quot;" />
         <Publish Property="MSIINSTALLPERUSER" Value="{}" Order="3" Condition="CRAFT_SCOPE = &quot;machine&quot;" />
         <Publish Property="MSIINSTALLPERUSER" Value="1" Order="4" Condition="CRAFT_SCOPE = &quot;user&quot;" />
         <Publish Event="EndDialog" Value="Return" Order="5" />
       </Control>
-      <Control Id="Cancel" Type="PushButton" X="290" Y="182" Width="60" Height="20" Cancel="yes" Text="Cancel"><Publish Event="EndDialog" Value="Exit" /></Control>
+      <Control Id="Cancel" Type="PushButton" X="290" Y="182" Width="60" Height="20" Cancel="yes" Text="Annuler"><Publish Event="EndDialog" Value="Exit" /></Control>
     </Dialog>
   </UI>
   <InstallUISequence>

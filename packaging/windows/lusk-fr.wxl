@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lusk Texte's own wording for WiX's French installer pages (wix build -culture fr-FR). -->
+<WixLocalization Culture="fr-FR" Codepage="1252" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ExitDialogTitle" Value="{\WixUI_Font_Bigger}Lusk Texte est installé" />
+  <String Id="ExitDialogDescription" Value="Merci d'avoir choisi Lusk Texte, le traitement de texte libre de l'association Lusk. Cliquez sur Terminer pour fermer l'assistant." />
+</WixLocalization>

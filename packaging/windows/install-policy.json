@@ -5,10 +5,13 @@
   "suite": "Lusk",
   "upgradeCode": "228346A7-5217-406B-B3D5-E4B3BDE7B77F",
   "sources": [
-    "wordcraft.wxs"
+    "wordcraft.wxs",
+    "lusk-welcome.wxs"
   ],
   "icon": "assets/app-icon/wordcraft.ico",
-  "localization": [],
+  "localization": [
+    "lusk-fr.wxl"
+  ],
   "extensions": [
     "UI",
     "Util"
@@ -287,6 +290,12 @@
       "Software\\Classes\\Applications\\wordcraft.exe\\SupportedTypes",
       ".txt",
       ""
+    ],
+    [
+      "-1",
+      "Software\\LuskTexte",
+      "DesktopShortcut",
+      "#1"
     ]
   ],
   "mode": "dualScope"

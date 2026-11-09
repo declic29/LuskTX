@@ -129,7 +129,7 @@ function ConvertTo-RtfText([string] $Text) {
 }
 $paragraphs = [System.Collections.Generic.List[string]]::new()
 $paragraphs.Add('\b Lusk Texte\b0')
-$paragraphs.Add((ConvertTo-RtfText 'Lusk Texte, published by the Lusk association, is free software under the MIT License or the Apache License, Version 2.0, at your option. Both license texts follow. Bundled fonts and other third-party material keep their own open licenses, listed in NOTICE and ATTRIBUTION.md at https://github.com/declic29/LuskTX.'))
+$paragraphs.Add((ConvertTo-RtfText "Lusk Texte, publi$([char]0xE9) par l'association Lusk, est un logiciel libre et gratuit, sous la licence MIT ou la licence Apache, version 2.0, au choix. Vous pouvez l'utiliser, le copier et le partager librement. Le texte officiel des deux licences, en anglais, suit. Les polices et les autres $([char]0xE9)l$([char]0xE9)ments fournis avec Lusk Texte gardent leurs propres licences libres, list$([char]0xE9)es dans NOTICE et ATTRIBUTION.md sur https://github.com/declic29/LuskTX."))
 foreach ($file in 'LICENSE-MIT', 'LICENSE-APACHE') {
   $title = $true  # each file opens with its license's name: show it bold
   foreach ($para in ((Get-Content -Raw (Join-Path $Root $file)) -split '\r?\n\s*\r?\n')) {
@@ -149,8 +149,9 @@ $rtf = '{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fcharset0 Tahoma;}}\vi
 # The plain name is the one every sibling app, the launcher and the shared windows-arm64 workflow expect.
 $Msi = Join-Path $Dist "Lusk-Texte-$Version-windows-$Arch.msi"
 Invoke-Native "wix build" {
-  wix build (Join-Path $PSScriptRoot 'wordcraft.wxs') -arch $Arch `
+  wix build (Join-Path $PSScriptRoot 'wordcraft.wxs') (Join-Path $PSScriptRoot 'lusk-welcome.wxs') -arch $Arch `
     -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext `
+    -culture fr-FR -loc (Join-Path $PSScriptRoot 'lusk-fr.wxl') `
     -d "Version=$MsiVersion" -d "BinDir=$Stage" -d "IconPath=$(Join-Path $Root 'assets\app-icon\wordcraft.ico')" `
     -d "LicenseRtf=$LicenseRtf" `
     -d "AppNoticesDir=$AppNotices" -d "DocsDir=$Docs" -d "HasCraftFontLicences=$HasCraftFontLicences" -d "Scope=perUserOrMachine" `
