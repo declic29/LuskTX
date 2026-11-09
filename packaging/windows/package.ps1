@@ -4,10 +4,10 @@
 
 .DESCRIPTION
   Produces, in $env:DIST (default: dist/release):
-    wordcraft-<version>-windows-<arch>.msi            installer (WiX v5), one dual-scope package: for the
+    Lusk-Texte-<version>-windows-<arch>.msi           installer (WiX v5), one dual-scope package: for the
                                                       current user by default, no admin rights (#39);
                                                       "Everyone on this computer" installs per machine
-    wordcraft-<version>-windows-<arch>-portable.zip   wordcraft.exe + wordcraft-cli.exe
+    Lusk-Texte-<version>-windows-<arch>-portable.zip  wordcraft.exe + wordcraft-cli.exe
 
   The binaries link the C runtime statically (+crt-static), so neither the MSI nor the portable
   zip needs the Visual C++ redistributable. Signing is delegated to sign.ps1 (skipped with a
@@ -147,7 +147,7 @@ $rtf = '{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fcharset0 Tahoma;}}\vi
 # One MSI from one dual-scope source (see wordcraft.wxs and install-policy.wxi): per user by default into
 # %LOCALAPPDATA%\Programs\Lusk\Lusk Texte (#39), per machine into Program Files\Lusk on request.
 # The plain name is the one every sibling app, the launcher and the shared windows-arm64 workflow expect.
-$Msi = Join-Path $Dist "wordcraft-$Version-windows-$Arch.msi"
+$Msi = Join-Path $Dist "Lusk-Texte-$Version-windows-$Arch.msi"
 Invoke-Native "wix build" {
   wix build (Join-Path $PSScriptRoot 'wordcraft.wxs') -arch $Arch `
     -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext `
@@ -165,7 +165,7 @@ Remove-Item -Force -ErrorAction SilentlyContinue ([IO.Path]::ChangeExtension($Ms
 & (Join-Path $PSScriptRoot 'sign.ps1') $Msi
 
 # ---- portable zip ------------------------------------------------------------------------------
-$Portable = Join-Path $TargetDir "windows-package\wordcraft-$Version-windows-$Arch-portable"
+$Portable = Join-Path $TargetDir "windows-package\Lusk-Texte-$Version-windows-$Arch-portable"
 Remove-Item -Recurse -Force $Portable -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $Portable | Out-Null
 Copy-Item (Join-Path $Stage '*.exe') $Portable
@@ -179,7 +179,7 @@ if ($env:CRAFT_FONTS_DIR) {
     Copy-Item $ofl.FullName (Join-Path $Portable "OFL-$($ofl.Directory.Name).txt")
   }
 }
-$Zip = Join-Path $Dist "wordcraft-$Version-windows-$Arch-portable.zip"
+$Zip = Join-Path $Dist "Lusk-Texte-$Version-windows-$Arch-portable.zip"
 Remove-Item -Force $Zip -ErrorAction SilentlyContinue
 Compress-Archive -Path $Portable -DestinationPath $Zip
 

@@ -23,7 +23,7 @@ read-only and checks the app inside it, and a `ditto` copy of it, with `--strict
 The mounted volume is called `Lusk Texte`, not `Lusk Texte <version>`. The layout points at the background
 through an alias that includes the volume name, and Finder resolves it by that name: with a
 versioned name the window keeps its size and icon positions but shows no background (tested).
-The DMG file name (`wordcraft-<version>-macos-<arch>.dmg`) still carries the version.
+The DMG file name (`Lusk-Texte-<version>-macos-<arch>.dmg`) still carries the version.
 
 ## Rules
 

@@ -58,7 +58,7 @@ HOST_ARCH="$(release_arch "$(uname -m)" 2>/dev/null)" || HOST_ARCH="$(uname -m)"
 if [ -n "${CARGO_BUILD_TARGET:-}" ] && [ "$(uname -s)" != FreeBSD ]; then
   HOST_ARCH="$(uname -s) $HOST_ARCH"
 fi
-BASENAME="wordcraft-$VERSION-freebsd-$ARCH"
+BASENAME="Lusk-Texte-$VERSION-freebsd-$ARCH"
 
 echo "==> Lusk Texte $VERSION for FreeBSD $ARCH"
 

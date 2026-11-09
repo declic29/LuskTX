@@ -6,10 +6,19 @@ use crate::WordApp;
 use craft_update::updater::{Action, Status, Updater};
 
 /// Lusk Texte : where its releases are published (GitHub Releases of `declic29/LuskTX`), instead
-/// of WordCraft's. The id stays `wordcraft` so release assets keep the names the packaging
-/// scripts give them (`wordcraft-<version>-…`).
+/// of WordCraft's. Release files are named `Lusk-Texte-<version>-<os>-<arch>.<ext>`; the id stays
+/// `wordcraft`, the program's file name (`wordcraft.exe`), which the updater looks for too, and
+/// it also accepts files named after it (`wordcraft-<version>-…`, the first 1.0.0 builds).
 #[cfg(not(target_arch = "wasm32"))]
-pub const LUSK_TEXTE: craft_update::app::App = craft_update::app::App::new("wordcraft", "Lusk Texte", "Traitement de texte", "declic29/LuskTX");
+pub const LUSK_TEXTE: craft_update::app::App = craft_update::app::App {
+    id: "wordcraft",
+    name: "Lusk Texte",
+    tagline: "Traitement de texte",
+    repo: "declic29/LuskTX",
+    former_ids: &["Lusk-Texte"],
+    former_names: &[],
+    icon_png: None,
+};
 
 pub(crate) struct Runtime {
     #[cfg(not(target_arch = "wasm32"))]
@@ -212,5 +221,25 @@ pub(crate) fn page(app: &mut WordApp, ui: &mut egui::Ui) {
     {
         let _ = app;
         ui.label("Dans le navigateur, Lusk Texte est toujours à jour : la page charge la dernière version.");
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod lusk_tests {
+    use super::LUSK_TEXTE;
+    use craft_update::platform::parse_asset_name;
+
+    /// Lusk Texte : the updater recognizes the release files named `Lusk-Texte-<version>-…`, and
+    /// still the first builds' `wordcraft-<version>-…`, but not the copies without a version.
+    #[test]
+    fn release_files_named_lusk_texte_are_found() {
+        let stems: Vec<&str> = LUSK_TEXTE.stems().collect();
+        let a = parse_asset_name("Lusk-Texte-1.1.0-windows-x64.msi", &stems).unwrap();
+        assert_eq!((a.version.as_str(), a.token.as_str()), ("1.1.0", "windows-x64"));
+        assert!(parse_asset_name("Lusk-Texte-1.1.0-macos-universal.dmg", &stems).is_some());
+        assert!(parse_asset_name("Lusk-Texte-1.1.0-linux-x86_64.AppImage", &stems).is_some());
+        assert!(parse_asset_name("wordcraft-1.0.0-windows-x64.msi", &stems).is_some());
+        assert!(parse_asset_name("Lusk-Texte-Windows.msi", &stems).is_none());
+        assert!(parse_asset_name("Lusk-Texte-cli-1.1.0-macos-universal.zip", &stems).is_none());
     }
 }

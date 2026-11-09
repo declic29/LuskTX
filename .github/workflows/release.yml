@@ -14,7 +14,7 @@
 # « Run workflow » (onglet Actions) fait la même chose sans étiquette, pour un essai : le brouillon
 # n'est visible que des membres du dépôt tant qu'il n'est pas publié.
 #
-# Les noms des fichiers (wordcraft-<version>-windows-x64.msi, -macos-universal.dmg,
+# Les noms des fichiers (Lusk-Texte-<version>-windows-x64.msi, -macos-universal.dmg,
 # -linux-x86_64.AppImage…) sont ceux que le module de mise à jour cherche : ne pas les changer
 # sans changer aussi crates/ui-egui/src/updates_ui.rs.
 #
@@ -271,12 +271,12 @@ jobs:
         working-directory: dist
         # https://github.com/<dépôt>/releases/latest/download/Lusk-Texte-Windows.msi télécharge
         # toujours la dernière version. Le module de mise à jour ignore ces copies (il cherche
-        # les noms wordcraft-<version>-…).
+        # les noms Lusk-Texte-<version>-…).
         run: |
-          cp "wordcraft-$VERSION-windows-x64.msi" Lusk-Texte-Windows.msi
-          cp "wordcraft-$VERSION-macos-universal.dmg" Lusk-Texte-Mac.dmg
-          cp "wordcraft-$VERSION-linux-x86_64.AppImage" Lusk-Texte-Linux.AppImage
-          for deb in wordcraft*"$VERSION"*.deb; do cp "$deb" Lusk-Texte-Linux.deb; done
+          cp "Lusk-Texte-$VERSION-windows-x64.msi" Lusk-Texte-Windows.msi
+          cp "Lusk-Texte-$VERSION-macos-universal.dmg" Lusk-Texte-Mac.dmg
+          cp "Lusk-Texte-$VERSION-linux-x86_64.AppImage" Lusk-Texte-Linux.AppImage
+          for deb in Lusk-Texte-"$VERSION"*.deb; do cp "$deb" Lusk-Texte-Linux.deb; done
       - name: Calculer les empreintes (SHA256SUMS.txt)
         working-directory: dist
         run: |
@@ -294,7 +294,7 @@ jobs:
             echo "- macOS : Lusk-Texte-Mac.dmg (première ouverture : clic droit › Ouvrir)"
             echo "- Linux : Lusk-Texte-Linux.AppImage, ou Lusk-Texte-Linux.deb (Debian, Ubuntu, Mint)"
             echo
-            echo "Les fichiers wordcraft-$VERSION-… sont les mêmes, sous leur nom technique (avec aussi le .rpm, le .tar.gz et la version portable pour Windows)."
+            echo "Les fichiers Lusk-Texte-$VERSION-… sont les mêmes, avec leur numéro de version (et aussi le .rpm, le .tar.gz et la version portable pour Windows)."
             echo
             echo "Les personnes qui ont déjà Lusk Texte reçoivent cette version par Fichier › Mises à jour."
           } >"$RUNNER_TEMP/notes.md"
