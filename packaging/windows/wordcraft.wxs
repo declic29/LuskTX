@@ -59,7 +59,6 @@
       <ComponentGroupRef Id="CraftFontLicences" />
       <?endif?>
       <ComponentGroupRef Id="WordcraftFiles" />
-      <ComponentRef Id="LuskDesktopShortcut" />
     </Feature>
   </Package>
 
