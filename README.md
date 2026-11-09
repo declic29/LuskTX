@@ -31,6 +31,9 @@ exactement quand Lusk Texte utilise Internet (pour les mises à jour, et quand v
   parties, chapitres), la mise en page d'édition, le studio de couverture, un PDF prêt pour
   l'imprimeur, un EPUB accessible pour les liseuses, un contrôle qualité avant publication et
   l'historique des versions.
+- **Des dictionnaires intégrés** : la correction orthographique en **français** (dictionnaire
+  Dicollecte) et en **breton** (dictionnaire d'An Drouizig) fonctionne dès l'installation,
+  sans rien télécharger, comme celle de l'anglais.
 - **En français d'abord**, avec une aide intégrée rédigée pour tous.
 
 ## Télécharger et installer
@@ -97,9 +100,7 @@ wordcraft-cli convert rapport.docx rapport.pdf    # docx, pdf, odt, rtf, html, m
 ```
 
 Avant chaque envoi, `cargo xtask ci` vérifie la mise en forme du code, les tests et les
-attributions des images et polices. Les consignes pour contribuer sont dans
-[AGENTS.md](AGENTS.md) et l'architecture dans [docs/architecture.md](docs/architecture.md)
-(en anglais).
+attributions des images et polices.
 
 ## Publier une version
 

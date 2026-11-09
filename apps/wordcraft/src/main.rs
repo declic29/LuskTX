@@ -357,7 +357,7 @@ OPTIONS:
   --sample            open the sample document
   --no-splash         start without the start-up screen (or set WORDCRAFT_NO_SPLASH)
   --control PORT      start the localhost control server on PORT, for agents and scripts
-                      (or set WORDCRAFT_CONTROL_PORT); see docs/control-protocol.md
+                      (or set WORDCRAFT_CONTROL_PORT)
   --version           print the version
   -h, --help          print this help
 ";
