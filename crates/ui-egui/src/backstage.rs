@@ -683,22 +683,25 @@ pub(crate) fn open_recent(app: &mut WordApp, path: &str) -> Result<(), String> {
 
 fn open_page(app: &mut WordApp, ui: &mut Ui) {
     heading(ui, "Open");
-    if crate::widgets::icon_text_button(ui, "folder", tl!("Browse…"), medium(14.0)).clicked() {
-        let _ = app.run("ui.openFileDialog", json!({}));
-    }
-    // Linux and the BSDs (#576): the system dialog needs a file chooser portal or zenity; when it
-    // doesn't show up, WordCraft's own browser is always one click away.
-    #[cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))]
-    if ui
-        .button(egui::RichText::new(tl!("Browse in Lusk Texte…")).font(medium(14.0)))
-        .on_hover_text(tl!("Open a file with Lusk Texte's own browser when the system file dialog doesn't appear."))
-        .clicked()
-    {
-        let _ = app.run("ui.fileBrowser", json!({}));
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    onedrive_buttons(app, ui, "open");
-    ui.add_space(18.0);
+    // Lusk Texte (comme Lusk Tab) : de grands boutons carrés sur une ligne, Parcourir… puis
+    // OneDrive et Google Drive.
+    ui.horizontal_wrapped(|ui| {
+        if square_button(ui, "folder", tl!("Browse…"), true).clicked() {
+            let _ = app.run("ui.openFileDialog", json!({}));
+        }
+        // Linux and the BSDs (#576): the system dialog needs a file chooser portal or zenity; when
+        // it doesn't show up, WordCraft's own browser is always one click away.
+        #[cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))]
+        if square_button(ui, "search", tl!("Browse in Lusk Texte…"), true)
+            .on_hover_text(tl!("Open a file with Lusk Texte's own browser when the system file dialog doesn't appear."))
+            .clicked()
+        {
+            let _ = app.run("ui.fileBrowser", json!({}));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        onedrive_buttons(app, ui, "open");
+    });
+    ui.add_space(22.0);
     open_list(app, ui);
 }
 
@@ -710,43 +713,67 @@ fn open_page(app: &mut WordApp, ui: &mut Ui) {
 #[cfg(not(target_arch = "wasm32"))]
 fn onedrive_buttons(app: &mut WordApp, ui: &mut Ui, purpose: &str) {
     let (onedrive, google) = cloud_dirs(ui.ctx());
-    ui.add_space(8.0);
+    let save = purpose == "save";
     let services = [
         (
             "OneDrive",
             onedrive,
-            "Pour utiliser OneDrive, l’application OneDrive doit être installée sur cet ordinateur et connectée à votre compte Microsoft (elle est fournie avec Windows). Lusk Texte enregistre alors dans votre dossier OneDrive, et OneDrive envoie le document en ligne.",
+            if save {
+                "Pour utiliser OneDrive, l’application OneDrive doit être installée sur cet ordinateur et connectée à votre compte Microsoft (elle est fournie avec Windows). Lusk Texte enregistre alors dans votre dossier OneDrive, et OneDrive envoie le document en ligne."
+            } else {
+                "Pour utiliser OneDrive, l’application OneDrive doit être installée sur cet ordinateur et connectée à votre compte Microsoft (elle est fournie avec Windows). Lusk Texte ouvre alors les documents de votre dossier OneDrive, que OneDrive tient à jour avec votre compte."
+            },
         ),
         (
             "Google Drive",
             google,
-            "Pour utiliser Google Drive, l’application gratuite « Google Drive pour ordinateur » doit être installée sur cet ordinateur et connectée à votre compte Google. Lusk Texte enregistre alors dans « Mon Drive », et Google Drive envoie le document en ligne : vous le retrouvez dans votre espace Google Drive.",
+            if save {
+                "Pour utiliser Google Drive, l’application gratuite « Google Drive pour ordinateur » doit être installée sur cet ordinateur et connectée à votre compte Google. Lusk Texte enregistre alors dans « Mon Drive », et Google Drive envoie le document en ligne : vous le retrouvez dans votre espace Google Drive."
+            } else {
+                "Pour utiliser Google Drive, l’application gratuite « Google Drive pour ordinateur » doit être installée sur cet ordinateur et connectée à votre compte Google. Lusk Texte ouvre alors les documents de « Mon Drive », que Google Drive tient à jour avec votre compte."
+            },
         ),
     ];
     for (service, dirs, help) in services {
+        ui.add_space(10.0);
         if dirs.is_empty() {
-            ui.horizontal(|ui| {
-                ui.add_enabled_ui(false, |ui| crate::widgets::icon_text_button(ui, "cloud", service, medium(14.0)))
-                    .response
-                    .on_disabled_hover_text(format!("{service} n’est pas installé sur cet ordinateur."));
-                help_hint(ui, help);
-            });
+            square_button(ui, "cloud", service, false).on_hover_text(format!("{service} n’est pas installé sur cet ordinateur."));
+            help_hint(ui, help);
             continue;
         }
         for (label, dir) in dirs {
-            let tip = if purpose == "save" {
+            let tip = if save {
                 format!("Enregistrer dans votre espace {service} ({})", dir.display())
             } else {
                 format!("Ouvrir un document de votre espace {service} ({})", dir.display())
             };
-            ui.horizontal(|ui| {
-                if crate::widgets::icon_text_button(ui, "cloud", &label, medium(14.0)).on_hover_text(tip).clicked() {
-                    app.browse_folder(purpose, dir.clone());
-                }
-                help_hint(ui, help);
-            });
+            if square_button(ui, "cloud", &label, true).on_hover_text(tip).clicked() {
+                app.browse_folder(purpose, dir.clone());
+            }
+            help_hint(ui, help);
         }
     }
+}
+
+/// Lusk Texte (comme Lusk Tab) : un grand bouton carré bordé, l'icône au-dessus du libellé
+/// (Parcourir…, OneDrive, Google Drive). Grisé quand il n'est pas `enabled` (un service qui
+/// n'est pas installé) : il ne réagit alors qu'au survol, pour son info-bulle.
+fn square_button(ui: &mut Ui, icon: &str, label: &str, enabled: bool) -> egui::Response {
+    let t = Tokens::get(ui.ctx());
+    let (rect, resp) = ui.allocate_exact_size(vec2(96.0, 88.0), if enabled { Sense::click() } else { Sense::hover() });
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, label));
+    let p = ui.painter();
+    let ink = if enabled { t.text } else { t.text_dim };
+    let hovered = enabled && resp.hovered();
+    p.rect_filled(rect, 6.0, if hovered { t.hover } else { t.ribbon });
+    p.rect_stroke(rect, 6.0, Stroke::new(1.0, if hovered { t.accent } else { t.border }), egui::StrokeKind::Inside);
+    let icon_rect = Rect::from_center_size(pos2(rect.center().x, rect.top() + 32.0), vec2(30.0, 30.0));
+    // Grisé : le nuage bleu de OneDrive devient gris, comme le libellé.
+    let icon = if icon == "cloud" && !enabled { "cloudOff" } else { icon };
+    icons::paint(p, icon_rect, icon, ink, t.accent);
+    let galley = p.layout(label.to_string(), regular(12.0), ink, rect.width() - 8.0);
+    p.galley(pos2(rect.center().x - galley.size().x / 2.0, rect.top() + 56.0), galley, ink);
+    resp
 }
 
 /// Lusk Texte : les dossiers OneDrive et Google Drive de cet ordinateur (nom affiché, dossier).
@@ -788,14 +815,19 @@ fn save_as_page(app: &mut WordApp, ui: &mut Ui) {
         ui.label(egui::RichText::new(&error).color(ui.visuals().error_fg_color));
         ui.add_space(6.0);
     }
-    if crate::widgets::icon_text_button(ui, "folder", tl!("Browse…"), medium(14.0)).clicked() {
-        app.save_as_dialog();
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    onedrive_buttons(app, ui, "save");
+    // Lusk Texte (comme Lusk Tab) : de grands boutons carrés sur une ligne, Parcourir… puis
+    // OneDrive et Google Drive.
+    ui.horizontal_wrapped(|ui| {
+        if square_button(ui, "folder", tl!("Browse…"), true).clicked() {
+            app.save_as_dialog();
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        onedrive_buttons(app, ui, "save");
+    });
     // A Word template in the user templates folder, which File › New lists under Personal (#2852).
-    ui.add_space(8.0);
-    if crate::widgets::icon_text_button(ui, "documentTemplate", tl!("Save as Word Template…"), medium(14.0))
+    ui.add_space(22.0);
+    // Le libellé court tient dans le bouton ; l'info-bulle dit le reste.
+    if square_button(ui, "documentTemplate", "Modèle Word…", true)
         .on_hover_text(tl!("Saves a .dotx template in your templates folder. It shows up in File › New under Personal."))
         .clicked()
     {

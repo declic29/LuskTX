@@ -1429,8 +1429,10 @@ fn paint_file_and_tools(pen: &Pen, name: &str) -> bool {
             pen.rect(4.0, 4.0, 16.0, 16.0, c);
         }
         // Lusk Texte : un nuage, pour l'espace de stockage en ligne (OneDrive).
-        "cloud" => {
-            let blue = Color32::from_rgb(0x1E, 0x78, 0xD4);
+        // Lusk Texte : « cloudOff », le même nuage dans la couleur du trait (gris quand le
+        // service n'est pas installé).
+        "cloud" | "cloudOff" => {
+            let blue = if name == "cloud" { Color32::from_rgb(0x1E, 0x78, 0xD4) } else { pen.c };
             pen.fcircle(6.5, 12.0, 3.5, blue);
             pen.fcircle(10.5, 9.0, 4.5, blue);
             pen.fcircle(14.5, 11.5, 3.5, blue);
