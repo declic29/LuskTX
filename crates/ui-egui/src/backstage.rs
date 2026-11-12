@@ -135,12 +135,21 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
                 #[allow(clippy::single_element_loop)] // Lusk Texte: Options moved to the left list.
                 for (label, id) in [("About", "about")] {
-                    let (r, resp) = ui.allocate_exact_size(vec2(200.0, 32.0), Sense::click());
+                    let (r, resp) = ui.allocate_exact_size(vec2(200.0, 38.0), Sense::click());
                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), tl!(label)));
                     if resp.hovered() {
                         ui.painter().rect_filled(r, 0.0, egui::Color32::from_white_alpha(26));
                     }
-                    ui.painter().text(pos2(r.min.x + 22.0, r.center().y), Align2::LEFT_CENTER, tl!(label), regular(13.0), egui::Color32::WHITE);
+                    // Lusk Texte : le renard de lusk.bzh, aligné sur les icônes des pages au-dessus.
+                    let white = egui::Color32::WHITE;
+                    icons::paint(
+                        ui.painter(),
+                        Rect::from_center_size(pos2(r.min.x + 31.0, r.center().y), vec2(20.0, 20.0)),
+                        "lusk-fox",
+                        white,
+                        white,
+                    );
+                    ui.painter().text(pos2(r.min.x + 52.0, r.center().y), Align2::LEFT_CENTER, tl!(label), medium(14.0), white);
                     if resp.clicked() {
                         if id == "discord" {
                             let _ = app.run("ui.discord", json!({}));

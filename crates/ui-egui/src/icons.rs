@@ -73,6 +73,11 @@ impl Pen<'_> {
 
 /// Paint icon `name` into `r`. `c` is the line colour; the accent comes from the theme.
 pub fn paint(p: &Painter, r: Rect, name: &str, c: Color32, accent: Color32) {
+    // Lusk Texte : « À propos » montre la tête du renard de lusk.bzh, une image en couleurs.
+    if name == "lusk-fox" {
+        paint_fox(p, r);
+        return;
+    }
     let pen = Pen { p, r, c, a: accent, w: 1.25 };
     if let Some(kind) = name.strip_prefix("shape.")
         && shape(&pen, kind)
@@ -90,6 +95,29 @@ pub fn paint(p: &Painter, r: Rect, name: &str, c: Color32, accent: Color32) {
     p.rect_stroke(r.shrink(r.width() * 0.12), 3.0, Stroke::new(1.0, c), egui::StrokeKind::Middle);
     let ch = name.chars().next().map(|x| x.to_ascii_uppercase().to_string()).unwrap_or_default();
     p.text(r.center(), egui::Align2::CENTER_CENTER, ch, FontId::proportional(r.height() * 0.45), accent);
+}
+
+/// Lusk Texte : la tête du renard de lusk.bzh (`assets/avatar/lusk-renard-tete.png`), dans ses
+/// couleurs, carrée au centre de `r`. La texture est chargée une fois ; un PNG illisible
+/// (impossible avec le fichier intégré) donne un pixel transparent, jamais un plantage.
+fn paint_fox(p: &Painter, r: Rect) {
+    let ctx = p.ctx();
+    let id = egui::Id::unique("lusk_fox_head");
+    let tex = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)).unwrap_or_else(|| {
+        let img = image::load_from_memory(include_bytes!("../../../assets/avatar/lusk-renard-tete.png"))
+            .map(|i| i.to_rgba8())
+            .unwrap_or_else(|_| image::RgbaImage::new(1, 1));
+        let tex = ctx.load_texture(
+            "lusk_fox_head",
+            egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw()),
+            egui::TextureOptions::LINEAR,
+        );
+        ctx.data_mut(|d| d.insert_temp(id, tex.clone()));
+        tex
+    });
+    let side = r.width().min(r.height());
+    let square = Rect::from_center_size(r.center(), egui::vec2(side, side));
+    p.image(tex.id(), square, Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), Color32::WHITE);
 }
 
 /// Icons of one section of the set; false when `name` is not one of them.
