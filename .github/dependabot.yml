@@ -12,6 +12,13 @@ updates:
       cargo-dependencies:
         patterns:
           - "*"
+    # Lusk : seulement les corrections (1.2.3 → 1.2.4). Les nouvelles versions majeures, et pour
+    # les bibliothèques en 0.x les nouvelles versions mineures (0.47 → 0.49), changent leur façon
+    # de s'utiliser : elles demandent d'adapter le code, et Dependabot ne sait pas le faire (sa
+    # demande de fusion échoue alors à la compilation).
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     commit-message:
       prefix: "chore(deps)"
 
