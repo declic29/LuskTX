@@ -296,6 +296,12 @@
       "Software\\LuskTexte",
       "DesktopShortcut",
       "#1"
+    ],
+    [
+      "-1",
+      "Software\\Learning Machines LLC\\Lusk Texte",
+      "InstallDir",
+      "[INSTALLFOLDER]"
     ]
   ],
   "mode": "dualScope"

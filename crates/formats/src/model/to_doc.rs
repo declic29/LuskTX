@@ -100,6 +100,7 @@ fn para_props(p: &Para, list_num: Option<u32>) -> ParaProps {
     out.indent_left = sp.left;
     out.indent_right = sp.right;
     out.indent_first = sp.first;
+    out.tabs = p.tabs.clone();
     if p.page_break {
         out.page_break_before = Some(true);
     }

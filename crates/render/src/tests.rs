@@ -1318,3 +1318,35 @@ fn a_line_runs_from_top_left_to_bottom_right() {
     let p = shape_path(ShapeKind::Line, kurbo::Rect::new(10.0, 20.0, 30.0, 60.0), None);
     assert_eq!(p.elements(), &[kurbo::PathEl::MoveTo((10.0, 20.0).into()), kurbo::PathEl::LineTo((30.0, 60.0).into())]);
 }
+
+/// Lusk Texte : a picture too big to decode whole (a 10 000-pixel scan placed as a small logo)
+/// is shrunk while it is read, a row at a time, instead of becoming a grey box.
+#[test]
+fn a_png_too_big_to_decode_whole_is_shrunk_as_it_is_read() {
+    let mut buf = Vec::new();
+    // Left half red, right half blue, top rows transparent.
+    let img = image::RgbaImage::from_fn(300, 200, |x, y| {
+        let a = if y < 20 { 0 } else { 255 };
+        if x < 150 { image::Rgba([255, 0, 0, a]) } else { image::Rgba([0, 0, 255, a]) }
+    });
+    img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png).unwrap();
+    let pm = decode_png_shrunk(&buf, 6_000).expect("shrunk");
+    // 60 000 pixels into at most 6 000: blocks of 4×4.
+    assert_eq!((pm.width(), pm.height()), (75, 50));
+    let px = |x: usize, y: usize| pm.data()[y * 75 + x];
+    assert_eq!((px(10, 25).r, px(10, 25).b, px(10, 25).a), (255, 0, 255));
+    assert_eq!((px(60, 25).r, px(60, 25).b, px(60, 25).a), (0, 255, 255));
+    assert_eq!(px(10, 2).a, 0, "transparent rows stay transparent");
+    // RGB without alpha, and greyscale, are read too.
+    let mut rgb = Vec::new();
+    image::RgbImage::from_pixel(40, 40, image::Rgb([10, 200, 30])).write_to(&mut std::io::Cursor::new(&mut rgb), image::ImageFormat::Png).unwrap();
+    let pm = decode_png_shrunk(&rgb, 100).expect("rgb");
+    assert_eq!((pm.width(), pm.height()), (10, 10));
+    assert_eq!((pm.data()[0].g, pm.data()[0].a), (200, 255));
+    let mut grey = Vec::new();
+    image::GrayImage::from_pixel(9, 9, image::Luma([77])).write_to(&mut std::io::Cursor::new(&mut grey), image::ImageFormat::Png).unwrap();
+    assert_eq!(decode_png_shrunk(&grey, 9).expect("grey").data()[0].r, 77);
+    // Not a PNG, or a header with no pixels: nothing (a grey box), as before.
+    assert!(decode_png_shrunk(b"not an image", 100).is_none());
+    assert!(decode_png_shrunk(&ihdr_only_png(60_000, 60_000), 16_000_000).is_none());
+}

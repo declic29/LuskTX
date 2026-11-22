@@ -232,6 +232,9 @@ pub struct Para {
     pub keep_next: bool,
     pub inlines: Vec<Inline>,
     pub spacing: Spacing,
+    /// Tab stops the source sets on the paragraph or its style (ODT `style:tab-stops`); `None`:
+    /// the document's default stops.
+    pub tabs: Option<Vec<wordcraft_doc::props::TabStop>>,
     /// Borders the source puts on the paragraph itself (RTF `\brdrb`…).
     pub borders: Option<wordcraft_doc::props::Borders>,
     /// The section this paragraph ends (RTF `\sect`), as the document's last paragraph of it.

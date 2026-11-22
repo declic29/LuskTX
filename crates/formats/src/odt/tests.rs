@@ -1135,3 +1135,43 @@ fn meta_creation_date_timezones_and_fallbacks() {
     assert_eq!(m2.created, "2024-03-05T13:45:00Z");
     assert_eq!(m2.author, "Solo Creator");
 }
+
+#[test]
+fn paragraph_spacing_indents_line_height_and_tab_stops_are_read() {
+    use wordcraft_doc::props::{LineSpacing, TabAlign, TabLeader};
+    // A LibreOffice letter: the Standard style states no spacing (ODF's default: none, single
+    // lines), automatic styles set tab stops for the right-hand address block. The import used
+    // to keep a new document's 8 pt after and 1.15 lines (big gaps between the lines) and to
+    // drop the tab stops (the address block fell on the default stops).
+    let styles = format!(
+        r#"<office:document-styles {NS_T}><office:styles><style:default-style style:family="paragraph"><style:paragraph-properties style:tab-stop-distance="1.251cm"/></style:default-style><style:style style:name="Standard" style:family="paragraph"/><style:style style:name="Text_20_body" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.212cm" fo:line-height="115%"/></style:style></office:styles></office:document-styles>"#
+    );
+    let content = format!(
+        r#"<office:document-content {NS_T}><office:automatic-styles><style:style style:name="P1" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:margin-left="1cm" fo:text-indent="-0.5cm"><style:tab-stops><style:tab-stop style:position="9.843cm"/><style:tab-stop style:position="15cm" style:type="right" style:leader-style="dotted" style:leader-text="."/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="P2" style:family="paragraph" style:parent-style-name="Text_20_body"><style:paragraph-properties style:line-height-at-least="14pt"/></style:style></office:automatic-styles><office:body><office:text><text:p text:style-name="Standard">Plain</text:p><text:p text:style-name="P1">Left<text:tab/>Right</text:p><text:p text:style-name="Text_20_body">Body</text:p><text:p text:style-name="P2">At least</text:p></office:text></office:body></office:document-content>"#
+    );
+    let f = parse(&package(&content, Some(&styles))).unwrap();
+    let ps = paras(&f);
+    assert_eq!(ps.len(), 4);
+    let cm = |v: f32| v * 72.0 / 2.54;
+    let near = |a: Option<f32>, b: f32| a.is_some_and(|a| (a - b).abs() < 0.01);
+    // ODF's defaults, stated, so the document's own defaults don't apply.
+    assert_eq!((ps[0].spacing.before, ps[0].spacing.after), (Some(0.0), Some(0.0)));
+    assert_eq!(ps[0].spacing.line, Some(LineSpacing::Multiple(1.0)));
+    assert_eq!(ps[0].tabs, None);
+    assert!(near(ps[1].spacing.left, cm(1.0)) && near(ps[1].spacing.first, cm(-0.5)), "{:?}", ps[1].spacing);
+    let tabs = ps[1].tabs.as_deref().unwrap();
+    assert_eq!(tabs.len(), 2);
+    assert!(near(Some(tabs[0].pos), cm(9.843)) && tabs[0].align == TabAlign::Left && tabs[0].leader == TabLeader::None);
+    assert!(near(Some(tabs[1].pos), cm(15.0)) && tabs[1].align == TabAlign::Right && tabs[1].leader == TabLeader::Dot);
+    assert!(near(ps[2].spacing.after, cm(0.212)));
+    assert_eq!(ps[2].spacing.line, Some(LineSpacing::Multiple(1.15)));
+    // The automatic style's own line height wins; the spacing comes from its parent.
+    assert_eq!(ps[3].spacing.line, Some(LineSpacing::AtLeast(14.0)));
+    assert!(near(ps[3].spacing.after, cm(0.212)));
+    // In the document, the stops and the spacing are on the paragraphs.
+    let doc = import(&package(&content, Some(&styles))).unwrap();
+    let body: Vec<_> = doc.body.iter().filter_map(|b| if let wordcraft_doc::Block::Para(p) = &**b { Some(p) } else { None }).collect();
+    assert_eq!(body[0].props.space_after, Some(0.0));
+    assert_eq!(body[0].props.line_spacing, Some(LineSpacing::Multiple(1.0)));
+    assert_eq!(body[1].props.tabs.as_ref().map(Vec::len), Some(2));
+}

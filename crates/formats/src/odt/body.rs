@@ -313,7 +313,8 @@ impl Body<'_> {
         if let Some(h) = heading {
             kind = Kind::Heading(h.clamp(1, 6));
         }
-        let mut p = Para { kind, align, page_break: pb, keep_next, ..Default::default() };
+        let (spacing, tabs) = self.styles.layout(style);
+        let mut p = Para { kind, align, page_break: pb, keep_next, spacing, tabs, ..Default::default() };
         if rule && kind == Kind::Normal {
             p.kind = Kind::Rule;
         }

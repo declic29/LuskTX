@@ -69,9 +69,95 @@ const MAX_DECODE_SIDE: u32 = u16::MAX as u32;
 pub fn decode_pixmap(bytes: &[u8]) -> Option<Pixmap> {
     // The shared probe also charges what the decoder holds beside its output (#3644).
     if !wordcraft_geom::picture::probe(bytes).is_ok_and(|p| p.fits(wordcraft_geom::MAX_DECODED_BYTES)) {
-        return None;
+        // Lusk Texte : a PNG too big to decode whole (a 10 000-pixel scan placed as a small
+        // logo) is read a row at a time and shrunk as it comes, instead of a grey box.
+        return decode_png_shrunk(bytes, SHRUNK_PIXELS);
     }
     decode_pixmap_within(bytes, wordcraft_geom::MAX_DECODED_BYTES)
+}
+
+/// Most pixels a picture too big to decode whole is shrunk to (16 million: 64 MB as RGBA,
+/// sharper than any page needs).
+const SHRUNK_PIXELS: u64 = 16_000_000;
+
+/// Decode a non-interlaced PNG a row at a time, averaging each `k`×`k` block of pixels into one,
+/// so the picture ends up with at most `max_pixels` and only a few rows are ever held. `None`
+/// for anything else (not a PNG, interlaced, damaged), as before: a grey box.
+pub(crate) fn decode_png_shrunk(bytes: &[u8], max_pixels: u64) -> Option<Pixmap> {
+    let mut dec = png::Decoder::new(std::io::Cursor::new(bytes));
+    dec.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
+    let mut reader = dec.read_info().ok()?;
+    let info = reader.info();
+    let (w, h) = (info.width, info.height);
+    if info.interlaced || w == 0 || h == 0 || w > MAX_DECODE_SIDE * 16 || h > MAX_DECODE_SIDE * 16 {
+        return None;
+    }
+    let (color, _) = reader.output_color_type();
+    let channels: usize = match color {
+        png::ColorType::Grayscale => 1,
+        png::ColorType::GrayscaleAlpha => 2,
+        png::ColorType::Rgb => 3,
+        png::ColorType::Rgba => 4,
+        png::ColorType::Indexed => return None,
+    };
+    let area = u64::from(w) * u64::from(h);
+    let k = (((area as f64) / (max_pixels.max(1) as f64)).sqrt().ceil() as u32).max(1);
+    let (ow, oh) = (w.div_ceil(k), h.div_ceil(k));
+    if ow > MAX_DECODE_SIDE || oh > MAX_DECODE_SIDE {
+        return None;
+    }
+    let (ow_us, oh_us) = (ow as usize, oh as usize);
+    let mut out = vec![0u8; ow_us.checked_mul(oh_us)?.checked_mul(4)?];
+    // Sums of the current output row's blocks, RGBA, and how many source pixels each holds.
+    let mut sums = vec![0u64; ow_us * 4];
+    let mut counts = vec![0u64; ow_us];
+    let mut y = 0u32;
+    while let Ok(Some(row)) = reader.next_row() {
+        let data = row.data();
+        for (x, px) in data.chunks_exact(channels).enumerate().take(w as usize) {
+            let (r, g, b, a) = match *px {
+                [v] => (v, v, v, 255),
+                [v, a] => (v, v, v, a),
+                [r, g, b] => (r, g, b, 255),
+                [r, g, b, a] => (r, g, b, a),
+                _ => continue,
+            };
+            let o = x / k as usize;
+            if let (Some(s), Some(c)) = (sums.get_mut(o * 4..o * 4 + 4), counts.get_mut(o)) {
+                // Colours weighted by alpha, so transparent pixels don't darken the average.
+                let a64 = u64::from(a);
+                s[0] += u64::from(r) * a64;
+                s[1] += u64::from(g) * a64;
+                s[2] += u64::from(b) * a64;
+                s[3] += a64;
+                *c += 1;
+            }
+        }
+        y += 1;
+        if y.is_multiple_of(k) || y == h {
+            let oy = ((y - 1) / k) as usize;
+            for (o, (s, c)) in sums.chunks_exact(4).zip(&counts).enumerate() {
+                let Some(dst) = out.get_mut((oy * ow_us + o) * 4..(oy * ow_us + o) * 4 + 4) else { continue };
+                if *c == 0 || s[3] == 0 {
+                    continue;
+                }
+                dst[0] = (s[0] / s[3]).min(255) as u8;
+                dst[1] = (s[1] / s[3]).min(255) as u8;
+                dst[2] = (s[2] / s[3]).min(255) as u8;
+                dst[3] = (s[3] / *c).min(255) as u8;
+            }
+            sums.iter_mut().for_each(|v| *v = 0);
+            counts.iter_mut().for_each(|v| *v = 0);
+        }
+        if y >= h {
+            break;
+        }
+    }
+    if y < h {
+        return None;
+    }
+    log::info!("a {w}×{h} picture is too big to decode whole: it is drawn from a {ow}×{oh} copy");
+    premul_pixmap(ow, oh, &out)
 }
 
 /// [`decode_pixmap`] with an explicit RGBA byte budget (a small one in tests).

@@ -16,6 +16,9 @@ wordcraft-layout = { workspace = true }
 wordcraft-metafile = { workspace = true }
 vello_cpu = { workspace = true }
 image = { workspace = true }
+# Already in the tree through `image`: read very large PNG pictures a row at a time, shrinking
+# them as they come (`media::decode_png_shrunk`).
+png = "0.18"
 log = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -79,6 +79,10 @@
 
         <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\wordcraft.exe" Value="[#WordcraftExe]" Type="string" />
       <RegistryValue Root="HKMU" Key="Software\LuskTexte" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+      <!-- Lusk : le module de mise à jour (craft-update) reconnaît une copie installée par ce MSI au
+           dossier qu'il lit sous cette clé ; sans elle, il la prend pour une version portable et
+           réclame un .zip. Le nom de la clé est celui que la bibliothèque lit, pas un éditeur. -->
+      <RegistryValue Root="HKMU" Key="Software\Learning Machines LLC\Lusk Texte" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
       </Component>
 
       <!-- File associations (#295). Each document type gets a Lusk Texte ProgId (name, icon, open

@@ -19,6 +19,8 @@ use wordcraft_metafile::{Item, Picture, PlacedItem, Seg};
 mod media;
 
 #[cfg(test)]
+use media::decode_png_shrunk;
+#[cfg(test)]
 use media::{CACHE_BYTES, MediaCache, OVERSIZED_GLYPHS_NOTED, cacheable, decode_pixmap_within, note_oversized_glyphs, shrink};
 pub use media::{decode_pixmap, image_size, metafile_size};
 use media::{draw_page_picture, draw_vector, lock, pixmap_for, premul_pixmap, vector_for};

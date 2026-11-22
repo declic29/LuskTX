@@ -277,6 +277,17 @@ jobs:
           cp "Lusk-Texte-$VERSION-macos-universal.dmg" Lusk-Texte-Mac.dmg
           cp "Lusk-Texte-$VERSION-linux-x86_64.AppImage" Lusk-Texte-Linux.AppImage
           for deb in Lusk-Texte-"$VERSION"*.deb; do cp "$deb" Lusk-Texte-Linux.deb; done
+      - name: Copies au nom technique, pour le module de mise à jour
+        working-directory: dist
+        # Le module de mise à jour (craft-update) cherche le fichier à installer sous le nom
+        # technique de l'application (wordcraft-<version>-…), pas sous Lusk-Texte-<version>-… : sans ces
+        # copies, il trouve la nouvelle version mais refuse de l'installer (« has no … »).
+        run: |
+          for f in Lusk-Texte-"$VERSION"-*; do
+            [ -e "$f" ] || continue
+            cp "$f" "wordcraft${f#Lusk-Texte}"
+          done
+          ls -1
       - name: Calculer les empreintes (SHA256SUMS.txt)
         working-directory: dist
         run: |
