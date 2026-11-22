@@ -11,9 +11,11 @@ de lui demander de lire ce fichier (`C:\lusk-texte\docs\memo-projet.md`). À ten
 - Porté par l'**association Lusk** (loi 1901), présidée par Philippe. Contact public :
   contact@lusk.bzh. Site : https://www.lusk.bzh.
 - Code : https://github.com/declic29/LuskTX, branche `main`. Sur le PC : `C:\lusk-texte`.
-- Version publiée : **1.1.0** (étiquette `v1.1.0`, 13 novembre 2026 : installateur Windows en
-  français aux couleurs de Lusk, renard pour « À propos », grands boutons dans Enregistrer sous et
-  Ouvrir). Version précédente : 1.0.0. Il reste une ancienne étiquette `v0.13.0`,
+- Version publiée : **1.1.1** (étiquette `v1.1.1`, 22 novembre 2026 : les .odt de LibreOffice
+  gardent leur mise en page (espacement, retraits, interligne, tabulations) et les très grandes
+  images s'affichent ; correcteur sous Windows). Avant : 1.1.0 (13 novembre 2026 : installateur
+  Windows en français aux couleurs de Lusk, renard pour « À propos », grands boutons dans
+  Enregistrer sous et Ouvrir), 1.0.0. Il reste une ancienne étiquette `v0.13.0`,
   qu'on peut supprimer.
 
 ## Décisions prises (à respecter)
