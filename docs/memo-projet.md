@@ -58,6 +58,12 @@ de lui demander de lire ce fichier (`C:\lusk-texte\docs\memo-projet.md`). À ten
   cochée par défaut (choix gardé lors des mises à jour), types de fichiers en français, licence
   précédée d'un résumé en français. Page d'accueil propre : `packaging/windows/lusk-welcome.wxs`
   (adaptée de WiX, licence MS-RL mentionnée dans NOTICE).
+- 23 novembre 2026, version 1.1.2, **mise à jour automatique sans signature** : le module de mise
+  à jour est copié dans `vendor/craft-update` (voir son `LISEZ-MOI.md`). Sous Windows, une copie
+  non signée se met maintenant à jour elle-même (fichier de la Release GitHub, empreinte SHA-256
+  vérifiée) au lieu de proposer seulement « Télécharger », et l'éditeur « Lusk » de
+  l'installateur est reconnu. Les copies déjà installées (versions précédentes) ont encore
+  l'ancien module : cette version-là s'installe une fois à la main, les suivantes se font seules.
 
 ## Façon de travailler avec Claude
 
