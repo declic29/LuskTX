@@ -1,19 +1,35 @@
 <p align="center">
-  <img src="assets/app-icon/hicolor/256x256/apps/bzh.lusk.texte.png" width="128" height="128" alt="Logo de Lusk Texte : une plume et les lettres TX">
+  <img src="docs/fiche/banniere.jpg" alt="Lusk Texte : ce que vous écrivez vous appartient.">
 </p>
 
-<h1 align="center">Lusk Texte</h1>
+<h3 align="center">Ce que vous écrivez vous appartient.</h3>
 
 <p align="center">
-  <b>Ce que vous écrivez vous appartient.</b><br>
-  Un traitement de texte libre et gratuit, porté par l'association Lusk (loi 1901).
+  Un traitement de texte libre et gratuit, porté par l'association Lusk (loi 1901).<br>
+  Pour Windows, macOS et Linux. Sans compte, sans publicité, et vos fichiers restent chez vous.
+</p>
+
+<p align="center">
+  <a href="https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Windows.msi"><img src="https://img.shields.io/badge/Windows-T%C3%A9l%C3%A9charger-1e7be0?style=for-the-badge" alt="Télécharger pour Windows"></a>
+  <a href="https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Mac.dmg"><img src="https://img.shields.io/badge/macOS-T%C3%A9l%C3%A9charger-0d2b52?style=for-the-badge&logo=apple&logoColor=white" alt="Télécharger pour macOS"></a>
+  <a href="https://github.com/declic29/LuskTX/releases/latest/download/Lusk-Texte-Linux.deb"><img src="https://img.shields.io/badge/Linux-T%C3%A9l%C3%A9charger-f7941d?style=for-the-badge&logo=linux&logoColor=white" alt="Télécharger pour Linux"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/declic29/LuskTX/releases/latest"><img src="https://img.shields.io/github/v/release/declic29/LuskTX?label=version&color=1e7be0" alt="Dernière version"></a>
+  <img src="https://img.shields.io/badge/prix-gratuit-2e9e5b" alt="Gratuit">
+  <img src="https://img.shields.io/badge/langue-fran%C3%A7ais-0d2b52" alt="En français">
+  <a href="https://www.lusk.bzh"><img src="https://img.shields.io/badge/lusk.bzh-site-f7941d" alt="lusk.bzh"></a>
 </p>
 
 <p align="center">
   <a href="https://www.lusk.bzh"><b>lusk.bzh</b></a> ·
-  <a href="https://github.com/declic29/LuskTX/releases/latest">Télécharger</a> ·
+  <a href="https://github.com/declic29/LuskTX/releases">Toutes les versions</a> ·
+  <a href="https://github.com/declic29/LuskOffice">Toute la suite avec Lusk Office</a> ·
   <a href="https://github.com/declic29/LuskTX/issues">Signaler un problème</a>
 </p>
+
+---
 
 ## Lusk Texte en bref
 
@@ -61,7 +77,9 @@ d'administrateur, dans `%LOCALAPPDATA%\Programs\Lusk\Lusk Texte`) ou « Pour tou
 utilisateurs de cet ordinateur » (dans `C:\Program Files\Lusk\Lusk Texte`, avec l'accord d'un
 administrateur), puis un raccourci sur le Bureau (case cochée au départ).
 
-**macOS.** Ouvrez le `.dmg` et glissez Lusk Texte dans Applications.
+**macOS.** Ouvrez le `.dmg` et glissez Lusk Texte dans Applications. L'application n'a pas de
+certificat Apple : la première fois, macOS la bloque ; ouvrez **Réglages Système › Confidentialité
+et sécurité**, puis cliquez sur **Ouvrir quand même**.
 
 **Linux.** Rendez l'AppImage exécutable (`chmod +x`) puis lancez-la, ou installez le paquet de
 votre distribution.
@@ -81,6 +99,23 @@ votre distribution.
 - Le **journal** se trouve dans `%APPDATA%\LuskTexte\logs\` (Windows),
   `~/Library/Application Support/Lusk Texte/logs/` (macOS) ou `~/.config/lusk-texte/logs/`
   (Linux). Joignez-le à un signalement de problème.
+
+## La suite Lusk
+
+Lusk Texte fait partie de la suite libre et gratuite de l'association Lusk. Avec
+**[Lusk Office](https://github.com/declic29/LuskOffice)**, un seul programme installe d'un coup les logiciels que vous cochez
+(Windows, Linux et Mac).
+
+<table>
+  <tr>
+    <td width="50%"><a href="https://github.com/declic29/LuskTab"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-tab.jpg" alt="Lusk Tab"></a></td>
+    <td width="50%"><a href="https://github.com/declic29/Lusk-Diapo"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-diapo.jpg" alt="Lusk Diapo"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="https://github.com/declic29/Lusk_Pdf"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-pdf.jpg" alt="Lusk PDF"></a></td>
+    <td width="50%"><a href="https://www.lusk.bzh"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-bzh.jpg" alt="Lusk.bzh"></a></td>
+  </tr>
+</table>
 
 ## Compiler Lusk Texte
 
