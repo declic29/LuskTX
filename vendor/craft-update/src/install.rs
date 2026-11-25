@@ -1367,10 +1367,11 @@ pub mod macos {
 
     /// Checks a copied bundle against what its release promises, before it replaces anything.
     fn check(bundle: &Path, found: &Installed, expect: &Expect<'_>) -> Result<(), String> {
-        if let Some(team) = expect.team
-            && !signed_by(bundle, team)
-        {
-            return Err("the app isn't signed by its developer, so it wasn't installed".into());
+        // Lusk: the association's apps carry an ad-hoc signature (no Apple Developer ID). Any
+        // intact signature is accepted: the download was already checked against the release's
+        // SHA256SUMS.txt, and an unsigned or damaged bundle still fails.
+        if expect.team.is_some() && !intact(bundle) {
+            return Err("the app's signature is missing or damaged, so it wasn't installed".into());
         }
         if let Some(want) = expect.version
             && !found.version.as_ref().is_some_and(|v| same_release(v, want))
@@ -1383,6 +1384,14 @@ pub mod macos {
     /// Whether `bundle` has a valid Developer ID signature from `team`, nested code included. The
     /// requirement pins the signer, so a valid ad-hoc or other developer's signature fails it.
     /// Unlike a Gatekeeper assessment it needs no network.
+    /// Lusk: whether `bundle` carries a valid signature, nested code included, whoever signed it
+    /// (an ad-hoc signature counts).
+    fn intact(bundle: &Path) -> bool {
+        let Some(path) = bundle.to_str() else { return false };
+        process::capture(CODESIGN, &["--verify", "--deep", "--strict", path], Duration::from_secs(120)).is_some()
+    }
+
+    #[cfg_attr(not(test), allow(dead_code))] // Lusk : seuls les tests s'en servent encore.
     pub fn signed_by(bundle: &Path, team: &str) -> bool {
         let Some(path) = bundle.to_str() else { return false };
         if team.is_empty() || !team.bytes().all(|b| b.is_ascii_alphanumeric()) {
@@ -2851,7 +2860,7 @@ mod tests {
             let release = Release { tag: "v0.6.0".into(), version: version::parse("0.6.0"), ..Release::default() };
 
             let result = install_dmg(photocraft(), &image, Some(&existing), None, false, &Paths::under(dir.path()), &Expect::release(&release));
-            assert_eq!(result, Err("the app isn't signed by its developer, so it wasn't installed".into()));
+            assert_eq!(result, Err("the app's signature is missing or damaged, so it wasn't installed".into()));
             assert_eq!(std::fs::read_to_string(current.join("Contents/MacOS/PhotoCraft")).unwrap(), "0.5.0");
             assert_eq!(
                 std::fs::read_dir(&apps).unwrap().map(|e| e.unwrap().file_name()).collect::<Vec<_>>(),

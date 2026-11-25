@@ -22,6 +22,14 @@ Le `Cargo.toml` racine de Lusk Texte la met à la place de l'original (`[patch]`
 Le `Cargo.toml` de la copie remplace les réglages du workspace de craft-libs par leurs valeurs, et
 n'a pas les dépendances de test d'écran.
 
+## Sur Mac
+
+**Mise à jour sans certificat Apple** (`src/install.rs`, marqué « Lusk ») : les applis Mac de
+l'association portent une signature « ad hoc », sans certificat de développeur Apple. L'original
+n'acceptait que la signature de Learning Machines et refusait donc la mise à jour. Ici, toute
+signature intacte est acceptée ; une appli non signée ou abîmée reste refusée, et le fichier
+téléchargé est déjà vérifié par son empreinte SHA-256 (`SHA256SUMS.txt` de la Release).
+
 ## Mettre à jour la copie
 
 Pour passer à une version plus récente de craft-libs : recopier `crates/update/src` du nouveau
